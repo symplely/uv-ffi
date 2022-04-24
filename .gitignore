@@ -1,0 +1,90 @@
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Linker output
+*.ilk
+*.map
+*.exp
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+build/
+composer.lock
+composer.phar
+phpunit.*
+vendor/
+*.lock
+*.cache
+*.crt
+*.pem
+*.csr
+*.local
+temp
+.vscode/c_cpp_properties.json
+.vscode/settings.json
+php-sdk-binary-tools-php-sdk-2.2.0/*
+php-sdk/*
+
+cmake-build-debug/
+
+*.xcodeproj
+*.xcworkspace
+
+# ignore test outputs
+tests/*.diff
+tests/*.exp
+tests/*.log
+tests/*.sh
+tests/*.out
+
+# make dist output
+libuv-*.tar.*
+*.cmake
+*.rule
+*.stamp
+*.depend
+CMakeFiles/*
+CMakeCache.txt
+DartConfiguration.tcl
