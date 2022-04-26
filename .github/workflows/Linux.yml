@@ -8,10 +8,10 @@ jobs:
       fail-fast: false
       matrix:
         container:
-        - {os: 'ubuntu:18.04', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y'}
-        - {os: 'ubuntu:latest', cli: 'apt-get', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y'}
-        - {os: 'centos:7', cli: 'yum', dep: 'yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-7.rpm', pre: "yum-config-manager --disable 'remi-php*' && yum-config-manager --enable remi-php80"}
-        - {os: 'centos:latest', cli: 'dnf', dep: 'dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-8.rpm', pre: 'dnf module reset php && dnf module install php:remi-8.0 -y'}
+        - {os: 'ubuntu:18.04', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'build-essential', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y'}
+        - {os: 'ubuntu:latest', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'build-essential', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y'}
+        - {os: 'centos:7', cli: 'yum', dev: 'groupinstall "Development Tools"', dep: 'yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-7.rpm', pre: "yum-config-manager --disable 'remi-php*' && yum-config-manager --enable remi-php80"}
+        - {os: 'centos:latest', cli: 'dnf', dev: 'groupinstall "Development Tools"', dep: 'dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-8.rpm', pre: 'dnf module reset php && dnf module install php:remi-8.0 -y'}
     runs-on: ubuntu-latest
     container: ${{ matrix.container.os }}
     steps:
@@ -22,7 +22,7 @@ jobs:
           ${{ matrix.container.cli }} update -y
           ${{ matrix.container.dep }} -y
           ${{ matrix.container.pre }}
-          ${{ matrix.container.cli }} install sudo git libtool php-pear -y
+          ${{ matrix.container.cli }} install sudo git libtool curl cmake ${{ matrix.container.dev }} -y
       - name: Configure for ${{ matrix.container.os }}
         run: |
           curl -L https://github.com/libuv/libuv/archive/v1.44.1.tar.gz | tar xzf -
@@ -34,12 +34,11 @@ jobs:
         run: |
           cd libuv-1.44.1
           cmake --build build
-          ls -lh build
       - name: Test
         run: |
           cd libuv-1.44.1
           ${{ matrix.config.qemu }} build/uv_run_tests_a
-          ls build
+          ls -lh build
 
   qemu:
     runs-on: ubuntu-latest
@@ -75,9 +74,8 @@ jobs:
         run: |
           cd libuv-1.44.1
           cmake --build build
-          ls -lh build
       - name: Test
         run: |
           cd libuv-1.44.1
           ${{ matrix.config.qemu }} build/uv_run_tests_a
-          ls build
+          ls -lh build

@@ -34,4 +34,4 @@ jobs:
         run: |
           cd libuv-1.44.1
           cd build && ctest -V
-          ls .
+          ls -lh .
