@@ -1,0 +1,35 @@
+# GitHub Action for building Libuv
+name: macOS
+
+on: [push, pull_request]
+
+jobs:
+  macos:
+    runs-on: macos-10.15
+    steps:
+      - uses: actions/checkout@v2
+      - name: Envinfo
+        run: npx envinfo
+      - name: Setup
+        run: |
+          brew install ninja
+      - name: Configure
+        run: |
+          curl -L https://github.com/libuv/libuv/archive/v1.44.1.tar.gz | tar xzf -
+          cd libuv-1.44.1
+          mkdir build
+          cd build
+          cmake .. -DBUILD_TESTING=ON -G Ninja
+      - name: Build
+        run: |
+          cmake --build build
+          ls -lh
+      - name: platform_output
+        run: |
+          ./build/uv_run_tests platform_output
+      - name: platform_output_a
+        run: |
+          ./build/uv_run_tests_a platform_output
+      - name: Test
+        run: |
+          cd build && ctest -V
