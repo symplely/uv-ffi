@@ -20,10 +20,8 @@ jobs:
         shell: cmd
         run: |
           curl -L https://github.com/libuv/libuv/archive/refs/tags/v${{ matrix.config.lib_uv }}.zip --output libuv.zip
-          dir .
           unzip -xoq libuv.zip
-          dir .
-          cd libuv
+          cd libuv-${{ matrix.config.lib_uv }}
           dir .
           mkdir -p build
           cd build
