@@ -1,0 +1,83 @@
+name: Linux
+
+on: [push, pull_request]
+
+jobs:
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        container:
+        - {os: 'ubuntu:18.04', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y'}
+        - {os: 'ubuntu:latest', cli: 'apt-get', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y'}
+        - {os: 'centos:7', cli: 'yum', dep: 'yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-7.rpm', pre: "yum-config-manager --disable 'remi-php*' && yum-config-manager --enable remi-php80"}
+        - {os: 'centos:latest', cli: 'dnf', dep: 'dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-8.rpm', pre: 'dnf module reset php && dnf module install php:remi-8.0 -y'}
+    runs-on: ubuntu-latest
+    container: ${{ matrix.container.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Install Build tools
+        run: |
+          ${{ matrix.container.cli }} update -y
+          ${{ matrix.container.dep }} -y
+          ${{ matrix.container.pre }}
+          ${{ matrix.container.cli }} install sudo git libtool php-pear -y
+      - name: Configure for ${{ matrix.container.os }}
+        run: |
+          curl -L https://github.com/libuv/libuv/archive/v1.44.1.tar.gz | tar xzf -
+          cd libuv-1.44.1
+          mkdir build
+          cd build
+          cmake .. -DBUILD_TESTING=ON
+      - name: Build
+        run: |
+          cd libuv-1.44.1
+          cmake --build build
+          ls -lh build
+      - name: Test
+        run: |
+          cd libuv-1.44.1
+          ${{ matrix.config.qemu }} build/uv_run_tests_a
+          ls build
+
+  qemu:
+    runs-on: ubuntu-latest
+    name: cross-build-qemu-${{ matrix.config.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {target: aarch64, toolchain: gcc-aarch64-linux-gnu, cc: aarch64-linux-gnu-gcc, qemu: qemu-aarch64-static }
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install QEMU
+        # this ensure install latest qemu on ubuntu, apt get version is old
+        env:
+          QEMU_SRC: "http://archive.ubuntu.com/ubuntu/pool/universe/q/qemu"
+          QEMU_VER: "qemu-user-static_4\\.2-.*_amd64.deb$"
+        run: |
+          DEB=`curl -s $QEMU_SRC/ | grep -o -E 'href="([^"#]+)"' | cut -d'"' -f2 | grep $QEMU_VER | tail -1`
+          wget $QEMU_SRC/$DEB
+          sudo dpkg -i $DEB
+      - name: Install ${{ matrix.config.toolchain }}
+        run: |
+          sudo apt update
+          sudo apt install ${{ matrix.config.toolchain }} -y
+      - name: Configure with ${{ matrix.config.cc }}
+        run: |
+          curl -L https://github.com/libuv/libuv/archive/v1.44.1.tar.gz | tar xzf -
+          cd libuv-1.44.1
+          mkdir build
+          cd build
+          cmake .. -DBUILD_TESTING=ON -DQEMU=ON -DCMAKE_C_COMPILER=${{ matrix.config.cc }}
+      - name: Build
+        run: |
+          cd libuv-1.44.1
+          cmake --build build
+          ls -lh build
+      - name: Test
+        run: |
+          cd libuv-1.44.1
+          ${{ matrix.config.qemu }} build/uv_run_tests_a
+          ls build
