@@ -1,12 +1,17 @@
 # GitHub Action for building Libuv
 name: Windows
 
-on: [push, pull_request]
+on:
+  release:
+    tags:
+      - '*'
+
+workflow_dispatch:
 
 jobs:
   windows:
     runs-on: windows-${{ matrix.config.server }}
-    name: build-${{ matrix.config.toolchain}}-${{ matrix.config.arch}}
+    name: windows-${{ matrix.config.toolchain}}-${{ matrix.config.arch}}
     strategy:
       fail-fast: false
       matrix:

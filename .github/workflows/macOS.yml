@@ -1,7 +1,12 @@
 # GitHub Action for building Libuv
 name: macOS
 
-on: [push, pull_request]
+on:
+  release:
+    tags:
+      - '*'
+
+workflow_dispatch:
 
 jobs:
   macos:
@@ -29,6 +34,5 @@ jobs:
       - name: Test
         run: |
           cd libuv-1.44.1
-          ls .
           cd build && ctest -V
           ls .
