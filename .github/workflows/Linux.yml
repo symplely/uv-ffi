@@ -8,10 +8,10 @@ jobs:
       fail-fast: false
       matrix:
         container:
-        - {os: 'ubuntu:18.04', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'build-essential', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y'}
-        - {os: 'ubuntu:latest', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'build-essential', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y'}
-        - {os: 'centos:7', cli: 'yum', dev: 'group "Development Tools" –setopt=group_package_types=mandatory,default,optional', dep: 'yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-7.rpm', pre: "yum-config-manager --disable 'remi-php*' && yum-config-manager --enable remi-php80"}
-        - {os: 'centos:latest', cli: 'dnf', dev: 'group "Development Tools"', dep: 'dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-8.rpm', pre: "dnf --disablerepo '*' --enablerepo=extras swap centos-linux-repos centos-stream-repos && dnf module reset php && dnf module install php:remi-8.0 -y"}
+        - {os: 'ubuntu:18.04', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'build-essential', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y', extra: 'ls'}
+        - {os: 'ubuntu:latest', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'build-essential', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y', extra: 'ls'}
+        - {os: 'centos:7', cli: 'yum', dev: 'group "Development Tools" –setopt=group_package_types=mandatory,default,optional', dep: 'yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-7.rpm', pre: "yum-config-manager --disable 'remi-php*' && yum-config-manager --enable remi-php80", extra: 'ls'}
+        - {os: 'centos:latest', cli: 'dnf', dev: 'group "Development Tools"', dep: 'dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-8.rpm', pre: "dnf module reset php && dnf module install php:remi-8.0 -y", extra: "dnf --disablerepo '*' --enablerepo=extras swap centos-linux-repos centos-stream-repos"}
     runs-on: ubuntu-latest
     container: ${{ matrix.container.os }}
     steps:
@@ -19,9 +19,10 @@ jobs:
         uses: actions/checkout@v2
       - name: Install Build tools
         run: |
-          ${{ matrix.container.pre }}
+          ${{ matrix.container.extra }}
           ${{ matrix.container.cli }} update -y
           ${{ matrix.container.dep }} -y
+          ${{ matrix.container.pre }}
           ${{ matrix.container.cli }} install sudo git libtool curl cmake ${{ matrix.container.dev }} -y
       - name: Configure for ${{ matrix.container.os }}
         run: |
