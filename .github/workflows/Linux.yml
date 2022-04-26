@@ -10,7 +10,7 @@ jobs:
         container:
         - {os: 'ubuntu:18.04', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'cmake build-essential', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y', extra: 'ls'}
         - {os: 'ubuntu:latest', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'cmake build-essential', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y', extra: 'ls'}
-        - {os: 'centos:7', cli: 'yum', dev: 'cmake group install "Development Tools"', dep: 'yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-7.rpm -y && yum install epel-release cmake3 -y && yum remove cmake -y && ln -s /usr/bin/cmake3 /usr/bin/cmake', pre: "yum-config-manager --disable 'remi-php*' && yum-config-manager --enable remi-php80", extra: 'ls'}
+        - {os: 'centos:7', cli: 'yum', dev: 'cmake group install "Development Tools"', dep: 'yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-7.rpm -y && yum install epel-release cmake3 -y && ln -s /usr/bin/cmake3 /usr/bin/cmake', pre: "yum-config-manager --disable 'remi-php*' && yum-config-manager --enable remi-php80", extra: 'ls'}
         - {os: 'centos:latest', cli: 'dnf', dev: 'cmake', dep: 'dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-8.rpm -y', pre: 'dnf module reset php && dnf module install php:remi-8.0 -y && dnf group install "Development Tools" -y', extra: "dnf --disablerepo '*' --enablerepo=extras swap centos-linux-repos centos-stream-repos -y && dnf distro-sync -y"}
     runs-on: ubuntu-latest
     container: ${{ matrix.container.os }}
@@ -36,6 +36,7 @@ jobs:
           cd libuv-1.44.1
           cmake --build build
           ls -lh build
+          php -v
 
   qemu:
     runs-on: ubuntu-latest
