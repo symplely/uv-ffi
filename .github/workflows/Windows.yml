@@ -17,7 +17,7 @@ jobs:
         config:
           - {toolchain: Visual Studio 16 2019, arch: x64, server: 2019, lib_uv: 1.44.1}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - name: Envinfo
         run: npx envinfo
       - name: Build
@@ -31,9 +31,10 @@ jobs:
           cmake .. -DBUILD_TESTING=ON -G "${{ matrix.config.toolchain }}" -A ${{ matrix.config.arch }}
           cmake --build .
           dir Debug
+      - uses: actions/checkout@v3
       - name: Saving
         shell: cmd
-      - run: |
+        run: |
           mkdir -p lib\windows
           copy libuv-${{ matrix.config.lib_uv }}\build\Debug\uv.dll lib\windows\
           git config user.name github-actions
