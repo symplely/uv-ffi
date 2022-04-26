@@ -29,5 +29,6 @@ jobs:
       - name: Test
         run: |
           cd libuv-1.44.1
+          ls .
           cd build && ctest -V
-          ls Debug
+          ls .
