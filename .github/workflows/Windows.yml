@@ -32,4 +32,3 @@ jobs:
           cd libuv-${{ matrix.config.lib_uv }}\build
           ctest -C Debug -V
           dir Debug
-          dir x64\Debug
