@@ -22,7 +22,6 @@ jobs:
           curl -L https://github.com/libuv/libuv/archive/refs/tags/v${{ matrix.config.lib_uv }}.zip --output libuv.zip
           unzip -xoq libuv.zip
           cd libuv-${{ matrix.config.lib_uv }}
-          dir .
           mkdir -p build
           cd build
           cmake .. -DBUILD_TESTING=ON -G "${{ matrix.config.toolchain }}" -A ${{ matrix.config.arch }}
@@ -30,11 +29,13 @@ jobs:
       - name: platform_output
         shell: cmd
         run: |
-          build\\Debug\\uv_run_tests.exe platform_output
+          dir .
+          libuv-${{ matrix.config.lib_uv }}\\build\\Debug\\uv_run_tests.exe platform_output
       - name: platform_output_a
         shell: cmd
         run: |
-          build\\Debug\\uv_run_tests_a.exe platform_output
+          dir .
+          libuv-${{ matrix.config.lib_uv }}\\build\\Debug\\uv_run_tests_a.exe platform_output
       - name: Test
         shell: cmd
         run: |
