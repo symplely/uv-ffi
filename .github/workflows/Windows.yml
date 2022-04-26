@@ -37,9 +37,7 @@ jobs:
       - name: Test
         shell: cmd
         run: |
-          dir .
-          cd libuv-${{ matrix.config.lib_uv }}
-          dir .
-          cd build
-          dir .
+          cd libuv-${{ matrix.config.lib_uv }}\build
           ctest -C Debug -V
+          dir Debug
+          dir x64
