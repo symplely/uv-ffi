@@ -30,9 +30,4 @@ jobs:
           cd build
           cmake .. -DBUILD_TESTING=ON -G "${{ matrix.config.toolchain }}" -A ${{ matrix.config.arch }}
           cmake --build .
-      - name: Test
-        shell: cmd
-        run: |
-          cd libuv-${{ matrix.config.lib_uv }}\build
-          ctest -C Debug -V
           dir Debug

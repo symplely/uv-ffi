@@ -30,8 +30,4 @@ jobs:
         run: |
           cd libuv-1.44.1
           cmake --build build
-      - name: Test
-        run: |
-          cd libuv-1.44.1
-          cd build && ctest -V
-          ls -lh .
+          ls -lh build
