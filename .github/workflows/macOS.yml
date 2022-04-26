@@ -5,8 +5,7 @@ on:
   release:
     tags:
       - '*'
-
-workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   macos:
