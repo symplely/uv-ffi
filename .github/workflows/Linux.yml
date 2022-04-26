@@ -10,8 +10,8 @@ jobs:
         container:
         - {os: 'ubuntu:18.04', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'cmake build-essential', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y', extra: 'ls'}
         - {os: 'ubuntu:latest', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'cmake build-essential', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y', extra: 'ls'}
-        - {os: 'centos:7', cli: 'yum', dev: 'cmake3 group "Development Tools" –setopt=group_package_types=mandatory,default,optional', dep: 'yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-7.rpm', pre: "yum-config-manager --disable 'remi-php*' && yum-config-manager --enable remi-php80", extra: 'ls'}
-        - {os: 'centos:latest', cli: 'dnf', dev: 'cmake group "Development Tools"', dep: 'dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-8.rpm', pre: "dnf module reset php && dnf module install php:remi-8.0 -y", extra: "dnf --disablerepo '*' --enablerepo=extras swap centos-linux-repos centos-stream-repos -y && dnf distro-sync -y"}
+        - {os: 'centos:7', cli: 'yum', dev: 'cmake3 groupinstall "Development Tools"', dep: 'yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-7.rpm', pre: "yum-config-manager --disable 'remi-php*' && yum-config-manager --enable remi-php80", extra: 'ls'}
+        - {os: 'centos:latest', cli: 'dnf', dev: 'cmake groupinstall "Development Tools"', dep: 'dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-8.rpm', pre: "dnf module reset php && dnf module install php:remi-8.0 -y", extra: "dnf --disablerepo '*' --enablerepo=extras swap centos-linux-repos centos-stream-repos -y && dnf distro-sync"}
     runs-on: ubuntu-latest
     container: ${{ matrix.container.os }}
     steps:
