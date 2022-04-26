@@ -22,14 +22,18 @@ jobs:
           cmake .. -DBUILD_TESTING=ON -G Ninja
       - name: Build
         run: |
+          cd libuv-1.44.1
           cmake --build build
           ls -lh
       - name: platform_output
         run: |
+          cd libuv-1.44.1
           ./build/uv_run_tests platform_output
       - name: platform_output_a
         run: |
+          cd libuv-1.44.1
           ./build/uv_run_tests_a platform_output
       - name: Test
         run: |
+          cd libuv-1.44.1
           cd build && ctest -V
