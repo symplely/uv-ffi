@@ -32,7 +32,6 @@ jobs:
           cmake --build build
           ls -lh build
       - name: Upload/Commit to Repo
-        shell: cmd
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
