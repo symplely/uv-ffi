@@ -35,10 +35,14 @@ jobs:
       - name: Saving
         shell: cmd
         run: |
-          mkdir -p lib\windows
-          copy libuv-${{ matrix.config.lib_uv }}\build\Debug\uv.dll lib\windows\
+          mkdir lib\windows
+          mkdir include
+          copy /B /Y libuv-${{ matrix.config.lib_uv }}\build\Debug\uv.dll lib\windows\
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add lib
-          git commit -m "GitHub Actions Windows x64 dll"
+          git add lib\Windows
+          git commit -m "GitHub Actions created uv.dll - Windows x64 "
+          copy /Y libuv-${{ matrix.config.lib_uv }}\include\*.* include\
+          git add include
+          git commit -m "Libuv *.h headers"
           git push
