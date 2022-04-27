@@ -34,13 +34,14 @@ jobs:
       - name: Upload/Commit to Repo
         shell: cmd
         run: |
+          git push
           git config user.name github-actions
           git config user.email github-actions@github.com
+          git pull
           mkdir lib\Windows\
           copy /Y libuv-${{ matrix.config.lib_uv }}\build\Debug\uv.dll lib\Windows\
           git add lib
           git commit -m "created uv.dll - for Windows x64"
-          git push
           copy /Y libuv-${{ matrix.config.lib_uv }}\include\*.* include\
           copy /Y libuv-${{ matrix.config.lib_uv }}\include\uv\*.* include\uv\
           git add include
