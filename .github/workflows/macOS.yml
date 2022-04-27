@@ -35,7 +35,6 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          mkdir lib\macOS\
           cp -f libuv-${{ matrix.config.lib_uv }}\build\libuv.1.0.0.dylib lib\macOS\
           git add lib
           git commit -m "GitHub Actions created libuv.1.0.0.dylib - macOS 10.15"
