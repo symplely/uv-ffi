@@ -35,8 +35,11 @@ jobs:
       - name: Saving
         shell: cmd
         run: |
-          mkdir lib\windows
-          mkdir include
+          dir
+          cd libuv-${{ matrix.config.lib_uv }}\
+          dir
+          cd build
+          dir
           copy /B /Y libuv-${{ matrix.config.lib_uv }}\build\Debug\uv.dll lib\windows\
           git config user.name github-actions
           git config user.email github-actions@github.com
