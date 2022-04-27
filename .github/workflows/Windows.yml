@@ -36,7 +36,8 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          copy /Y libuv-${{ matrix.config.lib_uv }}\build\Debug\uv.dll lib\windows\ /B
+          dir libuv-${{ matrix.config.lib_uv }}\build\Debug\
+          copy /Y libuv-${{ matrix.config.lib_uv }}\build\Debug\uv.dll lib\Windows\ /B
           git add lib
           git commit -m "GitHub Actions created uv.dll - Windows x64 "
           copy /Y libuv-${{ matrix.config.lib_uv }}\include\*.* include\
