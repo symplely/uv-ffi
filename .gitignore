@@ -47,7 +47,6 @@ dkms.conf
 build/
 composer.lock
 composer.phar
-phpunit.*
 vendor/
 *.lock
 *.cache
@@ -82,3 +81,5 @@ libuv-*.tar.*
 CMakeFiles/*
 CMakeCache.txt
 DartConfiguration.tcl
+libuv.zip
+libuv*/

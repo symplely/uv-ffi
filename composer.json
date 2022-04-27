@@ -1,0 +1,49 @@
+{
+    "name": "symplely/ext-uv-ffi",
+    "description": " An Foreign function interface (FFI) of libuv cross-platform event-driven asynchronous I/O library.",
+    "keywords": [
+        "ffi",
+        "event-driven",
+        "parallel",
+        "thread",
+        "uv_spawn",
+        "libuv",
+        "async",
+        "cross-platform",
+        "asynchronous"
+    ],
+    "homepage": "https://github.com/symplely/ext-uv-ffi",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Lawrence Stubbs",
+            "email": "lstubbs@techno.express"
+        }
+    ],
+    "require": {
+        "php": ">7.4"
+    },
+    "autoload": {
+        "files": [
+            "UVCore.php",
+            "UVConstants.php"
+        ],
+        "psr-4": {
+            "UV\\": [
+                "./"
+            ]
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7 | ^8"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit --bootstrap vendor/autoload.php tests"
+    }
+}

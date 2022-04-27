@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="vendor/autoload.php" backupGlobals="false" backupStaticAttributes="false" colors="true" convertErrorsToExceptions="true" convertNoticesToExceptions="true" convertWarningsToExceptions="true" stopOnFailure="false">
+
+    <testsuites>
+        <testsuite name="libuv-ffi Test Suite">
+            <directory suffix=".phpt">tests/</directory>
+        </testsuite>
+    </testsuites>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">Spawn/</directory>
+            <exclude>
+                <directory suffix=".php">examples/</directory>
+                <directory suffix=".h">include/</directory>
+                <directory suffix=".*">lib/</directory>
+                <directory suffix=".h">cdef/</directory>
+            </exclude>
+        </whitelist>
+    </filter>
+</phpunit>
