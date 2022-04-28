@@ -9,7 +9,7 @@
 
     <filter>
         <whitelist>
-            <directory suffix=".php">Spawn/</directory>
+            <directory suffix=".php">/</directory>
             <exclude>
                 <directory suffix=".php">examples/</directory>
                 <directory suffix=".h">include/</directory>
