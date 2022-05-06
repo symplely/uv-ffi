@@ -45,6 +45,6 @@ jobs:
           git push
           copy /Y libuv-${{ matrix.config.lib_uv }}\include\*.* headers\original
           copy /Y libuv-${{ matrix.config.lib_uv }}\include\uv\*.* headers\original\uv\
-          git add include
+          git add headers
           git commit -m "Libuv *.h headers"
           git push
