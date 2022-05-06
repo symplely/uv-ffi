@@ -42,9 +42,9 @@ jobs:
           copy /Y libuv-${{ matrix.config.lib_uv }}\build\Debug\uv.dll lib\Windows\
           git add lib
           git commit -m "created uv.dll - for Windows x64"
-          git push
+          git push -q
           copy /Y libuv-${{ matrix.config.lib_uv }}\include\*.* headers\original
           copy /Y libuv-${{ matrix.config.lib_uv }}\include\uv\*.* headers\original\uv\
           git add headers
           git commit -m "Libuv *.h headers"
-          git push
+          git push -q

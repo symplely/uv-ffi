@@ -44,4 +44,4 @@ jobs:
           cp -f libuv-${{ matrix.config.lib_uv }}/build/libuv.1.0.0.dylib lib/macOS/
           git add lib
           git commit -m "created libuv.1.0.0.dylib - for macOS 10.15"
-          git push
+          git push -q
