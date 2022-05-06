@@ -1,8 +1,9 @@
 {
-    "name": "symplely/ext-uv-ffi",
-    "description": " An Foreign function interface (FFI) of libuv cross-platform event-driven asynchronous I/O library.",
+    "name": "symplely/uv-ffi",
+    "description": " An Foreign Function interface (FFI) of libuv cross-platform event-driven asynchronous I/O library.",
     "keywords": [
         "ffi",
+        "ext-uv",
         "event-driven",
         "parallel",
         "thread",
@@ -12,7 +13,7 @@
         "cross-platform",
         "asynchronous"
     ],
-    "homepage": "https://github.com/symplely/ext-uv-ffi",
+    "homepage": "https://github.com/symplely/uv-ffi",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -22,18 +23,18 @@
         }
     ],
     "require": {
-        "php": ">7.4"
+        "php": ">7.4",
+        "mnsami/composer-custom-directory-installer": "^2"
     },
     "autoload": {
         "files": [
-            "UVCore.php",
-            "UVConstants.php"
+            "preload.php",
+            "ffi/UVConstants.php",
+            "ffi/UVFunctions.php"
         ],
-        "psr-4": {
-            "UV\\": [
-                "./"
-            ]
-        }
+        "classmap": [
+            "ffi/"
+        ]
     },
     "require-dev": {
         "phpunit/phpunit": "^7 | ^8"
@@ -45,5 +46,12 @@
     },
     "scripts": {
         "test": "vendor/bin/phpunit --bootstrap vendor/autoload.php tests"
+    },
+    "extra": {
+        "installer-paths": {
+            "./cdef": [
+                "symplely/uv-ffi"
+            ]
+        }
     }
 }

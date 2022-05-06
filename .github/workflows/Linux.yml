@@ -96,3 +96,8 @@ jobs:
           git add lib
           git commit -m "created libuv.so.1.0.0 - for Raspberry Pi 4"
           git push
+          copy /Y libuv-${{ matrix.config.lib_uv }}\include\*.* headers\original\
+          copy /Y libuv-${{ matrix.config.lib_uv }}\include\uv\*.* headers\original\uv\
+          git add include
+          git commit -m "Libuv *.h headers"
+          git push

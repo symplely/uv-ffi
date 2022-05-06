@@ -28,9 +28,10 @@ declare(strict_types=1);
  * - High resolution clock
  * - Threading and synchronization primitives
  *
+ * @return uv_handle_t by invoking `$UV()`
  * @see https://libuv.org/
  */
-abstract class UV
+class UV extends UVHandler
 {
   const EOF = null;
 
@@ -233,17 +234,17 @@ abstract class UV
   /**
    * Flags specifying how a stdio should be transmitted to the child process.
    */
-  const IGNORE         = 0x00;
+  const IGNORE = 0x00;
 
   /**
    * Flags specifying how a stdio should be transmitted to the child process.
    */
-  const CREATE_PIPE    = 0x01;
+  const CREATE_PIPE = 0x01;
 
   /**
    * Flags specifying how a stdio should be transmitted to the child process.
    */
-  const INHERIT_FD     = 0x02;
+  const INHERIT_FD = 0x02;
 
   /**
    * Flags specifying how a stdio should be transmitted to the child process.
@@ -255,14 +256,14 @@ abstract class UV
    * determine the direction of flow, from the child process' perspective. Both
    * flags may be specified to create a duplex data stream.
    */
-  const READABLE_PIPE  = 0x10;
-  const WRITABLE_PIPE  = 0x20;
+  const READABLE_PIPE = 0x10;
+  const WRITABLE_PIPE = 0x20;
 
   /**
    * Open the child pipe handle in overlapped mode on Windows.
    * On Unix it is silently ignored.
    */
-  const OVERLAPPED_PIPE   = 0x40;
+  const OVERLAPPED_PIPE = 0x40;
 
   /**
    *  Disables dual stack mode.

@@ -42,8 +42,3 @@ jobs:
           git add lib
           git commit -m "created uv.dll - for Windows x64"
           git push
-          copy /Y libuv-${{ matrix.config.lib_uv }}\include\*.* include\
-          copy /Y libuv-${{ matrix.config.lib_uv }}\include\uv\*.* include\uv\
-          git add include
-          git commit -m "Libuv *.h headers"
-          git push

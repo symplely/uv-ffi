@@ -20,3 +20,5 @@
 /php.png		   export-ignore
 /test.php		   export-ignore
 /codecov.yml       export-ignore
+/composer.lock       export-ignore
+/cdef        export-ignore

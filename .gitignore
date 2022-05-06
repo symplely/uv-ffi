@@ -83,3 +83,4 @@ CMakeCache.txt
 DartConfiguration.tcl
 libuv.zip
 libuv*/
+cdef/

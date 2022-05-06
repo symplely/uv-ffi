@@ -9,12 +9,11 @@
 
     <filter>
         <whitelist>
-            <directory suffix=".php">/</directory>
+            <directory suffix=".php">ffi/</directory>
             <exclude>
                 <directory suffix=".php">examples/</directory>
-                <directory suffix=".h">include/</directory>
-                <directory suffix=".*">lib/</directory>
-                <directory suffix=".h">cdef/</directory>
+                <directory suffix=".h">headers/</directory>
+                <file>headers/original/uv_ffi_stub.php</file>
             </exclude>
         </whitelist>
     </filter>

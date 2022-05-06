@@ -1,18 +1,59 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * The event loop is the central part of `libuv's` functionality.
  * It takes care of polling for i/o and scheduling callbacks to
  * be run based on different sources of events.
+ * @return uv_Loop_t by invoking `$UVLoop()`
  */
 final class UVLoop
 {
+    /** @var uv_Loop_t */
+    protected static $uv_Loop_t;
+
+    protected function __construct(bool $compile = true, ?string $library = null, ?string $include = null, $default = false)
+    {
+        \uv_init($compile, $library, $include);
+
+        if (!$default) {
+            self::$uv_Loop_t = \uv_ptr(\uv_struct("struct uv_loop_s"));
+        }
+    }
+
+    public function __invoke(): FFI\CData
+    {
+        return self::$uv_Loop_t;
+    }
+
+    public function free()
+    {
+        \uv_free(self::$uv_Loop_t);
+    }
+
+    public static function default(bool $compile = true, ?string $library = null, ?string $include = null): self
+    {
+        $loop = new self($compile, $library, $include, true);
+        self::$uv_Loop_t = \uv_ffi()->uv_default_loop();
+
+        return $loop;
+    }
+
+    public static function init(bool $compile = true, ?string $library = null, ?string $include = null): self
+    {
+        $loop = new self($compile, $library, $include);
+        $int = uv_ffi()->uv_loop_init($loop());
+
+        return ($int === 0) ? $loop : false;
+    }
 }
 
 /**
  * Stream handles provide an abstraction of a duplex communication channel.
  * `UVStream` is an abstract type, `libuv` provides 3 stream implementations
  * in the form of `UVTcp`, `UVPipe` and `UVTty`
+ * @return uv_stream_t by invoking `$UVStream()`
  */
 class UVStream extends UV
 {
@@ -20,6 +61,7 @@ class UVStream extends UV
 
 /**
  * TCP handles are used to represent both TCP streams and servers.
+ * @return uv_tcp_t by invoking `$UVTcp()`
  */
 final class UVTcp extends UVStream
 {
@@ -27,6 +69,7 @@ final class UVTcp extends UVStream
 
 /**
  * UDP handles encapsulate UDP communication for both clients and servers.
+ * @return uv_udp_t by invoking `$UVUdp()`
  */
 final class UVUdp extends UV
 {
@@ -35,6 +78,7 @@ final class UVUdp extends UV
 /**
  * Pipe handles provide an abstraction over streaming files on
  * Unix (including local domain sockets, pipes, and FIFOs) and named pipes on Windows.
+ * @return uv_pipe_t by invoking `$UVPipe()`
  */
 final class UVPipe extends UVStream
 {
@@ -65,6 +109,7 @@ final class UVPipe extends UVStream
  * Note: On windows only sockets can be polled with poll handles. On Unix any file descriptor that would be accepted by poll(2) can be used.
  *
  * Note: On AIX, watching for disconnection is not supported.
+ * @return uv_poll_t by invoking `$UVPoll()`
  */
 final class UVPoll extends UV
 {
@@ -72,6 +117,7 @@ final class UVPoll extends UV
 
 /**
  * Timer handles are used to schedule callbacks to be called in the future.
+ * @return uv_timer_t by invoking `$UVTimer()`
  */
 final class UVTimer extends UV
 {
@@ -113,6 +159,7 @@ final class UVTimer extends UV
  *
  * Note that calls to raise() or abort() to programmatically raise a signal are
  * not detected by libuv; these will not trigger a signal watcher.
+ * @return uv_signal_t by invoking `$UVSignal()`
  */
 final class UVSignal extends UV
 {
@@ -121,14 +168,15 @@ final class UVSignal extends UV
 /**
  * Process handles will spawn a new process and allow the user to control it and
  * establish communication channels with it using streams.
+ * @return uv_process_t by invoking `$UVProcess()`
  */
 final class UVProcess extends UV
 {
 }
 
 /**
- * Async handles allow the user to wakeup the event loop and get a callback
- * called from another thread.
+ * Async handles allow the user to wakeup the event loop and get a callback called from another thread.
+ * @return uv_async_t by invoking `$UVAsync()`
  */
 final class UVAsync extends UV
 {
@@ -136,6 +184,7 @@ final class UVAsync extends UV
 
 /**
  * TTY handles represent a stream for the console.
+ * @return uv_tty_t by invoking `$UVTty()`
  */
 final class UVTty extends UVStream
 {
@@ -150,6 +199,7 @@ final class UVTty extends UVStream
  *
  * `Warning:` Despite the name, idle handles will get their callbacks called on every loop
  *  iteration, not when the loop is actually "idle".
+ * @return uv_idle_t by invoking `$UVIdle()`
  */
 final class UVIdle extends UV
 {
@@ -158,14 +208,15 @@ final class UVIdle extends UV
 /**
  * Prepare handles will run the given callback once per loop iteration, right before
  * polling for i/o.
+ * @return uv_prepare_t by invoking `$UVIdle()`
  */
 final class UVPrepare extends UV
 {
 }
 
 /**
- * Check handles will run the given callback once per loop iteration, right after
- * polling for i/o.
+ * Check handles will run the given callback once per loop iteration, right after polling for i/o.
+ * @return uv_check_t by invoking `$UVCheck()`
  */
 final class UVCheck extends UV
 {
@@ -173,6 +224,7 @@ final class UVCheck extends UV
 
 /**
  * Stdio is an I/O wrapper to be passed to uv_spawn().
+ * @return uv_stdio_container_t by invoking `$UVStdio()`
  */
 final class UVStdio
 {
@@ -180,6 +232,7 @@ final class UVStdio
 
 /**
  * Address and port base structure
+ * @return sockaddr_in by invoking `$UVSockAddr()`
  */
 abstract class UVSockAddr
 {
@@ -187,6 +240,7 @@ abstract class UVSockAddr
 
 /**
  * IPv4 Address and port structure
+ * @deprecated 1.0
  */
 final class UVSockAddrIPv4 extends UVSockAddr
 {
@@ -194,6 +248,7 @@ final class UVSockAddrIPv4 extends UVSockAddr
 
 /**
  * IPv6 Address and port structure
+ * @deprecated 1.0
  */
 final class UVSockAddrIPv6 extends UVSockAddr
 {
@@ -205,6 +260,7 @@ final class UVSockAddrIPv6 extends UVSockAddr
  * `libuv` provides cross-platform implementations for multiple threading and synchronization primitives.
  *
  * The API largely follows the pthreads API.
+ * @return uv_rwlock_t by invoking `$UVLock()`
  */
 final class UVLock
 {
@@ -227,6 +283,7 @@ final class UVLock
  * `event ports` on Solaris.
  *
  * `unsupported` on Cygwin
+ * @return uv_fs_event_t by invoking `$UVFsEvent()`
  */
 final class UVFsEvent extends UV
 {
