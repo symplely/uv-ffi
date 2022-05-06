@@ -24,6 +24,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Install Build tools
         run: |
+          git config --global --add safe.directory /__w/uv-ffi/uv-ffi
           ${{ matrix.container.extra }}
           ${{ matrix.container.cli }} update -y
           ${{ matrix.container.dep }} -y
@@ -41,7 +42,6 @@ jobs:
           cd libuv-${{ matrix.container.lib_uv }}
           cmake --build build
           ls -lh build
-      - uses: actions/checkout@v2
       - name: Upload/Commit to Repo
         run: |
           git pull
@@ -97,8 +97,4 @@ jobs:
           cp libuv-${{ matrix.config.lib_uv }}/build/libuv.so.1.0.0 lib/Linux/raspberry/
           git add lib
           git commit -m "created libuv.so.1.0.0 - for Raspberry Pi 4"
-          git push
-          cp -rf libuv-${{ matrix.config.lib_uv }}/include/* headers/original
-          git add include
-          git commit -m "Libuv *.h headers"
           git push
