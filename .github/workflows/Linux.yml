@@ -24,7 +24,6 @@ jobs:
         uses: actions/checkout@v2
       - name: Install Build tools
         run: |
-          git config --global --add safe.directory /__w/uv-ffi/uv-ffi
           ${{ matrix.container.extra }}
           ${{ matrix.container.cli }} update -y
           ${{ matrix.container.dep }} -y
@@ -44,9 +43,10 @@ jobs:
           ls -lh build
       - name: Upload/Commit to Repo
         run: |
-          git pull
           git config user.name github-actions
           git config user.email github-actions@github.com
+          git config --global --add safe.directory /__w/uv-ffi/uv-ffi
+          git pull
           mkdir -p lib/Linux/${{ matrix.config.name }}/
           cp libuv-${{ matrix.container.lib_uv }}/build/libuv.so.1.0.0 lib/Linux/${{ matrix.config.name }}/
           git add lib
@@ -55,6 +55,7 @@ jobs:
 
   qemu:
     runs-on: ubuntu-latest
+    continue-on-error: true
     name: cross-build-qemu-${{ matrix.config.target }}
     strategy:
       fail-fast: false
