@@ -20,8 +20,6 @@ jobs:
     continue-on-error: true
     container: ${{ matrix.container.os }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
       - name: Install Build tools
         run: |
           ${{ matrix.container.extra }}
@@ -29,6 +27,8 @@ jobs:
           ${{ matrix.container.dep }} -y
           ${{ matrix.container.pre }}
           ${{ matrix.container.cli }} install sudo git libtool curl ${{ matrix.container.dev }}
+      - name: Checkout code
+        uses: actions/checkout@v3
       - name: Configure for ${{ matrix.container.os }}
         run: |
           git config --global --add safe.directory /__w/uv-ffi/uv-ffi
