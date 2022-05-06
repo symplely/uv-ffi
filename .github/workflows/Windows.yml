@@ -10,6 +10,7 @@ on:
 jobs:
   windows:
     runs-on: windows-${{ matrix.config.server }}
+    continue-on-error: true
     name: windows-${{ matrix.config.toolchain}}-${{ matrix.config.arch}}
     strategy:
       fail-fast: false

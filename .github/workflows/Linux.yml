@@ -17,6 +17,7 @@ jobs:
         - {os: 'centos:7', cli: 'yum', dev: 'cmake ninja-build -y && cp -f /usr/bin/cmake3 /usr/bin/cmake && yum groupinstall "Development Tools" -y', dep: 'yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-7.rpm -y && yum install epel-release cmake3 -y', pre: "yum-config-manager --disable 'remi-php*' && yum-config-manager --enable remi-php80", extra: 'ls', lib_uv: 1.44.1, name: centos7}
         - {os: 'centos:latest', cli: 'dnf', dev: 'cmake -y', dep: 'dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-8.rpm -y', pre: 'dnf module reset php && dnf module install php:remi-8.0 -y && dnf group install "Development Tools" -y', extra: "dnf --disablerepo '*' --enablerepo=extras swap centos-linux-repos centos-stream-repos -y && dnf distro-sync -y", lib_uv: 1.44.1, name: centos8+}
     runs-on: ubuntu-latest
+    continue-on-error: true
     container: ${{ matrix.container.os }}
     steps:
       - name: Checkout code
@@ -40,6 +41,7 @@ jobs:
           cd libuv-${{ matrix.container.lib_uv }}
           cmake --build build
           ls -lh build
+      - uses: actions/checkout@v2
       - name: Upload/Commit to Repo
         run: |
           git pull
@@ -96,8 +98,7 @@ jobs:
           git add lib
           git commit -m "created libuv.so.1.0.0 - for Raspberry Pi 4"
           git push
-          copy /Y libuv-${{ matrix.config.lib_uv }}\include\*.* headers\original\
-          copy /Y libuv-${{ matrix.config.lib_uv }}\include\uv\*.* headers\original\uv\
+          cp -rf libuv-${{ matrix.config.lib_uv }}/include/* headers/original
           git add include
           git commit -m "Libuv *.h headers"
           git push
