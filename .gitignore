@@ -11,10 +11,7 @@
 *.ilk
 *.map
 *.exp
-
-# Precompiled Headers
-*.gch
-*.pch
+*.deb
 
 # Libraries
 *.lib
@@ -83,4 +80,4 @@ CMakeCache.txt
 DartConfiguration.tcl
 libuv.zip
 libuv*/
-cdef/
+.cdef/

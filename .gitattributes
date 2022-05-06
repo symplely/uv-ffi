@@ -21,4 +21,4 @@
 /test.php		   export-ignore
 /codecov.yml       export-ignore
 /composer.lock       export-ignore
-/cdef        export-ignore
+/.cdef       export-ignore

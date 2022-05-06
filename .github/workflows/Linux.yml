@@ -31,6 +31,7 @@ jobs:
           ${{ matrix.container.cli }} install sudo git libtool curl ${{ matrix.container.dev }}
       - name: Configure for ${{ matrix.container.os }}
         run: |
+          git config --global --add safe.directory /__w/uv-ffi/uv-ffi
           curl -L https://github.com/libuv/libuv/archive/v${{ matrix.container.lib_uv }}.tar.gz | tar xzf -
           cd libuv-${{ matrix.container.lib_uv }}
           mkdir build
@@ -45,10 +46,9 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git config --global --add safe.directory /__w/uv-ffi/uv-ffi
           git pull
-          mkdir -p lib/Linux/${{ matrix.config.name }}/
-          cp libuv-${{ matrix.container.lib_uv }}/build/libuv.so.1.0.0 lib/Linux/${{ matrix.config.name }}/
+          mkdir -p lib/Linux/${{ matrix.container.name }}
+          cp libuv-${{ matrix.container.lib_uv }}/build/libuv.so.1.0.0 lib/Linux/${{ matrix.container.name }}/
           git add lib
           git commit -m "created libuv.so.1.0.0 - for ${{ matrix.container.os }}"
           git push
