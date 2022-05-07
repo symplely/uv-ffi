@@ -14,7 +14,7 @@
         "asynchronous"
     ],
     "homepage": "https://github.com/symplely/uv-ffi",
-    "type": "project",
+    "type": "ffi-plugin",
     "license": "MIT",
     "authors": [
         {
@@ -47,28 +47,18 @@
     "scripts": {
         "test": "vendor/bin/phpunit --bootstrap vendor/autoload.php tests",
         "post-install-cmd": [
-            "@post-package-install"
-        ],
-        "post-package-install": [
-            "php .ignore.php"
+            "@post-update-cmd"
         ],
         "post-update-cmd": [
-            "@post-package-install"
-        ],
-        "post-package-update": [
-            "@post-package-install"
+            "php .ignore.php"
         ]
     },
     "extra": {
         "installer-types": [
-            "ffi-plugin",
-            "project"
+            "ffi-plugin"
         ],
         "installer-paths": {
             "./.cdef": [
-                "project"
-            ],
-            "./.cdef/": [
                 "type:ffi-plugin"
             ]
         }
