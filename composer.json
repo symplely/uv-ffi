@@ -45,11 +45,26 @@
         }
     },
     "scripts": {
-        "test": "vendor/bin/phpunit --bootstrap vendor/autoload.php tests"
+        "test": "vendor/bin/phpunit --bootstrap vendor/autoload.php tests",
+        "post-install-cmd": [
+            "@post-package-install"
+        ],
+        "post-package-install": [
+            "php .ignore.php"
+        ],
+        "post-update-cmd": [
+            "@post-package-install"
+        ],
+        "post-package-update": [
+            "@post-package-install"
+        ]
     },
     "extra": {
+        "installer-types": [
+            "library"
+        ],
         "installer-paths": {
-            "./cdef": [
+            "./.cdef": [
                 "symplely/uv-ffi"
             ]
         }

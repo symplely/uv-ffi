@@ -14,6 +14,7 @@
                 <directory suffix=".php">examples/</directory>
                 <directory suffix=".h">headers/</directory>
                 <file>headers/original/uv_ffi_stub.php</file>
+                <file>.ignore.php</file>
             </exclude>
         </whitelist>
     </filter>
