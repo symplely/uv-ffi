@@ -38,10 +38,8 @@
     "scripts": {
         "test": "vendor/bin/phpunit --bootstrap vendor/autoload.php tests",
         "post-create-project-cmd": [
-            "php .ignore.php"
-        ],
-        "post-update-cmd": [
-            "php .ignore.php"
+            "php .ignore_autoload.php",
+            "composer update -d .."
         ]
     }
 }
