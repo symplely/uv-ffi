@@ -24,7 +24,7 @@
     ],
     "require": {
         "php": ">7.4",
-        "mnsami/composer-custom-directory-installer": "^2"
+        "oomphinc/composer-installers-extender": "^2"
     },
     "autoload": {
         "files": [
@@ -60,9 +60,6 @@
         ]
     },
     "extra": {
-        "installer-types": [
-            "library"
-        ],
         "installer-paths": {
             "./.cdef": [
                 "symplely/uv-ffi"

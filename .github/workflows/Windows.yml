@@ -2,9 +2,6 @@
 name: Windows
 
 on:
-  release:
-    tags:
-      - '*'
   workflow_dispatch:
 
 jobs:

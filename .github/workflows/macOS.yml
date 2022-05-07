@@ -2,9 +2,6 @@
 name: macOS
 
 on:
-  release:
-    tags:
-      - '*'
   workflow_dispatch:
 
 jobs:
