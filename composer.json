@@ -14,7 +14,7 @@
         "asynchronous"
     ],
     "homepage": "https://github.com/symplely/uv-ffi",
-    "type": "library",
+    "type": "project",
     "license": "MIT",
     "authors": [
         {
@@ -60,9 +60,16 @@
         ]
     },
     "extra": {
+        "installer-types": [
+            "ffi-plugin",
+            "project"
+        ],
         "installer-paths": {
             "./.cdef": [
-                "symplely/uv-ffi"
+                "project"
+            ],
+            "./.cdef/": [
+                "type:ffi-plugin"
             ]
         }
     }
