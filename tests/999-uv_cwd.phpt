@@ -1,7 +1,11 @@
 --TEST--
 Check for uv_cwd
+--SKIPIF--
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 $cwd = uv_cwd();
 
 $expected = getcwd();

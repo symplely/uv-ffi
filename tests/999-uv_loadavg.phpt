@@ -1,7 +1,11 @@
 --TEST--
 Check for uv_loadavg
+--SKIPIF--
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 $avg = uv_loadavg();
 
 echo "count: " . count($avg) . PHP_EOL;

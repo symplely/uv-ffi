@@ -2,8 +2,12 @@
 Check for uv_rwlock
 --INI--
 track_errors=0
+--SKIPIF--
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 $lock = uv_rwlock_init();
 
 uv_rwlock_rdlock($lock);

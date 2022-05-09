@@ -1,9 +1,11 @@
 --TEST--
 Check for poll read and close
 --SKIPIF--
-<?php if ('\\' === \DIRECTORY_SEPARATOR) print "Skip, broken on Windows"; ?>
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 $socket = stream_socket_server("tcp://0.0.0.0:9999", $errno, $errstr);
 stream_set_blocking($socket, 0);
 

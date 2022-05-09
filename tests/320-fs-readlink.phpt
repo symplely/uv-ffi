@@ -1,7 +1,10 @@
 --TEST--
 uv_fs_readlink() segfaults if file not a link
+--SKIPIF--
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
 
 $uv = uv_loop_new();
 

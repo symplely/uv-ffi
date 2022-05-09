@@ -1,7 +1,11 @@
 --TEST--
 Check for fs_send_file
+--SKIPIF--
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 define("FIXTURE_PATH", dirname(__FILE__) . "/fixtures/hello.data");
 
 uv_fs_open(uv_default_loop(), FIXTURE_PATH, UV::O_RDONLY, 0, function($read_fd) {

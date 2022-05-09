@@ -1,7 +1,11 @@
 --TEST--
 Check for uv_rwlock
+--SKIPIF--
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 $lock = uv_mutex_init();
 
 if (uv_mutex_trylock($lock)) {

@@ -1,7 +1,11 @@
 --TEST--
 Check poll of a pipe works
+--SKIPIF--
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 $php = (getenv('TEST_PHP_EXECUTABLE') ? : PHP_BINARY)  . ' ' . (getenv('TEST_PHP_ARGS') ? : '-n');
 $fd = popen($php . " ". __DIR__ . "/fixtures/proc.php 2>&1", "w");
 stream_set_blocking($fd, 0);

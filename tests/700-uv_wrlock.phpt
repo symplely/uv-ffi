@@ -1,7 +1,11 @@
 --TEST--
 Check for uv_rwlock
+--SKIPIF--
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 $lock = uv_rwlock_init();
 
 if (uv_rwlock_trywrlock($lock)) {

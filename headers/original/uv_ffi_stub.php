@@ -1,103 +1,104 @@
 <?php
 
 /** @var callable (struct uv_loop_s* loop, struct uv__io_s* w, unsigned int events) */
-abstract class uv__io_cb extends void
+interface uv__io_cb extends closure
 {
 }
 /** @var callable (uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) */
-abstract class uv_alloc_cb extends void
+interface uv_alloc_cb extends closure
 {
 }
 /** @var callable (uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) */
-abstract class uv_read_cb extends void
+interface uv_read_cb extends closure
 {
 }
 /** @var callable (uv_write_t* req, int status) */
-abstract class uv_write_cb extends void
+interface uv_write_cb extends closure
 {
 }
 /** @var callable (uv_connect_t* req, int status) */
-abstract class uv_connect_cb extends void
+interface uv_connect_cb extends closure
 {
 }
 /** @var callable (uv_shutdown_t* req, int status) */
-abstract class uv_shutdown_cb extends void
+interface uv_shutdown_cb extends closure
 {
 }
 /** @var callable (uv_stream_t* server, int status) */
-abstract class uv_connection_cb extends void
+interface uv_connection_cb extends closure
 {
 }
 /** @var callable (uv_handle_t* handle) */
-abstract class uv_close_cb extends void
+interface uv_close_cb extends closure
 {
 }
 /** @var callable (uv_poll_t* handle, int status, int events) */
-abstract class uv_poll_cb extends void
+interface uv_poll_cb extends closure
 {
 }
 /** @var callable (uv_timer_t* handle) */
-abstract class uv_timer_cb extends void
+interface uv_timer_cb extends closure
 {
 }
+
 /** @var callable (uv_async_t* handle) */
-abstract class uv_async_cb extends void
+interface uv_async_cb extends closure
 {
 }
 /** @var callable (uv_prepare_t* handle) */
-abstract class uv_prepare_cb extends void
+interface uv_prepare_cb extends closure
 {
 }
 /** @var callable (uv_check_t* handle) */
-abstract class uv_check_cb extends void
+interface uv_check_cb extends closure
 {
 }
 /** @var callable (uv_idle_t* handle) */
-abstract class uv_idle_cb extends void
+interface uv_idle_cb extends closure
 {
 }
 /** @var callable (uv_process_t*, int64_t exit_status, int term_signal) */
-abstract class uv_exit_cb extends void
+interface uv_exit_cb extends closure
 {
 }
 /** @var callable (uv_handle_t* handle, void* arg) */
-abstract class uv_walk_cb extends void
+interface uv_walk_cb extends closure
 {
 }
 /** @var callable (uv_fs_t* req) */
-abstract class uv_fs_cb extends void
+interface uv_fs_cb extends closure
 {
 }
 /** @var callable (uv_work_t* req) */
-abstract class uv_work_cb extends void
+interface uv_work_cb extends closure
 {
 }
 /** @var callable (uv_work_t* req, int status) */
-abstract class uv_after_work_cb extends void
+interface uv_after_work_cb extends closure
 {
 }
 /** @var callable (uv_getaddrinfo_t* req, int status, struct addrinfo* res) */
-abstract class uv_getaddrinfo_cb extends void
+interface uv_getaddrinfo_cb extends closure
 {
 }
 /** @var callable (uv_getnameinfo_t* req, int status, const char* hostname, const char* service) */
-abstract class uv_getnameinfo_cb extends void
+interface uv_getnameinfo_cb extends closure
 {
 }
 /** @var callable (uv_random_t* req, int status, void* buf, size_t buflen) */
-abstract class uv_random_cb extends void
+interface uv_random_cb extends closure
 {
 }
 /** @var callable (uv_fs_event_t* handle, const char* filename, int events, int status) */
-abstract class uv_fs_event_cb extends void
+interface uv_fs_event_cb extends closure
 {
 }
 /** @var callable (uv_fs_poll_t* handle, int status, const uv_stat_t* prev, const uv_stat_t* curr) */
-abstract class uv_fs_poll_cb extends void
+interface uv_fs_poll_cb extends closure
 {
 }
 /** @var callable (uv_signal_t* handle, int signum) */
-abstract class uv_signal_cb extends void
+interface uv_signal_cb extends closure
 {
 }
 
@@ -216,6 +217,29 @@ abstract class FFI
     {
     }
 
+    public function uv_close(uv_handle_t &$handle, ?uv_close_cb $callback = null)
+    {
+    }
+
+    /** @return int */
+    public function uv_last_error(uv_loop_t &$loop = null)
+    {
+    }
+
+    /** @return string */
+    public function uv_err_name(int $error_code)
+    {
+    }
+
+    /** @return string */
+    public function uv_strerror(int $error_code)
+    {
+    }
+
+    public function uv_update_time(uv_loop_t &$loop)
+    {
+    }
+
     public function uv_poll_start(uv_poll_t $poll, $events, ?uv_poll_cb $callback = null)
     {
     }
@@ -231,10 +255,6 @@ abstract class FFI
     }
 
     public function uv_poll_stop(uv_poll_t $poll)
-    {
-    }
-
-    public function uv_close(uv_handle_t $handle, ?uv_close_cb $callback = null)
     {
     }
 
@@ -396,15 +416,16 @@ abstract class FFI
     }
 
     /** @return int */
-    public function uv_async_init(uv_loop_t $loop, callable $callback)
+    public function uv_async_init(uv_loop_t &$loop, uv_async_t &$async, uv_async_cb $callback)
     {
     }
 
-    public function uv_async_send(uv_async_t $handle)
+    /** @return int */
+    public function uv_async_send(uv_async_t &$handle)
     {
     }
 
-    public function uv_queue_work(uv_loop_t $loop, callable $callback, callable $after_callback)
+    public function uv_queue_work(uv_loop_t &$loop, callable $callback, callable $after_callback)
     {
     }
 
@@ -443,22 +464,6 @@ abstract class FFI
     }
 
     public function uv_check_stop(UVCheck $handle)
-    {
-    }
-
-    public function uv_last_error(uv_loop_t $uv_loop = null)
-    {
-    }
-
-    public function uv_err_name(int $error_code)
-    {
-    }
-
-    public function uv_strerror(int $error_code)
-    {
-    }
-
-    public function uv_update_time(uv_loop_t $uv_loop)
     {
     }
 

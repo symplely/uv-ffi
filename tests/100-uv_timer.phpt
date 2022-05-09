@@ -1,7 +1,11 @@
 --TEST--
 Check for uv_timer_init and uv_timer_start
+--SKIPIF--
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 $loop = uv_default_loop();
 $timer = uv_timer_init();
 
@@ -9,7 +13,7 @@ $i = 0;
 uv_timer_start($timer, 10, 10, function($timer) use (&$i) {
     echo "count: {$i}" . PHP_EOL;
     $i++;
-    
+
     if ($i > 3) {
         uv_timer_stop($timer);
         uv_unref($timer);

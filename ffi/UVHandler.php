@@ -4,16 +4,28 @@ declare(strict_types=1);
 
 abstract class UVHandler implements UVInterface
 {
-  private ?FFI\CData $uv_struct;
+  private ?\FFI\CData $uv_struct;
+  private ?string $struct_cb;
 
-  protected function __construct(string $typedef)
+  public function __destruct()
   {
-    $this->uv_struct = \uv_struct($typedef);
+    if (!\is_null_ptr($this->uv_struct))
+      $this->free();
+
+    $this->uv_struct = null;
+  }
+
+  protected function __construct(string $typedef, string $callback_type = null)
+  {
+    $this->uv_struct = \uv_ptr(\uv_struct($typedef));
+
+    if (!empty($callback))
+      $this->struct_cb = $callback_type;
   }
 
   public function __invoke(): \FFI\CData
   {
-    return \uv_ptr($this->uv_struct);
+    return $this->uv_struct;
   }
 
   public function free(): void
@@ -21,8 +33,28 @@ abstract class UVHandler implements UVInterface
     \uv_free($this->uv_struct);
   }
 
-  public static function init(?UVLoop $loop, string $typedef, ...$arguments): self
+  public function setClose(callable $callback = null): void
   {
-    return new self($typedef);
+    $this->uv_struct->close_cb = $callback;
+  }
+
+  public function setCallback(callable $callback = null): void
+  {
+    $this->uv_struct->{$this->struct_cb} = $callback;
+  }
+
+  public function getClose()
+  {
+    return $this->uv_struct->close_cb;
+  }
+
+  public function getCallback()
+  {
+    return $this->uv_struct->{$this->struct_cb};
+  }
+
+  public static function init(?UVLoop $loop, ...$arguments): ?self
+  {
+    return new self('struct uv_handle_s', 'close_cb');
   }
 }

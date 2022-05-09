@@ -1,7 +1,11 @@
 --TEST--
 Test uv_stop ends loop execution
+--SKIPIF--
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 $loop = uv_default_loop();
 $timer = uv_timer_init();
 

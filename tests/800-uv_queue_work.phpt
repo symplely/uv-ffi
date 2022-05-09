@@ -5,11 +5,13 @@ Check for uv_queue_work
 ob_start();
 phpinfo();
 $data = ob_get_clean();
-if (!preg_match("/Thread Safety.+?enabled/", $data) || PHP_VERSION_ID >= 80000) {
+if (!preg_match("/Thread Safety.+?enabled/", $data) || (extension_loaded("ffi"))) {
   echo "skip";
-}
+} ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 $loop = uv_default_loop();
 
 $a = function() {

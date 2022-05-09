@@ -4,4 +4,4 @@ ignore:
   - "examples/."
   - "cdef/."
   - "lib/."
-  - "include/."
+  - "headers/."

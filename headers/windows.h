@@ -3,7 +3,6 @@
 
 typedef long int ptrdiff_t;
 typedef long unsigned int size_t;
-typedef int wchar_t;
 typedef struct {
   long long __max_align_ll ;
   long double __max_align_ld ;
@@ -2488,3 +2487,24 @@ struct uv_loop_s {
 };
  void* uv_loop_get_data(const uv_loop_t*);
  void uv_loop_set_data(uv_loop_t*, void* data);
+// This is a microsoft specific type, here is its definition for gcc
+// https://github.com/Alexpux/mingw-w64/blob/d0d7f784833bbb0b2d279310ddc6afb52fe47a46/mingw-w64-headers/crt/time.h#L36
+typedef unsigned short wchar_t;
+
+// Source for data correpsondance
+// https://docs.microsoft.com/en-us/windows/win32/winprog/windows-data-types
+
+typedef int BOOL;
+typedef unsigned long DWORD;
+typedef void *PVOID;
+typedef PVOID HANDLE;
+typedef DWORD *LPDWORD;
+typedef unsigned short WORD;
+typedef wchar_t WCHAR;
+typedef short SHORT;
+typedef unsigned int UINT;
+typedef char CHAR;
+typedef intptr_t ssize_t;
+
+typedef int uv_file;
+typedef int uv_pid_t;

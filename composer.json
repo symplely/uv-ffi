@@ -1,6 +1,6 @@
 {
     "name": "symplely/uv-ffi",
-    "description": " An Foreign Function interface (FFI) of libuv cross-platform event-driven asynchronous I/O library.",
+    "description": " An Foreign Function interface (FFI) of `libuv` cross-platform event-driven asynchronous I/O library.",
     "keywords": [
         "ffi",
         "ext-uv",

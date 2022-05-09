@@ -1,7 +1,11 @@
 --TEST--
 Check for #14
+--SKIPIF--
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 $loop = uv_default_loop();
 $filename ="does_not_exist.txt";
 uv_fs_stat($loop, $filename, function ($stat) use ($loop) {

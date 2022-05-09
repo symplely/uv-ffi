@@ -9,7 +9,7 @@ if (!\function_exists('uv_loop_init')) {
      * @return UVLoop
      * @link http://docs.libuv.org/en/v1.x/loop.html#c.uv_loop_init
      */
-    function uv_loop_init(bool $compile = true, ?string $library = null, ?string $include = null): UVLoop
+    function uv_loop_init(bool $compile = true, ?string $library = null, ?string $include = null): ?\UVLoop
     {
         return UVLoop::init($compile, $library, $include);
     }
@@ -66,7 +66,7 @@ if (!\function_exists('uv_loop_init')) {
     /**
      * Delete specified loop handle.
      *
-     * @param UVLoop $uv_loop uv_loop handle.
+     * @param UVLoop $loop uv_loop handle.
      *
      * @return void
      * @deprecated 1.0
@@ -82,7 +82,7 @@ if (!\function_exists('uv_loop_init')) {
      * Call this function only when the loop has finished executing and all open handles and requests have been closed, or
      * it will return UV_EBUSY. After this function returns, the user can free the memory allocated for the loop.
      *
-     * @param UVLoop $uv_loop
+     * @param UVLoop $loop
      * @return void
      * @link http://docs.libuv.org/en/v1.x/loop.html#c.uv_loop_close
      */
@@ -90,6 +90,30 @@ if (!\function_exists('uv_loop_init')) {
     {
         \uv_ffi()->uv_loop_close($loop());
         $loop->free();
+    }
+
+    /**
+     * close uv handle.
+     * Request handle to be closed. `$callback` will be called asynchronously after
+     * this call. This MUST be called on each handle before memory is released.
+     *
+     * Note that handles that wrap file descriptors are closed immediately but
+     * `$callback` will still be deferred to the next iteration of the event loop.
+     * It gives you a chance to free up any resources associated with the handle.
+     *
+     * In-progress requests, like uv_connect or uv_write, are cancelled and
+     * have their callbacks called asynchronously with status=UV_ECANCELED.
+     *
+     * @param UV $handle
+     * @param callable $callback - expects (UV $handle, int $status)
+     */
+    function uv_close($handle, ?callable $callback = null)
+    {
+        if ($handle instanceof UV) {
+            \uv_ffi()->uv_close($handle(), \uv_close_cb($handle, $callback));
+        } else {
+            \uv_ffi()->uv_close($handle->loop->closing_handles, \uv_close_cb($handle, $callback));
+        }
     }
 
     /**
@@ -101,7 +125,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVLoop $loop
      * @link http://docs.libuv.org/en/v1.x/loop.html#c.uv_stop
      */
-    function uv_stop(UVLoop $loop): void
+    function uv_stop(UVLoop &$loop): void
     {
         \uv_ffi()->uv_stop($loop());
     }
@@ -122,6 +146,108 @@ if (!\function_exists('uv_loop_init')) {
     function uv_now(UVLoop $loop = null): int
     {
         return \uv_ffi()->uv_now($loop());
+    }
+
+    /**
+     * Initialize the async handle. A NULL callback is allowed.
+     * Note: Unlike other handle initialization functions, it immediately starts the handle.
+     *
+     * @param UVLoop $loop
+     * @param callable $callback expects (UVAsync $handle)
+     *
+     * @return UVAsync
+     */
+    function uv_async_init(UVLoop $loop, callable $callback): ?\UVAsync
+    {
+        return UVAsync::init($loop, $callback);
+    }
+
+    /**
+     * Wake up the event loop and call the async handle’s callback.
+     *
+     * `Note:` It’s safe to call this function from any thread.
+     * The callback will be called on the loop thread.
+     *
+     * `Note:` uv_async_send() is async-signal-safe.
+     * It’s safe to call this function from a signal handler.
+     *
+     * `Warning:` libuv will coalesce calls to `uv_async_send()`, that is, not every call to it
+     * will yield an execution of the callback. For example: if `uv_async_send()` is called
+     * 5 times in a row before the callback is called, the callback will only be called once.
+     * If `uv_async_send()` is called again after the callback was called, it will be called again.
+     *
+     * @param UVAsync $handle uv async handle.
+     * @return int
+     */
+    function uv_async_send(UVAsync $handle)
+    {
+        return \uv_ffi()->uv_async_send($handle());
+    }
+
+    /**
+     * Initializes a work request which will run the given `$callback` in a thread from the threadpool.
+     * Once `$callback` is completed, `$after_callback` will be called on the loop thread.
+     * Executes callbacks in another thread (requires Thread Safe enabled PHP).
+     *
+     * @param UVLoop $loop
+     * @param callable $callback
+     * @param callable $after_callback
+     */
+    function uv_queue_work(UVLoop $loop, callable $callback, callable $after_callback)
+    {
+    }
+
+    /**
+     * Get last error code.
+     *
+     * @param UVLoop|null $uv_loop uv loop handle.
+     * @return int
+     */
+    function uv_last_error(UVLoop $loop = null)
+    {
+        return \uv_ffi()->uv_last_error($loop());
+    }
+
+    /**
+     * Get error code name.
+     * - Leaks a few bytes of memory when you call it with an unknown error code.
+     *
+     * @param int $error_code libuv error code.
+     * @return string
+     */
+    function uv_err_name(int $error_code)
+    {
+        return \uv_ffi()->uv_err_name($error_code);
+    }
+
+    /**
+     * Get error message.
+     * - Leaks a few bytes of memory when you call it with an unknown error code.
+     *
+     * @param int $error_code libuv error code
+     * @return string
+     */
+    function uv_strerror(int $error_code)
+    {
+        return \uv_ffi()->uv_strerror($error_code);
+    }
+
+    /**
+     * Update the event loop’s concept of “now”.
+     *
+     * `Libuv` caches the current time at the start of the event loop tick in order
+     * to reduce the number of time-related system calls.
+     *
+     * You won’t normally need to call this function unless you have callbacks that
+     * block the event loop for longer periods of time, where “longer” is somewhat
+     * subjective but probably on the order of a millisecond or more.
+     *
+     * @param UVLoop $uv_loop uv loop handle.
+     *
+     * @return void
+     */
+    function uv_update_time(UVLoop $loop)
+    {
     }
 
     /**
@@ -170,25 +296,6 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVPoll $poll
      */
     function uv_poll_stop(UVPoll $poll)
-    {
-    }
-
-    /**
-     * close uv handle.
-     * Request handle to be closed. `$callback` will be called asynchronously after
-     * this call. This MUST be called on each handle before memory is released.
-     *
-     * Note that handles that wrap file descriptors are closed immediately but
-     * `$callback` will still be deferred to the next iteration of the event loop.
-     * It gives you a chance to free up any resources associated with the handle.
-     *
-     * In-progress requests, like uv_connect or uv_write, are cancelled and
-     * have their callbacks called asynchronously with status=UV_ECANCELED.
-     *
-     * @param UV $handle
-     * @param callable $callback - expects (UV $handle, int $status)
-     */
-    function uv_close(UV $handle, ?callable $callback = null)
     {
     }
 
@@ -691,52 +798,6 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
-     * Initialize the async handle. A NULL callback is allowed.
-     * Note: Unlike other handle initialization functions, it immediately starts the handle.
-     *
-     * @param UVLoop $loop
-     * @param callable $callback expects (UVAsync $handle)
-     *
-     * @return UVAsync
-     */
-    function uv_async_init(UVLoop $loop, callable $callback)
-    {
-    }
-
-    /**
-     * Wake up the event loop and call the async handle’s callback.
-     *
-     * `Note:` It’s safe to call this function from any thread.
-     * The callback will be called on the loop thread.
-     *
-     * `Note:` uv_async_send() is async-signal-safe.
-     * It’s safe to call this function from a signal handler.
-     *
-     * `Warning:` libuv will coalesce calls to `uv_async_send()`, that is, not every call to it
-     * will yield an execution of the callback. For example: if `uv_async_send()` is called
-     * 5 times in a row before the callback is called, the callback will only be called once.
-     * If `uv_async_send()` is called again after the callback was called, it will be called again.
-     *
-     * @param UVAsync $handle uv async handle.
-     */
-    function uv_async_send(UVAsync $handle)
-    {
-    }
-
-    /**
-     * Initializes a work request which will run the given `$callback` in a thread from the threadpool.
-     * Once `$callback` is completed, `$after_callback` will be called on the loop thread.
-     * Executes callbacks in another thread (requires Thread Safe enabled PHP).
-     *
-     * @param UVLoop $loop
-     * @param callable $callback
-     * @param callable $after_callback
-     */
-    function uv_queue_work(UVLoop $loop, callable $callback, callable $after_callback)
-    {
-    }
-
-    /**
      * Initialize the `UVIdle` handle watcher.
      * Idle watchers get invoked every loop iteration.
      * This function always succeeds.
@@ -857,54 +918,6 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVCheck $handle UV handle (check).
      */
     function uv_check_stop(UVCheck $handle)
-    {
-    }
-
-    /**
-     * Get last error code.
-     *
-     * @param UVLoop|null $uv_loop uv loop handle.
-     * @return int
-     */
-    function uv_last_error(UVLoop $uv_loop = null)
-    {
-    }
-
-    /**
-     * Get error code name.
-     *
-     * @param int $error_code libuv error code.
-     * @return string
-     */
-    function uv_err_name(int $error_code)
-    {
-    }
-
-    /**
-     * Get error message.
-     *
-     * @param int $error_code libuv error code
-     * @return string
-     */
-    function uv_strerror(int $error_code)
-    {
-    }
-
-    /**
-     * Update the event loop’s concept of “now”.
-     *
-     * `Libuv` caches the current time at the start of the event loop tick in order
-     * to reduce the number of time-related system calls.
-     *
-     * You won’t normally need to call this function unless you have callbacks that
-     * block the event loop for longer periods of time, where “longer” is somewhat
-     * subjective but probably on the order of a millisecond or more.
-     *
-     * @param UVLoop $uv_loop uv loop handle.
-     *
-     * @return void
-     */
-    function uv_update_time(UVLoop $uv_loop)
     {
     }
 

@@ -1,9 +1,11 @@
 --TEST--
 Check for uv_listen callback is not destroyed by gc
 --SKIPIF--
-<?php if ('\\' === \DIRECTORY_SEPARATOR) print "Skip, broken on Windows"; ?>
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 class TcpServer
 {
     private $loop;

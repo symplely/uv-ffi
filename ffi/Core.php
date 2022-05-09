@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-final class Core
+class Core
 {
-    protected static ?\FFI $ffi = null;
+    private static ?\FFI $ffi = null;
 
     public static function get(): ?\FFI
     {
@@ -37,6 +37,25 @@ final class Core
         return self::$ffi->new($typedef, $owned, $persistent);
     }
 
+    public static function callback(UV $handle, ?callable $callback = null)
+    {
+        $handle->setCallback($callback);
+        return $handle->getCallback();
+    }
+
+    public static function callback_close($handle, ?callable $callback = null)
+    {
+        if ($handle instanceof \UVInterface) {
+            $handle->setClose($callback);
+            return $handle->getClose();
+        } elseif ($handle instanceof \FFI\CData) {
+            $handle->loop->closing_handles->close_cb = $callback;
+            return $handle->loop->closing_handles->close_cb;
+        } else {
+            throw new \LogicException("Unknown class/object passed to callback()");
+        }
+    }
+
     public static function free($ptr): void
     {
         if ($ptr instanceof \UVInterface || $ptr instanceof \UVLoop)
@@ -59,7 +78,7 @@ final class Core
 
     public static function sizeof($ptr): int
     {
-        if (\is_object($ptr) && $ptr instanceof \UVInterface) {
+        if ($ptr instanceof \UVInterface) {
             return self::$ffi->sizeof($ptr());
         } elseif ($ptr instanceof \FFI\CData || $ptr instanceof \FFI\CType) {
             return self::$ffi->sizeof($ptr);

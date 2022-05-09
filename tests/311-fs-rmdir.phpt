@@ -1,7 +1,11 @@
 --TEST--
 Check for fs rmdir
+--SKIPIF--
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 define("DIRECTORY_PATH", dirname(__FILE__) . "/fixtures/example_directory");
 
 @rmdir(DIRECTORY_PATH);

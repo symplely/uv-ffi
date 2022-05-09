@@ -1,7 +1,11 @@
 --TEST--
 Check for fs event
+--SKIPIF--
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 define("DIRECTORY_PATH", dirname(__FILE__) . "/fixtures/example_directory");
 
 $ev = uv_fs_event_init(uv_default_loop(), dirname(DIRECTORY_PATH), function($rsc, $name, $event, $stat) {

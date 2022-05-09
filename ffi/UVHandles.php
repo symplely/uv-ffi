@@ -32,6 +32,11 @@ final class UVLoop
         \uv_free(self::$uv_Loop_t);
     }
 
+    public function error()
+    {
+        \uv_free(self::$uv_Loop_t);
+    }
+
     public static function default(bool $compile = true, ?string $library = null, ?string $include = null): self
     {
         $loop = new self($compile, $library, $include, true);
@@ -40,12 +45,27 @@ final class UVLoop
         return $loop;
     }
 
-    public static function init(bool $compile = true, ?string $library = null, ?string $include = null): self
+    public static function init(bool $compile = true, ?string $library = null, ?string $include = null): ?self
     {
         $loop = new self($compile, $library, $include);
         $int = uv_ffi()->uv_loop_init($loop());
 
-        return ($int === 0) ? $loop : false;
+        return ($int === 0) ? $loop : null;
+    }
+}
+
+/**
+ * Async handles allow the user to wakeup the event loop and get a callback called from another thread.
+ * @return uv_async_t by invoking `$UVAsync()`
+ */
+final class UVAsync extends UV
+{
+    public static function init(?UVLoop $loop, ...$arguments): ?self
+    {
+        $async = new self('struct uv_async_s', 'async_cb');
+        $int = \uv_ffi()->uv_async_init($loop(), $async(), \uv_callback($async, \reset($arguments)));
+
+        return ($int === 0) ? $async : null;
     }
 }
 
@@ -171,14 +191,6 @@ final class UVSignal extends UV
  * @return uv_process_t by invoking `$UVProcess()`
  */
 final class UVProcess extends UV
-{
-}
-
-/**
- * Async handles allow the user to wakeup the event loop and get a callback called from another thread.
- * @return uv_async_t by invoking `$UVAsync()`
- */
-final class UVAsync extends UV
 {
 }
 

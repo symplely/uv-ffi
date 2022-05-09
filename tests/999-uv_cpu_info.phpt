@@ -1,7 +1,11 @@
 --TEST--
 Check for uv_cpuinfo
+--SKIPIF--
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 $cpuinfo = uv_cpu_info();
 
 $info = array_shift($cpuinfo);

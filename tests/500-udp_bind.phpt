@@ -1,9 +1,11 @@
 --TEST--
 Check for udp bind
 --SKIPIF--
-<?php if ('\\' === \DIRECTORY_SEPARATOR) print "Skip, broken on Windows"; ?>
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 $udp = uv_udp_init();
 uv_udp_bind($udp, uv_ip4_addr('0.0.0.0', 10000));
 

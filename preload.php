@@ -122,6 +122,16 @@ if (!\function_exists('ffi_loader')) {
     return Core::struct($typedef, $owned, $persistent);
   }
 
+  function uv_callback(UV $handle, ?callable $callback = null)
+  {
+    return Core::callback($handle, $callback);
+  }
+
+  function uv_close_cb($handle, ?callable $callback = null)
+  {
+    return Core::callback_close($handle, $callback);
+  }
+
   /**
    * Manually removes an previously created _uv structure_.
    *
@@ -234,6 +244,7 @@ if (!\function_exists('ffi_loader')) {
         && \opcache_is_script_cached("./ffi/UVFunctions.php") === false
         && \opcache_is_script_cached("./ffi/UVHandles.php") === false
       ) {
+        \opcache_compile_file("./preload.php");
         \opcache_compile_file("./ffi/Core.php");
         \opcache_compile_file("./ffi/UV.php");
         \opcache_compile_file("./ffi/UVConstants.php");

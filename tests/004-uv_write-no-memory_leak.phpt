@@ -1,7 +1,11 @@
 --TEST--
 Check for uv_write has no memory leak
+--SKIPIF--
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 class TestCase {
     public $counter = 0;
 

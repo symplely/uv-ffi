@@ -2,6 +2,7 @@
 Check for php-uv constants
 --FILE--
 <?php
+require 'vendor/autoload.php';
 
 if (!defined("UV::CHANGE")) {
   echo "FAILED UV::CHANGE" . PHP_EOL;

@@ -1,7 +1,11 @@
 --TEST--
 Check for uv_write multiple call with different callbacks
+--SKIPIF--
+<?php if (extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
+require 'vendor/autoload.php';
+
 $loop = uv_loop_new();
 
 $handler = uv_pipe_init($loop, false);
