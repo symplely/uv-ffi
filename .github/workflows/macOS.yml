@@ -14,13 +14,10 @@ jobs:
   macos:
     runs-on: macos-10.15
     continue-on-error: true
+    env:
+      VERSION: ${{ github.event.inputs.version }}
     strategy:
       fail-fast: false
-      matrix:
-        config:
-          - {lib_uv: $version}
-      env:
-        version: ${{ github.event.inputs.version }}
     steps:
       - uses: actions/checkout@v2
       - name: Envinfo
@@ -30,14 +27,14 @@ jobs:
           brew install ninja
       - name: Configure
         run: |
-          curl -L https://github.com/libuv/libuv/archive/v${{ matrix.config.lib_uv }}.tar.gz | tar xzf -
-          cd libuv-${{ matrix.config.lib_uv }}
+          curl -L https://github.com/libuv/libuv/archive/v${{ env.VERSION }}.tar.gz | tar xzf -
+          cd libuv-${{ env.VERSION }}
           mkdir build
           cd build
           cmake .. -DBUILD_TESTING=ON -G Ninja
       - name: Build
         run: |
-          cd libuv-${{ matrix.config.lib_uv }}
+          cd libuv-${{ env.VERSION }}
           cmake --build build
           ls -lh build
       - name: Upload/Commit to Repo
@@ -46,7 +43,7 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           mkdir -p lib/macOS/
-          cp -f libuv-${{ matrix.config.lib_uv }}/build/libuv.1.0.0.dylib lib/macOS/
+          cp -f libuv-${{ env.VERSION }}/build/libuv.1.0.0.dylib lib/macOS/
           git add lib
           git commit -m "created libuv.1.0.0.dylib - for macOS 10.15"
           git push -q

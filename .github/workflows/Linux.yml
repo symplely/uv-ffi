@@ -15,15 +15,17 @@ jobs:
       fail-fast: false
       matrix:
         container:
-        - {os: 'ubuntu:18.04', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'cmake build-essential -y', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y && add-apt-repository ppa:git-core/ppa -y && apt-get update -y' , extra: 'ls', lib_uv: $version, name: ubuntu18.04}
-        - {os: 'ubuntu:latest', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'cmake build-essential -y', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y', extra: 'ls', lib_uv: $version, name: ubuntu20.04}
-        - {os: 'centos:7', cli: 'yum', dev: 'cmake ninja-build -y && cp -f /usr/bin/cmake3 /usr/bin/cmake && yum groupinstall "Development Tools" -y', dep: 'yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-7.rpm -y && yum install epel-release cmake3 -y', pre: "yum-config-manager --disable 'remi-php*' && yum-config-manager --enable remi-php80 && yum install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm -y", extra: 'ls', lib_uv: $version, name: centos7}
-        - {os: 'centos:latest', cli: 'dnf', dev: 'cmake -y', dep: 'dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-8.rpm -y', pre: 'dnf module reset php && dnf module install php:remi-8.0 -y && dnf group install "Development Tools" -y', extra: "dnf --disablerepo '*' --enablerepo=extras swap centos-linux-repos centos-stream-repos -y && dnf distro-sync -y", lib_uv: $version, name: centos8+}
+        - {os: 'ubuntu:18.04', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'cmake build-essential -y', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y && add-apt-repository ppa:git-core/ppa -y && apt-get update -y' , extra: 'ls', name: ubuntu18.04}
+        - {os: 'ubuntu:latest', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'cmake build-essential -y', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y', extra: 'ls', name: ubuntu20.04}
+        - {os: 'centos:7', cli: 'yum', dev: 'cmake ninja-build -y && cp -f /usr/bin/cmake3 /usr/bin/cmake && yum groupinstall "Development Tools" -y', dep: 'yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-7.rpm -y && yum install epel-release cmake3 -y', pre: "yum-config-manager --disable 'remi-php*' && yum-config-manager --enable remi-php80 && yum install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm -y", extra: 'ls', name: centos7}
+        - {os: 'centos:latest', cli: 'dnf', dev: 'cmake -y', dep: 'dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-8.rpm -y', pre: 'dnf module reset php && dnf module install php:remi-8.0 -y && dnf group install "Development Tools" -y', extra: "dnf --disablerepo '*' --enablerepo=extras swap centos-linux-repos centos-stream-repos -y && dnf distro-sync -y", name: centos8+}
       env:
         version: ${{ github.event.inputs.version }}
     runs-on: ubuntu-latest
     continue-on-error: true
     container: ${{ matrix.container.os }}
+    env:
+      VERSION: ${{ github.event.inputs.version }}
     steps:
       - name: Install Build tools
         run: |
@@ -62,13 +64,13 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     name: cross-build-qemu-${{ matrix.config.target }}
+    env:
+      VERSION: ${{ github.event.inputs.version }}
     strategy:
       fail-fast: false
       matrix:
         config:
-          - {target: aarch64, toolchain: gcc-aarch64-linux-gnu, cc: aarch64-linux-gnu-gcc, qemu: qemu-aarch64-static, lib_uv: $version}
-      env:
-        version: ${{ github.event.inputs.version }}
+          - {target: aarch64, toolchain: gcc-aarch64-linux-gnu, cc: aarch64-linux-gnu-gcc, qemu: qemu-aarch64-static}
     steps:
       - uses: actions/checkout@v2
       - name: Install QEMU
@@ -86,14 +88,14 @@ jobs:
           sudo apt install ${{ matrix.config.toolchain }} -y
       - name: Configure with ${{ matrix.config.cc }}
         run: |
-          curl -L https://github.com/libuv/libuv/archive/v${{ matrix.config.lib_uv }}.tar.gz | tar xzf -
-          cd libuv-${{ matrix.config.lib_uv }}
+          curl -L https://github.com/libuv/libuv/archive/v${{ env.VERSION }}.tar.gz | tar xzf -
+          cd libuv-${{ env.VERSION }}
           mkdir build
           cd build
           cmake .. -DBUILD_TESTING=ON -DQEMU=ON -DCMAKE_C_COMPILER=${{ matrix.config.cc }}
       - name: Build
         run: |
-          cd libuv-${{ matrix.config.lib_uv }}
+          cd libuv-${{ env.VERSION }}
           cmake --build build
           ls -lh build
       - name: Upload/Commit to Repo
@@ -102,7 +104,7 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           mkdir -p lib/Linux/raspberry/
-          cp libuv-${{ matrix.config.lib_uv }}/build/libuv.so.1.0.0 lib/Linux/raspberry/
+          cp libuv-${{ env.VERSION }}/build/libuv.so.1.0.0 lib/Linux/raspberry/
           git add lib
           git commit -m "created libuv.so.1.0.0 - for Raspberry Pi 4"
           git push -q
