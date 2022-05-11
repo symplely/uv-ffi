@@ -19,9 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {toolchain: Visual Studio 16 2019, arch: x64, server: 2019, lib_uv: $version}
-      env:
-        version: ${{ github.event.inputs.version }}
+          - {toolchain: Visual Studio 16 2019, arch: x64, server: 2019}
     steps:
       - uses: actions/checkout@v2
       - name: Envinfo
@@ -29,14 +27,16 @@ jobs:
       - name: Build
         shell: cmd
         run: |
-          curl -L https://github.com/libuv/libuv/archive/refs/tags/v${{ matrix.config.lib_uv }}.zip --output libuv.zip
+          curl -L https://github.com/libuv/libuv/archive/refs/tags/v$VERSION.zip --output libuv.zip
           unzip -xoq libuv.zip
-          cd libuv-${{ matrix.config.lib_uv }}
+          cd libuv-$VERSION
           mkdir -p build
           cd build
           cmake .. -DBUILD_TESTING=ON -DBUILDING_UV_SHARED=1 -G "${{ matrix.config.toolchain }}" -A ${{ matrix.config.arch }}
           cmake --build .
           dir Debug
+        env:
+          VERSION: ${{ github.event.inputs.version }}
       - name: Upload/Commit to Repo
         shell: cmd
         run: |
@@ -44,12 +44,14 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           mkdir lib\Windows\
-          copy /Y libuv-${{ matrix.config.lib_uv }}\build\Debug\uv.dll lib\Windows\
+          copy /Y libuv-$VERSION\build\Debug\uv.dll lib\Windows\
           git add lib
           git commit -m "created uv.dll - for Windows x64"
           git push -q
-          copy /Y libuv-${{ matrix.config.lib_uv }}\include\*.* headers\original
-          copy /Y libuv-${{ matrix.config.lib_uv }}\include\uv\*.* headers\original\uv\
+          copy /Y libuv-$VERSION\include\*.* headers\original
+          copy /Y libuv-$VERSION\include\uv\*.* headers\original\uv\
           git add headers
           git commit -m "Libuv *.h headers"
           git push -q
+        env:
+          VERSION: ${{ github.event.inputs.version }}
