@@ -15,6 +15,8 @@ jobs:
     runs-on: windows-${{ matrix.config.server }}
     continue-on-error: true
     name: windows-${{ matrix.config.toolchain}}-${{ matrix.config.arch}}
+    env:
+      VERSION: ${{ github.event.inputs.version }}
     strategy:
       fail-fast: false
       matrix:
@@ -27,9 +29,9 @@ jobs:
       - name: Build
         shell: cmd
         run: |
-          curl -L https://github.com/libuv/libuv/archive/refs/tags/v"$VERSION".zip --output libuv.zip
+          curl -L https://github.com/libuv/libuv/archive/refs/tags/v${{ env.VERSION }}.zip --output libuv.zip
           unzip -xoq libuv.zip
-          cd libuv-"$VERSION"
+          cd libuv-${{ env.VERSION }}
           mkdir -p build
           cd build
           cmake .. -DBUILD_TESTING=ON -DBUILDING_UV_SHARED=1 -G "${{ matrix.config.toolchain }}" -A ${{ matrix.config.arch }}
@@ -44,14 +46,12 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           mkdir lib\Windows\
-          copy /Y libuv-"$VERSION"\build\Debug\uv.dll lib\Windows\
+          copy /Y libuv-${{ env.VERSION }}\build\Debug\uv.dll lib\Windows\
           git add lib
           git commit -m "created uv.dll - for Windows x64"
           git push -q
-          copy /Y libuv-"$VERSION"\include\*.* headers\original
-          copy /Y libuv-"$VERSION"\include\uv\*.* headers\original\uv\
+          copy /Y libuv-${{ env.VERSION }}\include\*.* headers\original
+          copy /Y libuv-${{ env.VERSION }}\include\uv\*.* headers\original\uv\
           git add headers
           git commit -m "Libuv *.h headers"
           git push -q
-        env:
-          VERSION: ${{ github.event.inputs.version }}
