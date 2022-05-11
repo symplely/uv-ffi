@@ -27,9 +27,9 @@ jobs:
       - name: Build
         shell: cmd
         run: |
-          curl -L https://github.com/libuv/libuv/archive/refs/tags/v$VERSION.zip --output libuv.zip
+          curl -L https://github.com/libuv/libuv/archive/refs/tags/v"$VERSION".zip --output libuv.zip
           unzip -xoq libuv.zip
-          cd libuv-$VERSION
+          cd libuv-"$VERSION"
           mkdir -p build
           cd build
           cmake .. -DBUILD_TESTING=ON -DBUILDING_UV_SHARED=1 -G "${{ matrix.config.toolchain }}" -A ${{ matrix.config.arch }}
@@ -44,12 +44,12 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           mkdir lib\Windows\
-          copy /Y libuv-$VERSION\build\Debug\uv.dll lib\Windows\
+          copy /Y libuv-"$VERSION"\build\Debug\uv.dll lib\Windows\
           git add lib
           git commit -m "created uv.dll - for Windows x64"
           git push -q
-          copy /Y libuv-$VERSION\include\*.* headers\original
-          copy /Y libuv-$VERSION\include\uv\*.* headers\original\uv\
+          copy /Y libuv-"$VERSION"\include\*.* headers\original
+          copy /Y libuv-"$VERSION"\include\uv\*.* headers\original\uv\
           git add headers
           git commit -m "Libuv *.h headers"
           git push -q
