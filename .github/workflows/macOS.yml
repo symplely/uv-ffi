@@ -16,9 +16,11 @@ jobs:
     continue-on-error: true
     strategy:
       fail-fast: false
+      env:
+        version: ${{ github.event.inputs.version }}
       matrix:
         config:
-          - {lib_uv: ${{ github.event.inputs.version }}}
+          - {lib_uv: ${{ env.version}}}
     steps:
       - uses: actions/checkout@v2
       - name: Envinfo
