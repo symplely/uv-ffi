@@ -17,9 +17,9 @@ jobs:
     name: windows-${{ matrix.config.toolchain}}-${{ matrix.config.arch}}
     strategy:
       fail-fast: false
-      env:
-        version: ${{ github.event.inputs.version }}
       matrix:
+        env:
+          version: ${{ github.event.inputs.version }}
         config:
           - {toolchain: Visual Studio 16 2019, arch: x64, server: 2019, lib_uv: ${{ env.version}}}
     steps:
