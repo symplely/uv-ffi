@@ -3,6 +3,12 @@ name: Windows
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'What version of libuv to compile and commit to repo?'
+        required: true
+        default: 1.44.1
+        type: number
 
 jobs:
   windows:
@@ -13,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {toolchain: Visual Studio 16 2019, arch: x64, server: 2019, lib_uv: 1.44.1}
+          - {toolchain: Visual Studio 16 2019, arch: x64, server: 2019, lib_uv: ${{ github.event.inputs.version }}}
     steps:
       - uses: actions/checkout@v2
       - name: Envinfo
@@ -26,7 +32,7 @@ jobs:
           cd libuv-${{ matrix.config.lib_uv }}
           mkdir -p build
           cd build
-          cmake .. -DBUILD_TESTING=ON -G "${{ matrix.config.toolchain }}" -A ${{ matrix.config.arch }}
+          cmake .. -DBUILD_TESTING=ON -DBUILDING_UV_SHARED=ON -G "${{ matrix.config.toolchain }}" -A ${{ matrix.config.arch }}
           cmake --build .
           dir Debug
       - name: Upload/Commit to Repo

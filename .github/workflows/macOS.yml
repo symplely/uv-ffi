@@ -3,6 +3,12 @@ name: macOS
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'What version of libuv to compile and commit to repo?'
+        required: true
+        default: 1.44.1
+        type: number
 
 jobs:
   macos:
@@ -12,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {lib_uv: 1.44.1}
+          - {lib_uv: ${{ github.event.inputs.version }}}
     steps:
       - uses: actions/checkout@v2
       - name: Envinfo

@@ -2,6 +2,12 @@ name: Linux
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'What version of libuv to compile and commit to repo?'
+        required: true
+        default: 1.44.1
+        type: number
 
 jobs:
   linux:
@@ -9,10 +15,10 @@ jobs:
       fail-fast: false
       matrix:
         container:
-        - {os: 'ubuntu:18.04', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'cmake build-essential -y', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y && add-apt-repository ppa:git-core/ppa -y && apt-get update -y' , extra: 'ls', lib_uv: 1.44.1, name: ubuntu18.04}
-        - {os: 'ubuntu:latest', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'cmake build-essential -y', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y', extra: 'ls', lib_uv: 1.44.1, name: ubuntu20.04}
-        - {os: 'centos:7', cli: 'yum', dev: 'cmake ninja-build -y && cp -f /usr/bin/cmake3 /usr/bin/cmake && yum groupinstall "Development Tools" -y', dep: 'yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-7.rpm -y && yum install epel-release cmake3 -y', pre: "yum-config-manager --disable 'remi-php*' && yum-config-manager --enable remi-php80 && yum install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm -y", extra: 'ls', lib_uv: 1.44.1, name: centos7}
-        - {os: 'centos:latest', cli: 'dnf', dev: 'cmake -y', dep: 'dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-8.rpm -y', pre: 'dnf module reset php && dnf module install php:remi-8.0 -y && dnf group install "Development Tools" -y', extra: "dnf --disablerepo '*' --enablerepo=extras swap centos-linux-repos centos-stream-repos -y && dnf distro-sync -y", lib_uv: 1.44.1, name: centos8+}
+        - {os: 'ubuntu:18.04', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'cmake build-essential -y', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y && add-apt-repository ppa:git-core/ppa -y && apt-get update -y' , extra: 'ls', lib_uv: ${{ github.event.inputs.version }}, name: ubuntu18.04}
+        - {os: 'ubuntu:latest', cli: 'DEBIAN_FRONTEND=noninteractive apt-get', dev: 'cmake build-essential -y', dep: 'apt-get install software-properties-common', pre: 'add-apt-repository ppa:ondrej/php -y', extra: 'ls', lib_uv: ${{ github.event.inputs.version }}, name: ubuntu20.04}
+        - {os: 'centos:7', cli: 'yum', dev: 'cmake ninja-build -y && cp -f /usr/bin/cmake3 /usr/bin/cmake && yum groupinstall "Development Tools" -y', dep: 'yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-7.rpm -y && yum install epel-release cmake3 -y', pre: "yum-config-manager --disable 'remi-php*' && yum-config-manager --enable remi-php80 && yum install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm -y", extra: 'ls', lib_uv: ${{ github.event.inputs.version }}, name: centos7}
+        - {os: 'centos:latest', cli: 'dnf', dev: 'cmake -y', dep: 'dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm https://rpms.remirepo.net/enterprise/remi-release-8.rpm -y', pre: 'dnf module reset php && dnf module install php:remi-8.0 -y && dnf group install "Development Tools" -y', extra: "dnf --disablerepo '*' --enablerepo=extras swap centos-linux-repos centos-stream-repos -y && dnf distro-sync -y", lib_uv: ${{ github.event.inputs.version }}, name: centos8+}
     runs-on: ubuntu-latest
     continue-on-error: true
     container: ${{ matrix.container.os }}
@@ -58,7 +64,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {target: aarch64, toolchain: gcc-aarch64-linux-gnu, cc: aarch64-linux-gnu-gcc, qemu: qemu-aarch64-static, lib_uv: 1.44.1}
+          - {target: aarch64, toolchain: gcc-aarch64-linux-gnu, cc: aarch64-linux-gnu-gcc, qemu: qemu-aarch64-static, lib_uv: ${{ github.event.inputs.version }}}
     steps:
       - uses: actions/checkout@v2
       - name: Install QEMU
