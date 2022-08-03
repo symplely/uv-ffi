@@ -1,6 +1,7 @@
 <?php
+require 'vendor/autoload.php';
 
-uv_fs_readlink(uv_default_loop(), "linkPath", function($buffer){
+uv_fs_readlink(uv_default_loop(), "linkPath", function ($buffer) {
     var_dump($buffer);
 });
 

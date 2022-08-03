@@ -128,7 +128,32 @@ if (!\defined('S_IXUSR')) {
     \define('S_IXUSR', UV::S_IXUSR);
 }
 
+/**
+ * The OS physical _input/output_ console `DEVICE`.
+ */
+\define('SYS_CONSOLE', \IS_WINDOWS ? '\\\\?\\CON' : '/dev/tty');
+
+/**
+ * The OS physical _null_ `DEVICE`.
+ */
+\define('SYS_NULL', \IS_WINDOWS ? '\\\\?\\NUL' : '/dev/null');
+
 if (\IS_WINDOWS) {
+    /**
+     * The standard input device. Initially, this is the console input buffer.
+     */
+    \define('STD_INPUT_HANDLE', -10);
+
+    /**
+     * The standard output device. Initially, this is the active console screen buffer.
+     */
+    \define('STD_OUTPUT_HANDLE', -11);
+
+    /**
+     * The standard error device. Initially, this is the active console screen buffer.
+     */
+    \define('STD_ERROR_HANDLE', -12);
+
     /**
      * The SIGUSR1 signal is sent to a process to indicate user-defined conditions.
      */

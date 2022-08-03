@@ -1,7 +1,7 @@
 --TEST--
 Check uv_async has no memory leak
 --SKIPIF--
-<?php if (extension_loaded("ffi")) print "skip"; ?>
+<?php if (!extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';
@@ -23,4 +23,4 @@ unset($loop);
 
 echo memory_get_usage() - $m, PHP_EOL;
 --EXPECTF--
-0
+-%d

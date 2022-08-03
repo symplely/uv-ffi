@@ -1,4 +1,5 @@
 <?php
+require 'vendor/autoload.php';
 
 $loop = uv_default_loop();
 $completed = false;

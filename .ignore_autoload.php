@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-\define('DS', \DIRECTORY_SEPARATOR);
+if (!\defined('DS'))
+  \define('DS', \DIRECTORY_SEPARATOR);
 
 if (\file_exists('..' . \DS . '.gitignore')) {
   $ignore = \file_get_contents('..' . \DS . '.gitignore');
   if (\strpos($ignore, '.cdef/') === false) {
-    $ignore .= '.cdef' . \DS . \PHP_EOL;
+    $ignore .= '.cdef/' . \PHP_EOL;
     \file_put_contents('..' . \DS . '.gitignore', $ignore);
   }
 } else {
@@ -24,6 +25,7 @@ if (\file_exists('..' . \DS . '.gitattributes')) {
 } else {
   \file_put_contents('..' . \DS . '.gitattributes', '/.cdef       export-ignore' . \PHP_EOL);
 }
+
 echo "- Initialized .gitattributes" . \PHP_EOL;
 
 if (\file_exists('..' . \DS . 'composer.json'))
@@ -33,9 +35,9 @@ else
 
 if (isset($composerJson['autoload'])) {
   if (isset($composerJson['autoload']['files']) && !\in_array('.cdef/preload.php', $composerJson['autoload']['files']))
-    \array_push($composerJson['autoload']['files'], ".cdef/preload.php", ".cdef/ffi/UVConstants.php", ".cdef/ffi/UVFunctions.php");
+    \array_push($composerJson['autoload']['files'], ".cdef/preload.php", ".cdef/ffi/UVConstants.php", ".cdef/ffi/UVFunctions.php", ".cdef/ffi/ZEFunctions.php");
   elseif (!isset($composerJson['autoload']['files']))
-    $composerJson = \array_merge($composerJson, ["autoload" => ["files" => [".cdef/preload.php", ".cdef/ffi/UVConstants.php",  ".cdef/ffi/UVFunctions.php"]]]);
+    $composerJson = \array_merge($composerJson, ["autoload" => ["files" => [".cdef/preload.php", ".cdef/ffi/UVConstants.php", ".cdef/ffi/UVFunctions.php", ".cdef/ffi/ZEFunctions.php"]]]);
 
   if (isset($composerJson['autoload']['classmap']) && !\in_array('.cdef/ffi/', $composerJson['autoload']['classmap']))
     \array_push($composerJson['autoload']['classmap'], ".cdef/ffi/");
@@ -47,7 +49,8 @@ if (isset($composerJson['autoload'])) {
       "files" => [
         ".cdef/preload.php",
         ".cdef/ffi/UVConstants.php",
-        ".cdef/ffi/UVFunctions.php"
+        ".cdef/ffi/UVFunctions.php",
+        ".cdef/ffi/ZEFunctions.php"
       ],
       "classmap" => [
         ".cdef/ffi/"
@@ -65,11 +68,11 @@ if (isset($composerJson['require']['symplely/uv-ffi']))
 );
 echo "- Initialized `autoload` & `require` composer.json" . \PHP_EOL;
 
-function recursiveDelete($directory, $options = array())
+function recursiveDelete($directory, $options = [])
 {
   if (!isset($options['traverseSymlinks']))
     $options['traverseSymlinks'] = false;
-  $files = \array_diff(\scandir($directory), array('.', '..'));
+  $files = \array_diff(\scandir($directory), ['.', '..']);
   foreach ($files as $file) {
     $dirFile = $directory . \DS . $file;
     if (\is_dir($dirFile)) {
@@ -86,11 +89,13 @@ function recursiveDelete($directory, $options = array())
   return \rmdir($directory);
 }
 
-
+$isWindows = '\\' === \DS;
 $delete = '';
-if ('\\' !== \DS) {
-  \unlink('..' . \DS . 'cdef' . \DS . 'headers' . \DS . 'windows.h');
-  \unlink('..' . \DS . '.cdef' . \DS . 'Headers' . \DS . 'extra_windows.h');
+if (!$isWindows) {
+  $files = ['zeWin8.h', 'zeWin8ts.h', 'zeWin7.h', 'zeWin7ts.h', 'windows.h', 'msvcrt.h'];
+  foreach ($files as $file)
+    \unlink('..' . \DS . 'cdef' . \DS . 'headers' . \DS . $file);
+
   \unlink('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Windows' . \DS . 'uv.dll');
   \rmdir('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Windows');
   $delete .= 'Windows ';
@@ -110,50 +115,55 @@ if (\php_uname('m') !== 'aarch64') {
   $delete .= 'Raspberry Pi ';
 }
 
-$os = [];
-$files = \glob('/etc/*-release');
-foreach ($files as $file) {
-  $lines = \array_filter(\array_map(function ($line) {
-    // split value from key
-    $parts = \explode('=', $line);
-    // makes sure that "useless" lines are ignored (together with array_filter)
-    if (\count($parts) !== 2)
-      return false;
+if ($isWindows)
+  $version = 0;
+else {
+  $os = [];
+  $files = \glob('/etc/*-release');
+  foreach ($files as $file) {
+    $lines = \array_filter(\array_map(function ($line) {
+      // split value from key
+      $parts = \explode('=', $line);
+      // makes sure that "useless" lines are ignored (together with array_filter)
+      if (\count($parts) !== 2)
+        return false;
 
-    // remove quotes, if the value is quoted
-    $parts[1] = \str_replace(['"', "'"], '', $parts[1]);
-    return $parts;
-  }, \file($file)));
+      // remove quotes, if the value is quoted
+      $parts[1] = \str_replace(['"', "'"], '', $parts[1]);
+      return $parts;
+    }, \file($file)));
 
-  foreach ($lines as $line)
-    $os[$line[0]] = $line[1];
+    foreach ($lines as $line)
+      $os[$line[0]] = $line[1];
+  }
+
+  $id = \trim((string) $os['ID']);
+  $like = \trim((string) $os['ID_LIKE']);
+  $version = \trim((string) $os['VERSION_ID']);
 }
 
-$id = \trim((string) $os['ID']);
-$like = \trim((string) $os['ID_LIKE']);
-$version = \trim((string) $os['VERSION_ID']);
-if ((float)$version !== 20.04) {
+if ((float)$version !== 20.04 || $isWindows) {
   \unlink('..' . \DS . 'cdef' . \DS . 'headers' . \DS . 'ubuntu20.04.h');
   \unlink('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'ubuntu20.04' . \DS . 'libuv.so.1.0.0');
   \rmdir('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'ubuntu20.04');
   $delete .= 'Ubuntu 20.04 ';
 }
 
-if ((float)$version !==  18.04) {
+if ((float)$version !== 18.04 || $isWindows) {
   \unlink('..' . \DS . 'cdef' . \DS . 'headers' . \DS . 'ubuntu18.04.h');
   \unlink('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'ubuntu18.04' . \DS . 'libuv.so.1.0.0');
   \rmdir('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'ubuntu18.04');
   $delete .= 'Ubuntu 18.04 ';
 }
 
-if (!(float)$version >= 8) {
+if (!(float)$version >= 8 || $isWindows) {
   \unlink('..' . \DS . 'cdef' . \DS . 'headers' . \DS . 'centos8+.h');
   \unlink('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'centos8+' . \DS . 'libuv.so.1.0.0');
   \rmdir('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'centos8+');
   $delete .= 'Centos 8+ ';
 }
 
-if (!(float)$version < 8) {
+if (!(float)$version < 8 || $isWindows) {
   \unlink('..' . \DS . 'cdef' . \DS . 'headers' . \DS . 'centos7.h');
   \unlink('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'centos7' . \DS . 'libuv.so.1.0.0');
   \rmdir('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'centos7');
@@ -164,4 +174,8 @@ if (!(float)$version < 8) {
 \recursiveDelete('..' . \DS . '.cdef' . \DS . 'headers' . \DS . 'original' . \DS . 'uv');
 echo "- Removed unneeded `libuv` binary libraries and .h headers" . $delete . \PHP_EOL;
 
-unlink(__FILE__);
+\chmod('..' . \DS . 'cdef', 0644);
+if (\file_exists('..' . \DS . 'vendor' . \DS . 'symplely' . \DS . 'uv-ffi' . \DS . 'composer.json'))
+  \recursiveDelete('..' . \DS . 'vendor' . \DS . 'symplely' . \DS . 'uv-ffi');
+
+\unlink(__FILE__);

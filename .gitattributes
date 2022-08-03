@@ -22,3 +22,8 @@
 /codecov.yml       export-ignore
 /composer.lock       export-ignore
 /.cdef       export-ignore
+/php-8.*      export-ignore
+/cmd        export-ignore
+/php_uv.c		   export-ignore
+/php_uv.h		   export-ignore
+/uv.c		   export-ignore

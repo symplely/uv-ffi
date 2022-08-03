@@ -2,25 +2,16 @@
 
 declare(strict_types=1);
 
+use FFI\CData;
+
 interface UVInterface
 {
-  public function __invoke(): \FFI\CData;
+    public function __invoke(?bool $by_handle = false): CData;
 
-  public function free(): void;
+    public function free(): void;
 
-  public function setClose(callable $callback): void;
+    public static function close(object $handle, ?callable $callback = null);
 
-  public function setCallback(callable $callback): void;
-
-  /**
-   * @return closure
-   */
-  public function getClose();
-
-  /**
-   * @return closure
-   */
-  public function getCallback();
-
-  public static function init(?UVLoop $loop, ...$arguments): ?self;
+    /** @return static|int */
+    public static function init(?\UVLoop $loop, ...$arguments);
 }

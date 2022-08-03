@@ -1,6 +1,8 @@
 <?php
+require 'vendor/autoload.php';
+
 $idle = uv_idle_init();
-uv_idle_start($idle, function(){
+uv_idle_start($idle, function () {
     echo "Hello";
 });
 

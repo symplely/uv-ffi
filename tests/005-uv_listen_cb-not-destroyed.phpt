@@ -1,7 +1,7 @@
 --TEST--
 Check for uv_listen callback is not destroyed by gc
 --SKIPIF--
-<?php if (extension_loaded("ffi")) print "skip"; ?>
+<?php if (!extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';
@@ -30,7 +30,7 @@ class TcpServer
             uv_accept($server, $client);
 
             uv_read_start($client, function ($socket, $buffer) {
-                echo 'OK', PHP_EOL;
+                printf('OK'. PHP_EOL);
                 uv_close($socket);
             });
         });

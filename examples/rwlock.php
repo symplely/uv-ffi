@@ -1,4 +1,6 @@
 <?php
+require 'vendor/autoload.php';
+
 $lock = uv_rwlock_init();
 
 uv_rwlock_rdlock($lock);

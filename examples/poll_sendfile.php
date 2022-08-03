@@ -1,4 +1,5 @@
 <?php
+require 'vendor/autoload.php';
 
 $socket = stream_socket_server("tcp://0.0.0.0:9999", $errno, $errstr);
 

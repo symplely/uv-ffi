@@ -6,7 +6,7 @@ on:
       version:
         description: 'What version of libuv to compile and commit to repo?'
         required: true
-        default: 1.44.1
+        default: 1.44.2
         type: number
 
 jobs:

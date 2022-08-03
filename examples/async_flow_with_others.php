@@ -1,4 +1,6 @@
 <?php
+require 'vendor/autoload.php';
+
 $loop = uv_default_loop();
 $count = 1;
 $counter = 1;

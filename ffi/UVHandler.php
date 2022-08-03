@@ -2,59 +2,102 @@
 
 declare(strict_types=1);
 
+use FFI\CData;
+
 abstract class UVHandler implements UVInterface
 {
-  private ?\FFI\CData $uv_struct;
-  private ?string $struct_cb;
+    protected ?CData $uv_struct = null;
+    protected ?CData $uv_struct_ptr = null;
+    protected ?CData $uv_struct_type = null;
 
-  public function __destruct()
-  {
-    if (!\is_null_ptr($this->uv_struct))
-      $this->free();
+    public function __destruct()
+    {
+        $this->free();
+    }
 
-    $this->uv_struct = null;
-  }
+    protected function __construct(string $typedef, string $uv_type)
+    {
+        $this->uv_struct = \uv_struct($typedef);
+        $this->uv_struct_ptr = \ffi_ptr($this->uv_struct);
+        $this->uv_struct_type = \ffi_ptr($this->uv_struct_ptr->uv->{$uv_type});
+    }
 
-  protected function __construct(string $typedef, string $callback_type = null)
-  {
-    $this->uv_struct = \uv_ptr(\uv_struct($typedef));
+    public function __invoke(?bool $by_handle = false): CData
+    {
+        if ($by_handle)
+            return \uv_handle($this->uv_struct_type);
+        elseif (\is_null($by_handle))
+            return $this->uv_struct_ptr;
 
-    if (!empty($callback))
-      $this->struct_cb = $callback_type;
-  }
+        return $this->uv_struct_type;
+    }
 
-  public function __invoke(): \FFI\CData
-  {
-    return $this->uv_struct;
-  }
+    /**
+     * Manually removes `C data` structure pointer memory.
+     *
+     * @return void
+     */
+    public function free(): void
+    {
+        if (\is_uv_ffi() && !\is_null($this->uv_struct_type))
+            \uv_ffi()->uv_unref($this->__invoke(true));
 
-  public function free(): void
-  {
-    \uv_free($this->uv_struct);
-  }
+        if (\is_cdata($this->uv_struct_type) && !\is_null_ptr($this->uv_struct_type))
+            \FFI::free($this->uv_struct_type);
 
-  public function setClose(callable $callback = null): void
-  {
-    $this->uv_struct->close_cb = $callback;
-  }
+        if (\is_cdata($this->uv_struct_ptr) && !\is_null_ptr($this->uv_struct_ptr))
+            \FFI::free($this->uv_struct_ptr);
 
-  public function setCallback(callable $callback = null): void
-  {
-    $this->uv_struct->{$this->struct_cb} = $callback;
-  }
+        $this->uv_struct_type = null;
+        $this->uv_struct_ptr = null;
+        $this->uv_struct = null;
+    }
 
-  public function getClose()
-  {
-    return $this->uv_struct->close_cb;
-  }
+    public static function close(object $handle, ?callable $callback = null)
+    {
+        if (!$handle instanceof \UVInterface) {
+            return \ze_ffi()->zend_error(
+                \E_WARNING,
+                "passed UV handle (%s) is not closeable",
+                \ffi_str_typeof(\ffi_object($handle))
+            );
+        }
 
-  public function getCallback()
-  {
-    return $this->uv_struct->{$this->struct_cb};
-  }
+        if (!\uv_is_active($handle)) {
+            \zval_add_ref($handle);
+        }
 
-  public static function init(?UVLoop $loop, ...$arguments): ?self
-  {
-    return new self('struct uv_handle_s', 'close_cb');
-  }
+        if (\uv_is_closing($handle)) {
+            return \ze_ffi()->zend_error(
+                \E_WARNING,
+                "passed %s handle is already closed",
+                \reflect_object_name($handle)
+            );
+        }
+
+        if (!\uv_is_closing($handle)) {
+            $handler = $handle(true);
+            $fd = $handler->u->fd;
+            if (Resource::is_valid($fd))
+                Resource::remove_fd($fd);
+            elseif (PhpStream::is_valid($fd))
+                PhpStream::remove_fd($fd);
+
+            \uv_ffi()->uv_close(
+                $handler,
+                (!\is_null($callback) ?
+                    function (object $stream, int $status) use ($callback, $handle) {
+                        $callback($handle, $status);
+                    } : null)
+            );
+
+            \zval_skip_dtor($handle);
+        }
+    }
+
+    /** @return static */
+    public static function init(?\UVLoop $loop, ...$arguments)
+    {
+        return new static(\array_shift($arguments), \reset($arguments));
+    }
 }

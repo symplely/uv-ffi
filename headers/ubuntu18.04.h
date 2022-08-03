@@ -1,17 +1,13 @@
-#define FFI_SCOPE "UV"
+#define FFI_SCOPE "__uv__"
 #define FFI_LIB "./lib/Linux/ubuntu18.04/libuv.so.1.0.0"
-
-extern int *__errno_location (void);
 
 typedef long int ptrdiff_t;
 typedef long unsigned int size_t;
-typedef int wchar_t;
 typedef struct {
   long long __max_align_ll ;
   long double __max_align_ld ;
 } max_align_t;
 
-typedef __builtin_va_list __gnuc_va_list;
 typedef unsigned char __u_char;
 typedef unsigned short int __u_short;
 typedef unsigned int __u_int;
@@ -134,145 +130,9 @@ struct _IO_FILE
   int _mode;
   char _unused2[15 * sizeof (int) - 4 * sizeof (void *) - sizeof (size_t)];
 };
-typedef __gnuc_va_list va_list;
 typedef __off_t off_t;
 typedef __ssize_t ssize_t;
 typedef __fpos_t fpos_t;
-extern FILE *stdin;
-extern FILE *stdout;
-extern FILE *stderr;
-extern int remove (const char *__filename) ;
-extern int rename (const char *__old, const char *__new) ;
-extern int renameat (int __oldfd, const char *__old, int __newfd,
-       const char *__new) ;
-extern FILE *tmpfile (void) ;
-extern char *tmpnam (char *__s) ;
-extern char *tmpnam_r (char *__s) ;
-extern char *tempnam (const char *__dir, const char *__pfx)
-     ;
-extern int fclose (FILE *__stream);
-extern int fflush (FILE *__stream);
-extern int fflush_unlocked (FILE *__stream);
-extern FILE *fopen (const char *__restrict __filename,
-      const char *__restrict __modes) ;
-extern FILE *freopen (const char *__restrict __filename,
-        const char *__restrict __modes,
-        FILE *__restrict __stream) ;
-extern FILE *fdopen (int __fd, const char *__modes) ;
-extern FILE *fmemopen (void *__s, size_t __len, const char *__modes)
-  ;
-extern FILE *open_memstream (char **__bufloc, size_t *__sizeloc) ;
-extern void setbuf (FILE *__restrict __stream, char *__restrict __buf) ;
-extern int setvbuf (FILE *__restrict __stream, char *__restrict __buf,
-      int __modes, size_t __n) ;
-extern void setbuffer (FILE *__restrict __stream, char *__restrict __buf,
-         size_t __size) ;
-extern void setlinebuf (FILE *__stream) ;
-extern int fprintf (FILE *__restrict __stream,
-      const char *__restrict __format, ...);
-extern int printf (const char *__restrict __format, ...);
-extern int sprintf (char *__restrict __s,
-      const char *__restrict __format, ...) ;
-extern int vfprintf (FILE *__restrict __s, const char *__restrict __format,
-       __gnuc_va_list __arg);
-extern int vprintf (const char *__restrict __format, __gnuc_va_list __arg);
-extern int vsprintf (char *__restrict __s, const char *__restrict __format,
-       __gnuc_va_list __arg) ;
-extern int snprintf (char *__restrict __s, size_t __maxlen,
-       const char *__restrict __format, ...)
-     ;
-extern int vsnprintf (char *__restrict __s, size_t __maxlen,
-        const char *__restrict __format, __gnuc_va_list __arg)
-     ;
-extern int vdprintf (int __fd, const char *__restrict __fmt,
-       __gnuc_va_list __arg)
-     ;
-extern int dprintf (int __fd, const char *__restrict __fmt, ...)
-     ;
-extern int fscanf (FILE *__restrict __stream,
-     const char *__restrict __format, ...) ;
-extern int scanf (const char *__restrict __format, ...) ;
-extern int sscanf (const char *__restrict __s,
-     const char *__restrict __format, ...) ;
-extern int fscanf (FILE *__restrict __stream, const char *__restrict __format, ...) __asm__ ("" "__isoc99_fscanf") ;
-extern int scanf (const char *__restrict __format, ...) __asm__ ("" "__isoc99_scanf") ;
-extern int sscanf (const char *__restrict __s, const char *__restrict __format, ...) __asm__ ("" "__isoc99_sscanf") ;
-extern int vfscanf (FILE *__restrict __s, const char *__restrict __format,
-      __gnuc_va_list __arg)
-     ;
-extern int vscanf (const char *__restrict __format, __gnuc_va_list __arg)
-     ;
-extern int vsscanf (const char *__restrict __s,
-      const char *__restrict __format, __gnuc_va_list __arg)
-     ;
-extern int vfscanf (FILE *__restrict __s, const char *__restrict __format, __gnuc_va_list __arg) __asm__ ("" "__isoc99_vfscanf")
-     ;
-extern int vscanf (const char *__restrict __format, __gnuc_va_list __arg) __asm__ ("" "__isoc99_vscanf")
-     ;
-extern int vsscanf (const char *__restrict __s, const char *__restrict __format, __gnuc_va_list __arg) __asm__ ("" "__isoc99_vsscanf")
-     ;
-extern int fgetc (FILE *__stream);
-extern int getc (FILE *__stream);
-extern int getchar (void);
-extern int getc_unlocked (FILE *__stream);
-extern int getchar_unlocked (void);
-extern int fgetc_unlocked (FILE *__stream);
-extern int fputc (int __c, FILE *__stream);
-extern int putc (int __c, FILE *__stream);
-extern int putchar (int __c);
-extern int fputc_unlocked (int __c, FILE *__stream);
-extern int putc_unlocked (int __c, FILE *__stream);
-extern int putchar_unlocked (int __c);
-extern int getw (FILE *__stream);
-extern int putw (int __w, FILE *__stream);
-extern char *fgets (char *__restrict __s, int __n, FILE *__restrict __stream)
-     ;
-extern __ssize_t __getdelim (char **__restrict __lineptr,
-                             size_t *__restrict __n, int __delimiter,
-                             FILE *__restrict __stream) ;
-extern __ssize_t getdelim (char **__restrict __lineptr,
-                           size_t *__restrict __n, int __delimiter,
-                           FILE *__restrict __stream) ;
-extern __ssize_t getline (char **__restrict __lineptr,
-                          size_t *__restrict __n,
-                          FILE *__restrict __stream) ;
-extern int fputs (const char *__restrict __s, FILE *__restrict __stream);
-extern int puts (const char *__s);
-extern int ungetc (int __c, FILE *__stream);
-extern size_t fread (void *__restrict __ptr, size_t __size,
-       size_t __n, FILE *__restrict __stream) ;
-extern size_t fwrite (const void *__restrict __ptr, size_t __size,
-        size_t __n, FILE *__restrict __s);
-extern size_t fread_unlocked (void *__restrict __ptr, size_t __size,
-         size_t __n, FILE *__restrict __stream) ;
-extern size_t fwrite_unlocked (const void *__restrict __ptr, size_t __size,
-          size_t __n, FILE *__restrict __stream);
-extern int fseek (FILE *__stream, long int __off, int __whence);
-extern long int ftell (FILE *__stream) ;
-extern void rewind (FILE *__stream);
-extern int fseeko (FILE *__stream, __off_t __off, int __whence);
-extern __off_t ftello (FILE *__stream) ;
-extern int fgetpos (FILE *__restrict __stream, fpos_t *__restrict __pos);
-extern int fsetpos (FILE *__stream, const fpos_t *__pos);
-extern void clearerr (FILE *__stream) ;
-extern int feof (FILE *__stream) ;
-extern int ferror (FILE *__stream) ;
-extern void clearerr_unlocked (FILE *__stream) ;
-extern int feof_unlocked (FILE *__stream) ;
-extern int ferror_unlocked (FILE *__stream) ;
-extern void perror (const char *__s);
-extern int sys_nerr;
-extern const char *const sys_errlist[];
-extern int fileno (FILE *__stream) ;
-extern int fileno_unlocked (FILE *__stream) ;
-extern FILE *popen (const char *__command, const char *__modes) ;
-extern int pclose (FILE *__stream);
-extern char *ctermid (char *__s) ;
-extern void flockfile (FILE *__stream) ;
-extern int ftrylockfile (FILE *__stream) ;
-extern void funlockfile (FILE *__stream) ;
-extern int __uflow (FILE *);
-extern int __overflow (FILE *, int);
 
 typedef __int8_t int8_t;
 typedef __int16_t int16_t;
@@ -334,36 +194,6 @@ typedef __uint16_t u_int16_t;
 typedef __uint32_t u_int32_t;
 typedef __uint64_t u_int64_t;
 typedef int register_t ;
-static __inline __uint16_t
-__bswap_16 (__uint16_t __bsx)
-{
-  return __builtin_bswap16 (__bsx);
-}
-static __inline __uint32_t
-__bswap_32 (__uint32_t __bsx)
-{
-  return __builtin_bswap32 (__bsx);
-}
-__extension__ static __inline __uint64_t
-__bswap_64 (__uint64_t __bsx)
-{
-  return __builtin_bswap64 (__bsx);
-}
-static __inline __uint16_t
-__uint16_identity (__uint16_t __x)
-{
-  return __x;
-}
-static __inline __uint32_t
-__uint32_identity (__uint32_t __x)
-{
-  return __x;
-}
-static __inline __uint64_t
-__uint64_identity (__uint64_t __x)
-{
-  return __x;
-}
 typedef struct
 {
   unsigned long int __val[(1024 / (8 * sizeof (unsigned long int)))];
@@ -386,16 +216,6 @@ typedef struct
     __fd_mask __fds_bits[1024 / (8 * (int) sizeof (__fd_mask))];
   } fd_set;
 typedef __fd_mask fd_mask;
-
-extern int select (int __nfds, fd_set *__restrict __readfds,
-     fd_set *__restrict __writefds,
-     fd_set *__restrict __exceptfds,
-     struct timeval *__restrict __timeout);
-extern int pselect (int __nfds, fd_set *__restrict __readfds,
-      fd_set *__restrict __writefds,
-      fd_set *__restrict __exceptfds,
-      const struct timespec *__restrict __timeout,
-      const __sigset_t *__restrict __sigmask);
 
 typedef __blksize_t blksize_t;
 typedef __blkcnt_t blkcnt_t;
@@ -473,8 +293,6 @@ typedef union
   char __size[4];
   int __align;
 } pthread_condattr_t;
-typedef unsigned int pthread_key_t;
-typedef int pthread_once_t;
 union pthread_attr_t
 {
   char __size[56];
@@ -535,56 +353,6 @@ struct stat
     struct timespec st_ctim;
     __syscall_slong_t __glibc_reserved[3];
   };
-extern int stat (const char *__restrict __file,
-   struct stat *__restrict __buf) ;
-extern int fstat (int __fd, struct stat *__buf) ;
-extern int fstatat (int __fd, const char *__restrict __file,
-      struct stat *__restrict __buf, int __flag)
-     ;
-extern int lstat (const char *__restrict __file,
-    struct stat *__restrict __buf) ;
-extern int chmod (const char *__file, __mode_t __mode)
-     ;
-extern int lchmod (const char *__file, __mode_t __mode)
-     ;
-extern int fchmod (int __fd, __mode_t __mode) ;
-extern int fchmodat (int __fd, const char *__file, __mode_t __mode,
-       int __flag)
-     ;
-extern __mode_t umask (__mode_t __mask) ;
-extern int mkdir (const char *__path, __mode_t __mode)
-     ;
-extern int mkdirat (int __fd, const char *__path, __mode_t __mode)
-     ;
-extern int mknod (const char *__path, __mode_t __mode, __dev_t __dev)
-     ;
-extern int mknodat (int __fd, const char *__path, __mode_t __mode,
-      __dev_t __dev) ;
-extern int mkfifo (const char *__path, __mode_t __mode)
-     ;
-extern int mkfifoat (int __fd, const char *__path, __mode_t __mode)
-     ;
-extern int utimensat (int __fd, const char *__path,
-        const struct timespec __times[2],
-        int __flags)
-     ;
-extern int futimens (int __fd, const struct timespec __times[2]) ;
-extern int __fxstat (int __ver, int __fildes, struct stat *__stat_buf)
-     ;
-extern int __xstat (int __ver, const char *__filename,
-      struct stat *__stat_buf) ;
-extern int __lxstat (int __ver, const char *__filename,
-       struct stat *__stat_buf) ;
-extern int __fxstatat (int __ver, int __fildes, const char *__filename,
-         struct stat *__stat_buf, int __flag)
-     ;
-extern int __xmknod (int __ver, const char *__path, __mode_t __mode,
-       __dev_t *__dev) ;
-extern int __xmknodat (int __ver, int __fd, const char *__path,
-         __mode_t __mode, __dev_t *__dev)
-     ;
-
-
 struct flock
   {
     short int l_type;
@@ -594,26 +362,16 @@ struct flock
     __pid_t l_pid;
   };
 
-
-extern int fcntl (int __fd, int __cmd, ...);
-extern int open (const char *__file, int __oflag, ...) ;
-extern int openat (int __fd, const char *__file, int __oflag, ...)
-     ;
-extern int creat (const char *__file, mode_t __mode) ;
-extern int lockf (int __fd, int __cmd, off_t __len);
-extern int posix_fadvise (int __fd, off_t __offset, off_t __len,
-     int __advise) ;
-extern int posix_fallocate (int __fd, off_t __offset, off_t __len);
-
-
 struct dirent
-  {
+ {
     __ino_t d_ino;
-    __off_t d_off;
+   __off_t d_off;
     unsigned short int d_reclen;
     unsigned char d_type;
     char d_name[256];
   };
+
+typedef struct dirent uv__dirent_t;
 enum
   {
     DT_UNKNOWN = 0,
@@ -627,33 +385,6 @@ enum
     DT_WHT = 14
   };
 typedef struct __dirstream DIR;
-extern DIR *opendir (const char *__name) ;
-extern DIR *fdopendir (int __fd);
-extern int closedir (DIR *__dirp) ;
-extern struct dirent *readdir (DIR *__dirp) ;
-extern int readdir_r (DIR *__restrict __dirp,
-        struct dirent *__restrict __entry,
-        struct dirent **__restrict __result)
-     ;
-extern void rewinddir (DIR *__dirp) ;
-extern void seekdir (DIR *__dirp, long int __pos) ;
-extern long int telldir (DIR *__dirp) ;
-extern int dirfd (DIR *__dirp) ;
-extern int scandir (const char *__restrict __dir,
-      struct dirent ***__restrict __namelist,
-      int (*__selector) (const struct dirent *),
-      int (*__cmp) (const struct dirent **,
-      const struct dirent **))
-     ;
-extern int alphasort (const struct dirent **__e1,
-        const struct dirent **__e2)
-     ;
-extern __ssize_t getdirentries (int __fd, char *__restrict __buf,
-    size_t __nbytes,
-    __off_t *__restrict __basep)
-     ;
-
-
 
 
 struct iovec
@@ -720,6 +451,7 @@ struct msghdr
     size_t msg_controllen;
     int msg_flags;
   };
+
 struct cmsghdr
   {
     size_t cmsg_len;
@@ -727,8 +459,7 @@ struct cmsghdr
     int cmsg_type;
     __extension__ unsigned char __cmsg_data [];
   };
-extern struct cmsghdr *__cmsg_nxthdr (struct msghdr *__mhdr,
-          struct cmsghdr *__cmsg) ;
+
 enum
   {
     SCM_RIGHTS = 0x01
@@ -786,39 +517,6 @@ enum
   SHUT_WR,
   SHUT_RDWR
 };
-extern int socket (int __domain, int __type, int __protocol) ;
-extern int socketpair (int __domain, int __type, int __protocol,
-         int __fds[2]) ;
-extern int bind (int __fd, const struct sockaddr * __addr, socklen_t __len)
-     ;
-extern int getsockname (int __fd, struct sockaddr *__restrict __addr,
-   socklen_t *__restrict __len) ;
-extern int connect (int __fd, const struct sockaddr * __addr, socklen_t __len);
-extern int getpeername (int __fd, struct sockaddr *__restrict __addr,
-   socklen_t *__restrict __len) ;
-extern ssize_t send (int __fd, const void *__buf, size_t __n, int __flags);
-extern ssize_t recv (int __fd, void *__buf, size_t __n, int __flags);
-extern ssize_t sendto (int __fd, const void *__buf, size_t __n,
-         int __flags, const struct sockaddr * __addr,
-         socklen_t __addr_len);
-extern ssize_t recvfrom (int __fd, void *__restrict __buf, size_t __n,
-    int __flags, struct sockaddr *__restrict __addr,
-    socklen_t *__restrict __addr_len);
-extern ssize_t sendmsg (int __fd, const struct msghdr *__message,
-   int __flags);
-extern ssize_t recvmsg (int __fd, struct msghdr *__message, int __flags);
-extern int getsockopt (int __fd, int __level, int __optname,
-         void *__restrict __optval,
-         socklen_t *__restrict __optlen) ;
-extern int setsockopt (int __fd, int __level, int __optname,
-         const void *__optval, socklen_t __optlen) ;
-extern int listen (int __fd, int __n) ;
-extern int accept (int __fd, struct sockaddr *__restrict __addr,
-     socklen_t *__restrict __addr_len);
-extern int shutdown (int __fd, int __how) ;
-extern int sockatmark (int __fd) ;
-extern int isfdtype (int __fd, int __fdtype) ;
-
 
 typedef uint32_t in_addr_t;
 struct in_addr
@@ -920,8 +618,6 @@ struct in6_addr
  uint32_t __u6_addr32[4];
       } __in6_u;
   };
-extern const struct in6_addr in6addr_any;
-extern const struct in6_addr in6addr_loopback;
 struct sockaddr_in
   {
     sa_family_t sin_family;
@@ -983,16 +679,6 @@ struct group_filter
     uint32_t gf_numsrc;
     struct sockaddr_storage gf_slist[1];
 };
-extern uint32_t ntohl (uint32_t __netlong) ;
-extern uint16_t ntohs (uint16_t __netshort)
-     ;
-extern uint32_t htonl (uint32_t __hostlong)
-     ;
-extern uint16_t htons (uint16_t __hostshort)
-     ;
-extern int bindresvport (int __sockfd, struct sockaddr_in *__sock_in) ;
-extern int bindresvport6 (int __sockfd, struct sockaddr_in6 *__sock_in)
-     ;
 
 typedef uint32_t tcp_seq;
 struct tcphdr
@@ -1134,49 +820,12 @@ struct tcp_zerocopy_receive
   uint32_t recv_skip_hint;
 };
 
-extern in_addr_t inet_addr (const char *__cp) ;
-extern in_addr_t inet_lnaof (struct in_addr __in) ;
-extern struct in_addr inet_makeaddr (in_addr_t __net, in_addr_t __host)
-     ;
-extern in_addr_t inet_netof (struct in_addr __in) ;
-extern in_addr_t inet_network (const char *__cp) ;
-extern char *inet_ntoa (struct in_addr __in) ;
-extern int inet_pton (int __af, const char *__restrict __cp,
-        void *__restrict __buf) ;
-extern const char *inet_ntop (int __af, const void *__restrict __cp,
-         char *__restrict __buf, socklen_t __len)
-     ;
-extern int inet_aton (const char *__cp, struct in_addr *__inp) ;
-extern char *inet_neta (in_addr_t __net, char *__buf, size_t __len) ;
-extern char *inet_net_ntop (int __af, const void *__cp, int __bits,
-       char *__buf, size_t __len) ;
-extern int inet_net_pton (int __af, const char *__cp,
-     void *__buf, size_t __len) ;
-extern unsigned int inet_nsap_addr (const char *__cp,
-        unsigned char *__buf, int __len) ;
-extern char *inet_nsap_ntoa (int __len, const unsigned char *__cp,
-        char *__buf) ;
-
-
 struct rpcent
 {
   char *r_name;
   char **r_aliases;
   int r_number;
 };
-extern void setrpcent (int __stayopen) ;
-extern void endrpcent (void) ;
-extern struct rpcent *getrpcbyname (const char *__name) ;
-extern struct rpcent *getrpcbynumber (int __number) ;
-extern struct rpcent *getrpcent (void) ;
-extern int getrpcbyname_r (const char *__name, struct rpcent *__result_buf,
-      char *__buffer, size_t __buflen,
-      struct rpcent **__result) ;
-extern int getrpcbynumber_r (int __number, struct rpcent *__result_buf,
-        char *__buffer, size_t __buflen,
-        struct rpcent **__result) ;
-extern int getrpcent_r (struct rpcent *__result_buf, char *__buffer,
-   size_t __buflen, struct rpcent **__result) ;
 
 struct netent
 {
@@ -1186,9 +835,6 @@ struct netent
   uint32_t n_net;
 };
 
-extern int *__h_errno_location (void) ;
-extern void herror (const char *__str) ;
-extern const char *hstrerror (int __err_num) ;
 struct hostent
 {
   char *h_name;
@@ -1197,52 +843,7 @@ struct hostent
   int h_length;
   char **h_addr_list;
 };
-extern void sethostent (int __stay_open);
-extern void endhostent (void);
-extern struct hostent *gethostent (void);
-extern struct hostent *gethostbyaddr (const void *__addr, __socklen_t __len,
-          int __type);
-extern struct hostent *gethostbyname (const char *__name);
-extern struct hostent *gethostbyname2 (const char *__name, int __af);
-extern int gethostent_r (struct hostent *__restrict __result_buf,
-    char *__restrict __buf, size_t __buflen,
-    struct hostent **__restrict __result,
-    int *__restrict __h_errnop);
-extern int gethostbyaddr_r (const void *__restrict __addr, __socklen_t __len,
-       int __type,
-       struct hostent *__restrict __result_buf,
-       char *__restrict __buf, size_t __buflen,
-       struct hostent **__restrict __result,
-       int *__restrict __h_errnop);
-extern int gethostbyname_r (const char *__restrict __name,
-       struct hostent *__restrict __result_buf,
-       char *__restrict __buf, size_t __buflen,
-       struct hostent **__restrict __result,
-       int *__restrict __h_errnop);
-extern int gethostbyname2_r (const char *__restrict __name, int __af,
-        struct hostent *__restrict __result_buf,
-        char *__restrict __buf, size_t __buflen,
-        struct hostent **__restrict __result,
-        int *__restrict __h_errnop);
-extern void setnetent (int __stay_open);
-extern void endnetent (void);
-extern struct netent *getnetent (void);
-extern struct netent *getnetbyaddr (uint32_t __net, int __type);
-extern struct netent *getnetbyname (const char *__name);
-extern int getnetent_r (struct netent *__restrict __result_buf,
-   char *__restrict __buf, size_t __buflen,
-   struct netent **__restrict __result,
-   int *__restrict __h_errnop);
-extern int getnetbyaddr_r (uint32_t __net, int __type,
-      struct netent *__restrict __result_buf,
-      char *__restrict __buf, size_t __buflen,
-      struct netent **__restrict __result,
-      int *__restrict __h_errnop);
-extern int getnetbyname_r (const char *__restrict __name,
-      struct netent *__restrict __result_buf,
-      char *__restrict __buf, size_t __buflen,
-      struct netent **__restrict __result,
-      int *__restrict __h_errnop);
+
 struct servent
 {
   char *s_name;
@@ -1250,86 +851,14 @@ struct servent
   int s_port;
   char *s_proto;
 };
-extern void setservent (int __stay_open);
-extern void endservent (void);
-extern struct servent *getservent (void);
-extern struct servent *getservbyname (const char *__name, const char *__proto);
-extern struct servent *getservbyport (int __port, const char *__proto);
-extern int getservent_r (struct servent *__restrict __result_buf,
-    char *__restrict __buf, size_t __buflen,
-    struct servent **__restrict __result);
-extern int getservbyname_r (const char *__restrict __name,
-       const char *__restrict __proto,
-       struct servent *__restrict __result_buf,
-       char *__restrict __buf, size_t __buflen,
-       struct servent **__restrict __result);
-extern int getservbyport_r (int __port, const char *__restrict __proto,
-       struct servent *__restrict __result_buf,
-       char *__restrict __buf, size_t __buflen,
-       struct servent **__restrict __result);
+
 struct protoent
 {
   char *p_name;
   char **p_aliases;
   int p_proto;
 };
-extern void setprotoent (int __stay_open);
-extern void endprotoent (void);
-extern struct protoent *getprotoent (void);
-extern struct protoent *getprotobyname (const char *__name);
-extern struct protoent *getprotobynumber (int __proto);
-extern int getprotoent_r (struct protoent *__restrict __result_buf,
-     char *__restrict __buf, size_t __buflen,
-     struct protoent **__restrict __result);
-extern int getprotobyname_r (const char *__restrict __name,
-        struct protoent *__restrict __result_buf,
-        char *__restrict __buf, size_t __buflen,
-        struct protoent **__restrict __result);
-extern int getprotobynumber_r (int __proto,
-          struct protoent *__restrict __result_buf,
-          char *__restrict __buf, size_t __buflen,
-          struct protoent **__restrict __result);
-extern int setnetgrent (const char *__netgroup);
-extern void endnetgrent (void);
-extern int getnetgrent (char **__restrict __hostp,
-   char **__restrict __userp,
-   char **__restrict __domainp);
-extern int innetgr (const char *__netgroup, const char *__host,
-      const char *__user, const char *__domain);
-extern int getnetgrent_r (char **__restrict __hostp,
-     char **__restrict __userp,
-     char **__restrict __domainp,
-     char *__restrict __buffer, size_t __buflen);
-extern int rcmd (char **__restrict __ahost, unsigned short int __rport,
-   const char *__restrict __locuser,
-   const char *__restrict __remuser,
-   const char *__restrict __cmd, int *__restrict __fd2p);
-extern int rcmd_af (char **__restrict __ahost, unsigned short int __rport,
-      const char *__restrict __locuser,
-      const char *__restrict __remuser,
-      const char *__restrict __cmd, int *__restrict __fd2p,
-      sa_family_t __af);
-extern int rexec (char **__restrict __ahost, int __rport,
-    const char *__restrict __name,
-    const char *__restrict __pass,
-    const char *__restrict __cmd, int *__restrict __fd2p);
-extern int rexec_af (char **__restrict __ahost, int __rport,
-       const char *__restrict __name,
-       const char *__restrict __pass,
-       const char *__restrict __cmd, int *__restrict __fd2p,
-       sa_family_t __af);
-extern int ruserok (const char *__rhost, int __suser,
-      const char *__remuser, const char *__locuser);
-extern int ruserok_af (const char *__rhost, int __suser,
-         const char *__remuser, const char *__locuser,
-         sa_family_t __af);
-extern int iruserok (uint32_t __raddr, int __suser,
-       const char *__remuser, const char *__locuser);
-extern int iruserok_af (const void *__raddr, int __suser,
-   const char *__remuser, const char *__locuser,
-   sa_family_t __af);
-extern int rresvport (int *__alport);
-extern int rresvport_af (int *__alport, sa_family_t __af);
+
 struct addrinfo
 {
   int ai_flags;
@@ -1341,17 +870,6 @@ struct addrinfo
   char *ai_canonname;
   struct addrinfo *ai_next;
 };
-extern int getaddrinfo (const char *__restrict __name,
-   const char *__restrict __service,
-   const struct addrinfo *__restrict __req,
-   struct addrinfo **__restrict __pai);
-extern void freeaddrinfo (struct addrinfo *__ai) ;
-extern const char *gai_strerror (int __ecode) ;
-extern int getnameinfo (const struct sockaddr *__restrict __sa,
-   socklen_t __salen, char *__restrict __host,
-   socklen_t __hostlen, char *__restrict __serv,
-   socklen_t __servlen, int __flags);
-
 
 typedef unsigned char cc_t;
 typedef unsigned int speed_t;
@@ -1367,21 +885,6 @@ struct termios
     speed_t c_ispeed;
     speed_t c_ospeed;
   };
-extern speed_t cfgetospeed (const struct termios *__termios_p) ;
-extern speed_t cfgetispeed (const struct termios *__termios_p) ;
-extern int cfsetospeed (struct termios *__termios_p, speed_t __speed) ;
-extern int cfsetispeed (struct termios *__termios_p, speed_t __speed) ;
-extern int cfsetspeed (struct termios *__termios_p, speed_t __speed) ;
-extern int tcgetattr (int __fd, struct termios *__termios_p) ;
-extern int tcsetattr (int __fd, int __optional_actions,
-        const struct termios *__termios_p) ;
-extern void cfmakeraw (struct termios *__termios_p) ;
-extern int tcsendbreak (int __fd, int __duration) ;
-extern int tcdrain (int __fd);
-extern int tcflush (int __fd, int __queue_selector) ;
-extern int tcflow (int __fd, int __action) ;
-extern __pid_t tcgetsid (int __fd) ;
-
 
 struct passwd
 {
@@ -1393,56 +896,12 @@ struct passwd
   char *pw_dir;
   char *pw_shell;
 };
-extern void setpwent (void);
-extern void endpwent (void);
-extern struct passwd *getpwent (void);
-extern struct passwd *fgetpwent (FILE *__stream) ;
-extern int putpwent (const struct passwd *__restrict __p,
-       FILE *__restrict __f);
-extern struct passwd *getpwuid (__uid_t __uid);
-extern struct passwd *getpwnam (const char *__name) ;
-extern int getpwent_r (struct passwd *__restrict __resultbuf,
-         char *__restrict __buffer, size_t __buflen,
-         struct passwd **__restrict __result)
-         ;
-extern int getpwuid_r (__uid_t __uid,
-         struct passwd *__restrict __resultbuf,
-         char *__restrict __buffer, size_t __buflen,
-         struct passwd **__restrict __result)
-         ;
-extern int getpwnam_r (const char *__restrict __name,
-         struct passwd *__restrict __resultbuf,
-         char *__restrict __buffer, size_t __buflen,
-         struct passwd **__restrict __result)
-         ;
-extern int fgetpwent_r (FILE *__restrict __stream,
-   struct passwd *__restrict __resultbuf,
-   char *__restrict __buffer, size_t __buflen,
-   struct passwd **__restrict __result)
-   ;
 
 typedef union
 {
   char __size[32];
   long int __align;
 } sem_t;
-
-extern int sem_init (sem_t *__sem, int __pshared, unsigned int __value)
-  ;
-extern int sem_destroy (sem_t *__sem) ;
-extern sem_t *sem_open (const char *__name, int __oflag, ...)
-  ;
-extern int sem_close (sem_t *__sem) ;
-extern int sem_unlink (const char *__name) ;
-extern int sem_wait (sem_t *__sem) ;
-extern int sem_timedwait (sem_t *__restrict __sem,
-     const struct timespec *__restrict __abstime)
-  ;
-extern int sem_trywait (sem_t *__sem) ;
-extern int sem_post (sem_t *__sem) ;
-extern int sem_getvalue (sem_t *__restrict __sem, int *__restrict __sval)
-  ;
-
 
 typedef __sig_atomic_t sig_atomic_t;
 union sigval
@@ -1612,28 +1071,7 @@ enum
   SIGEV_THREAD_ID = 4
 };
 typedef void (*__sighandler_t) (int);
-extern __sighandler_t __sysv_signal (int __sig, __sighandler_t __handler)
-     ;
-extern __sighandler_t signal (int __sig, __sighandler_t __handler)
-     ;
-extern int kill (__pid_t __pid, int __sig) ;
-extern int killpg (__pid_t __pgrp, int __sig) ;
-extern int raise (int __sig) ;
-extern __sighandler_t ssignal (int __sig, __sighandler_t __handler)
-     ;
-extern int gsignal (int __sig) ;
-extern void psignal (int __sig, const char *__s);
-extern void psiginfo (const siginfo_t *__pinfo, const char *__s);
-extern int sigblock (int __mask) ;
-extern int sigsetmask (int __mask) ;
-extern int siggetmask (void) ;
-typedef __sighandler_t sig_t;
-extern int sigemptyset (sigset_t *__set) ;
-extern int sigfillset (sigset_t *__set) ;
-extern int sigaddset (sigset_t *__set, int __signo) ;
-extern int sigdelset (sigset_t *__set, int __signo) ;
-extern int sigismember (const sigset_t *__set, int __signo)
-     ;
+
 struct sigaction
   {
     union
@@ -1646,24 +1084,7 @@ struct sigaction
     int sa_flags;
     void (*sa_restorer) (void);
   };
-extern int sigprocmask (int __how, const sigset_t *__restrict __set,
-   sigset_t *__restrict __oset) ;
-extern int sigsuspend (const sigset_t *__set) ;
-extern int sigaction (int __sig, const struct sigaction *__restrict __act,
-        struct sigaction *__restrict __oact) ;
-extern int sigpending (sigset_t *__set) ;
-extern int sigwait (const sigset_t *__restrict __set, int *__restrict __sig)
-     ;
-extern int sigwaitinfo (const sigset_t *__restrict __set,
-   siginfo_t *__restrict __info) ;
-extern int sigtimedwait (const sigset_t *__restrict __set,
-    siginfo_t *__restrict __info,
-    const struct timespec *__restrict __timeout)
-     ;
-extern int sigqueue (__pid_t __pid, int __sig, const union sigval __val)
-     ;
-extern const char *const _sys_siglist[(64 + 1)];
-extern const char *const sys_siglist[(64 + 1)];
+
 struct _fpx_sw_bytes
 {
   __uint32_t magic1;
@@ -1752,7 +1173,7 @@ struct _xstate
   struct _xsave_hdr xstate_hdr;
   struct _ymmh_state ymmh;
 };
-extern int sigreturn (struct sigcontext *__scp) ;
+
 typedef struct
   {
     void *ss_sp;
@@ -1802,56 +1223,29 @@ typedef struct ucontext_t
     struct _libc_fpstate __fpregs_mem;
     __extension__ unsigned long long int __ssp[4];
   } ucontext_t;
-extern int siginterrupt (int __sig, int __interrupt) ;
+
 enum
 {
   SS_ONSTACK = 1,
   SS_DISABLE
 };
-extern int sigaltstack (const stack_t *__restrict __ss,
-   stack_t *__restrict __oss) ;
+
 struct sigstack
   {
     void *ss_sp;
     int ss_onstack;
   };
-extern int sigstack (struct sigstack *__ss, struct sigstack *__oss)
-     ;
-extern int pthread_sigmask (int __how,
-       const __sigset_t *__restrict __newmask,
-       __sigset_t *__restrict __oldmask);
-extern int pthread_kill (pthread_t __threadid, int __signo) ;
-extern int __libc_current_sigrtmin (void) ;
-extern int __libc_current_sigrtmax (void) ;
 
 struct sched_param
 {
   int sched_priority;
 };
 
-
 typedef unsigned long int __cpu_mask;
 typedef struct
 {
   __cpu_mask __bits[1024 / (8 * sizeof (__cpu_mask))];
 } cpu_set_t;
-
-extern int __sched_cpucount (size_t __setsize, const cpu_set_t *__setp)
-     ;
-extern cpu_set_t *__sched_cpualloc (size_t __count) ;
-extern void __sched_cpufree (cpu_set_t *__set) ;
-
-
-extern int sched_setparam (__pid_t __pid, const struct sched_param *__param)
-     ;
-extern int sched_getparam (__pid_t __pid, struct sched_param *__param) ;
-extern int sched_setscheduler (__pid_t __pid, int __policy,
-          const struct sched_param *__param) ;
-extern int sched_getscheduler (__pid_t __pid) ;
-extern int sched_yield (void) ;
-extern int sched_get_priority_max (int __algorithm) ;
-extern int sched_get_priority_min (int __algorithm) ;
-extern int sched_rr_get_interval (__pid_t __pid, struct timespec *__t) ;
 
 struct tm
 {
@@ -1883,63 +1277,6 @@ struct __locale_struct
 };
 typedef struct __locale_struct *__locale_t;
 typedef __locale_t locale_t;
-
-extern clock_t clock (void) ;
-extern time_t time (time_t *__timer) ;
-extern double difftime (time_t __time1, time_t __time0)
-     ;
-extern time_t mktime (struct tm *__tp) ;
-extern size_t strftime (char *__restrict __s, size_t __maxsize,
-   const char *__restrict __format,
-   const struct tm *__restrict __tp) ;
-extern size_t strftime_l (char *__restrict __s, size_t __maxsize,
-     const char *__restrict __format,
-     const struct tm *__restrict __tp,
-     locale_t __loc) ;
-extern struct tm *gmtime (const time_t *__timer) ;
-extern struct tm *localtime (const time_t *__timer) ;
-extern struct tm *gmtime_r (const time_t *__restrict __timer,
-       struct tm *__restrict __tp) ;
-extern struct tm *localtime_r (const time_t *__restrict __timer,
-          struct tm *__restrict __tp) ;
-extern char *asctime (const struct tm *__tp) ;
-extern char *ctime (const time_t *__timer) ;
-extern char *asctime_r (const struct tm *__restrict __tp,
-   char *__restrict __buf) ;
-extern char *ctime_r (const time_t *__restrict __timer,
-        char *__restrict __buf) ;
-extern char *__tzname[2];
-extern int __daylight;
-extern long int __timezone;
-extern char *tzname[2];
-extern void tzset (void) ;
-extern int daylight;
-extern long int timezone;
-extern time_t timegm (struct tm *__tp) ;
-extern time_t timelocal (struct tm *__tp) ;
-extern int dysize (int __year) ;
-extern int nanosleep (const struct timespec *__requested_time,
-        struct timespec *__remaining);
-extern int clock_getres (clockid_t __clock_id, struct timespec *__res) ;
-extern int clock_gettime (clockid_t __clock_id, struct timespec *__tp) ;
-extern int clock_settime (clockid_t __clock_id, const struct timespec *__tp)
-     ;
-extern int clock_nanosleep (clockid_t __clock_id, int __flags,
-       const struct timespec *__req,
-       struct timespec *__rem);
-extern int clock_getcpuclockid (pid_t __pid, clockid_t *__clock_id) ;
-extern int timer_create (clockid_t __clock_id,
-    struct sigevent *__restrict __evp,
-    timer_t *__restrict __timerid) ;
-extern int timer_delete (timer_t __timerid) ;
-extern int timer_settime (timer_t __timerid, int __flags,
-     const struct itimerspec *__restrict __value,
-     struct itimerspec *__restrict __ovalue) ;
-extern int timer_gettime (timer_t __timerid, struct itimerspec *__value)
-     ;
-extern int timer_getoverrun (timer_t __timerid) ;
-extern int timespec_get (struct timespec *__ts, int __base)
-     ;
 
 typedef long int __jmp_buf[8];
 enum
@@ -2012,86 +1349,6 @@ enum
   PTHREAD_CANCEL_ASYNCHRONOUS
 };
 
-extern int pthread_create (pthread_t *__restrict __newthread,
-      const pthread_attr_t *__restrict __attr,
-      void *(*__start_routine) (void *),
-      void *__restrict __arg) ;
-extern void pthread_exit (void *__retval) ;
-extern int pthread_join (pthread_t __th, void **__thread_return);
-extern int pthread_detach (pthread_t __th) ;
-extern pthread_t pthread_self (void) ;
-extern int pthread_equal (pthread_t __thread1, pthread_t __thread2)
-  ;
-extern int pthread_attr_init (pthread_attr_t *__attr) ;
-extern int pthread_attr_destroy (pthread_attr_t *__attr)
-     ;
-extern int pthread_attr_getdetachstate (const pthread_attr_t *__attr,
-     int *__detachstate)
-     ;
-extern int pthread_attr_setdetachstate (pthread_attr_t *__attr,
-     int __detachstate)
-     ;
-extern int pthread_attr_getguardsize (const pthread_attr_t *__attr,
-          size_t *__guardsize)
-     ;
-extern int pthread_attr_setguardsize (pthread_attr_t *__attr,
-          size_t __guardsize)
-     ;
-extern int pthread_attr_getschedparam (const pthread_attr_t *__restrict __attr,
-           struct sched_param *__restrict __param)
-     ;
-extern int pthread_attr_setschedparam (pthread_attr_t *__restrict __attr,
-           const struct sched_param *__restrict
-           __param) ;
-extern int pthread_attr_getschedpolicy (const pthread_attr_t *__restrict
-     __attr, int *__restrict __policy)
-     ;
-extern int pthread_attr_setschedpolicy (pthread_attr_t *__attr, int __policy)
-     ;
-extern int pthread_attr_getinheritsched (const pthread_attr_t *__restrict
-      __attr, int *__restrict __inherit)
-     ;
-extern int pthread_attr_setinheritsched (pthread_attr_t *__attr,
-      int __inherit)
-     ;
-extern int pthread_attr_getscope (const pthread_attr_t *__restrict __attr,
-      int *__restrict __scope)
-     ;
-extern int pthread_attr_setscope (pthread_attr_t *__attr, int __scope)
-     ;
-extern int pthread_attr_getstackaddr (const pthread_attr_t *__restrict
-          __attr, void **__restrict __stackaddr)
-     ;
-extern int pthread_attr_setstackaddr (pthread_attr_t *__attr,
-          void *__stackaddr)
-     ;
-extern int pthread_attr_getstacksize (const pthread_attr_t *__restrict
-          __attr, size_t *__restrict __stacksize)
-     ;
-extern int pthread_attr_setstacksize (pthread_attr_t *__attr,
-          size_t __stacksize)
-     ;
-extern int pthread_attr_getstack (const pthread_attr_t *__restrict __attr,
-      void **__restrict __stackaddr,
-      size_t *__restrict __stacksize)
-     ;
-extern int pthread_attr_setstack (pthread_attr_t *__attr, void *__stackaddr,
-      size_t __stacksize) ;
-extern int pthread_setschedparam (pthread_t __target_thread, int __policy,
-      const struct sched_param *__param)
-     ;
-extern int pthread_getschedparam (pthread_t __target_thread,
-      int *__restrict __policy,
-      struct sched_param *__restrict __param)
-     ;
-extern int pthread_setschedprio (pthread_t __target_thread, int __prio)
-     ;
-extern int pthread_once (pthread_once_t *__once_control,
-    void (*__init_routine) (void)) ;
-extern int pthread_setcancelstate (int __state, int *__oldstate);
-extern int pthread_setcanceltype (int __type, int *__oldtype);
-extern int pthread_cancel (pthread_t __th);
-extern void pthread_testcancel (void);
 typedef struct
 {
   struct
@@ -2108,190 +1365,8 @@ struct __pthread_cleanup_frame
   int __do_it;
   int __cancel_type;
 };
-extern void __pthread_register_cancel (__pthread_unwind_buf_t *__buf)
-     ;
-extern void __pthread_unregister_cancel (__pthread_unwind_buf_t *__buf)
-  ;
-extern void __pthread_unwind_next (__pthread_unwind_buf_t *__buf)
 
-
-     ;
 struct __jmp_buf_tag;
-extern int __sigsetjmp (struct __jmp_buf_tag *__env, int __savemask) ;
-extern int pthread_mutex_init (pthread_mutex_t *__mutex,
-          const pthread_mutexattr_t *__mutexattr)
-     ;
-extern int pthread_mutex_destroy (pthread_mutex_t *__mutex)
-     ;
-extern int pthread_mutex_trylock (pthread_mutex_t *__mutex)
-     ;
-extern int pthread_mutex_lock (pthread_mutex_t *__mutex)
-     ;
-extern int pthread_mutex_timedlock (pthread_mutex_t *__restrict __mutex,
-        const struct timespec *__restrict
-        __abstime) ;
-extern int pthread_mutex_unlock (pthread_mutex_t *__mutex)
-     ;
-extern int pthread_mutex_getprioceiling (const pthread_mutex_t *
-      __restrict __mutex,
-      int *__restrict __prioceiling)
-     ;
-extern int pthread_mutex_setprioceiling (pthread_mutex_t *__restrict __mutex,
-      int __prioceiling,
-      int *__restrict __old_ceiling)
-     ;
-extern int pthread_mutex_consistent (pthread_mutex_t *__mutex)
-     ;
-extern int pthread_mutexattr_init (pthread_mutexattr_t *__attr)
-     ;
-extern int pthread_mutexattr_destroy (pthread_mutexattr_t *__attr)
-     ;
-extern int pthread_mutexattr_getpshared (const pthread_mutexattr_t *
-      __restrict __attr,
-      int *__restrict __pshared)
-     ;
-extern int pthread_mutexattr_setpshared (pthread_mutexattr_t *__attr,
-      int __pshared)
-     ;
-extern int pthread_mutexattr_gettype (const pthread_mutexattr_t *__restrict
-          __attr, int *__restrict __kind)
-     ;
-extern int pthread_mutexattr_settype (pthread_mutexattr_t *__attr, int __kind)
-     ;
-extern int pthread_mutexattr_getprotocol (const pthread_mutexattr_t *
-       __restrict __attr,
-       int *__restrict __protocol)
-     ;
-extern int pthread_mutexattr_setprotocol (pthread_mutexattr_t *__attr,
-       int __protocol)
-     ;
-extern int pthread_mutexattr_getprioceiling (const pthread_mutexattr_t *
-          __restrict __attr,
-          int *__restrict __prioceiling)
-     ;
-extern int pthread_mutexattr_setprioceiling (pthread_mutexattr_t *__attr,
-          int __prioceiling)
-     ;
-extern int pthread_mutexattr_getrobust (const pthread_mutexattr_t *__attr,
-     int *__robustness)
-     ;
-extern int pthread_mutexattr_setrobust (pthread_mutexattr_t *__attr,
-     int __robustness)
-     ;
-extern int pthread_rwlock_init (pthread_rwlock_t *__restrict __rwlock,
-    const pthread_rwlockattr_t *__restrict
-    __attr) ;
-extern int pthread_rwlock_destroy (pthread_rwlock_t *__rwlock)
-     ;
-extern int pthread_rwlock_rdlock (pthread_rwlock_t *__rwlock)
-     ;
-extern int pthread_rwlock_tryrdlock (pthread_rwlock_t *__rwlock)
-  ;
-extern int pthread_rwlock_timedrdlock (pthread_rwlock_t *__restrict __rwlock,
-           const struct timespec *__restrict
-           __abstime) ;
-extern int pthread_rwlock_wrlock (pthread_rwlock_t *__rwlock)
-     ;
-extern int pthread_rwlock_trywrlock (pthread_rwlock_t *__rwlock)
-     ;
-extern int pthread_rwlock_timedwrlock (pthread_rwlock_t *__restrict __rwlock,
-           const struct timespec *__restrict
-           __abstime) ;
-extern int pthread_rwlock_unlock (pthread_rwlock_t *__rwlock)
-     ;
-extern int pthread_rwlockattr_init (pthread_rwlockattr_t *__attr)
-     ;
-extern int pthread_rwlockattr_destroy (pthread_rwlockattr_t *__attr)
-     ;
-extern int pthread_rwlockattr_getpshared (const pthread_rwlockattr_t *
-       __restrict __attr,
-       int *__restrict __pshared)
-     ;
-extern int pthread_rwlockattr_setpshared (pthread_rwlockattr_t *__attr,
-       int __pshared)
-     ;
-extern int pthread_rwlockattr_getkind_np (const pthread_rwlockattr_t *
-       __restrict __attr,
-       int *__restrict __pref)
-     ;
-extern int pthread_rwlockattr_setkind_np (pthread_rwlockattr_t *__attr,
-       int __pref) ;
-extern int pthread_cond_init (pthread_cond_t *__restrict __cond,
-         const pthread_condattr_t *__restrict __cond_attr)
-     ;
-extern int pthread_cond_destroy (pthread_cond_t *__cond)
-     ;
-extern int pthread_cond_signal (pthread_cond_t *__cond)
-     ;
-extern int pthread_cond_broadcast (pthread_cond_t *__cond)
-     ;
-extern int pthread_cond_wait (pthread_cond_t *__restrict __cond,
-         pthread_mutex_t *__restrict __mutex)
-     ;
-extern int pthread_cond_timedwait (pthread_cond_t *__restrict __cond,
-       pthread_mutex_t *__restrict __mutex,
-       const struct timespec *__restrict __abstime)
-     ;
-extern int pthread_condattr_init (pthread_condattr_t *__attr)
-     ;
-extern int pthread_condattr_destroy (pthread_condattr_t *__attr)
-     ;
-extern int pthread_condattr_getpshared (const pthread_condattr_t *
-     __restrict __attr,
-     int *__restrict __pshared)
-     ;
-extern int pthread_condattr_setpshared (pthread_condattr_t *__attr,
-     int __pshared) ;
-extern int pthread_condattr_getclock (const pthread_condattr_t *
-          __restrict __attr,
-          __clockid_t *__restrict __clock_id)
-     ;
-extern int pthread_condattr_setclock (pthread_condattr_t *__attr,
-          __clockid_t __clock_id)
-     ;
-extern int pthread_spin_init (pthread_spinlock_t *__lock, int __pshared)
-     ;
-extern int pthread_spin_destroy (pthread_spinlock_t *__lock)
-     ;
-extern int pthread_spin_lock (pthread_spinlock_t *__lock)
-     ;
-extern int pthread_spin_trylock (pthread_spinlock_t *__lock)
-     ;
-extern int pthread_spin_unlock (pthread_spinlock_t *__lock)
-     ;
-extern int pthread_barrier_init (pthread_barrier_t *__restrict __barrier,
-     const pthread_barrierattr_t *__restrict
-     __attr, unsigned int __count)
-     ;
-extern int pthread_barrier_destroy (pthread_barrier_t *__barrier)
-     ;
-extern int pthread_barrier_wait (pthread_barrier_t *__barrier)
-     ;
-extern int pthread_barrierattr_init (pthread_barrierattr_t *__attr)
-     ;
-extern int pthread_barrierattr_destroy (pthread_barrierattr_t *__attr)
-     ;
-extern int pthread_barrierattr_getpshared (const pthread_barrierattr_t *
-        __restrict __attr,
-        int *__restrict __pshared)
-     ;
-extern int pthread_barrierattr_setpshared (pthread_barrierattr_t *__attr,
-        int __pshared)
-     ;
-extern int pthread_key_create (pthread_key_t *__key,
-          void (*__destr_function) (void *))
-     ;
-extern int pthread_key_delete (pthread_key_t __key) ;
-extern void *pthread_getspecific (pthread_key_t __key) ;
-extern int pthread_setspecific (pthread_key_t __key,
-    const void *__pointer) ;
-extern int pthread_getcpuclockid (pthread_t __thread_id,
-      __clockid_t *__clock_id)
-     ;
-extern int pthread_atfork (void (*__prepare) (void),
-      void (*__parent) (void),
-      void (*__child) (void)) ;
-
 struct uv__work {
   void (*work)(struct uv__work *w);
   void (*done)(struct uv__work *w, int status);
@@ -2313,25 +1388,29 @@ struct uv__io_s {
   int fd;
 
 };
+
 typedef struct uv_buf_t {
   char* base;
   size_t len;
 } uv_buf_t;
+
 typedef int uv_file;
 typedef int uv_os_sock_t;
 typedef int uv_os_fd_t;
 typedef pid_t uv_pid_t;
+typedef int pthread_once_t;
 typedef pthread_once_t uv_once_t;
 typedef pthread_t uv_thread_t;
 typedef pthread_mutex_t uv_mutex_t;
-typedef pthread_rwlock_t uv_rwlock_t;
 typedef sem_t uv_sem_t;
+typedef pthread_rwlock_t uv_rwlock_t;
 typedef pthread_cond_t uv_cond_t;
+typedef unsigned int pthread_key_t;
 typedef pthread_key_t uv_key_t;
+
 typedef pthread_barrier_t uv_barrier_t;
 typedef gid_t uv_gid_t;
 typedef uid_t uv_uid_t;
-typedef struct dirent uv__dirent_t;
 typedef struct {
   void* handle;
   char* errmsg;
@@ -2352,6 +1431,7 @@ typedef enum {
 
   UV_REQ_TYPE_MAX
 } uv_req_type;
+
 typedef struct uv_loop_s uv_loop_t;
 typedef struct uv_handle_s uv_handle_t;
 typedef struct uv_dir_s uv_dir_t;
@@ -2498,8 +1578,9 @@ typedef enum {
  char* uv_strerror_r(int err, char* buf, size_t buflen);
  const char* uv_err_name(int err);
  char* uv_err_name_r(int err, char* buf, size_t buflen);
+
 struct uv_req_s {
-  void* data; uv_req_type type; void* reserved[6];
+void* data; uv_req_type type; void* reserved[6];
 };
 
  int uv_shutdown(uv_shutdown_t* req,
@@ -2509,11 +1590,14 @@ struct uv_shutdown_s {
   void* data; uv_req_type type; void* reserved[6];
   uv_stream_t* handle;
   uv_shutdown_cb cb;
+};
 
-};
 struct uv_handle_s {
-  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u; uv_handle_t* next_closing; unsigned int flags;
+  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
+uv_handle_t* next_closing;
+unsigned int flags;
 };
+
  size_t uv_handle_size(uv_handle_type type);
  uv_handle_type uv_handle_get_type(const uv_handle_t* handle);
  const char* uv_handle_type_name(uv_handle_type type);
@@ -2541,9 +1625,13 @@ struct uv_handle_s {
                             int flags0,
                             int flags1);
 struct uv_stream_s {
-  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u; uv_handle_t* next_closing; unsigned int flags;
-  size_t write_queue_size; uv_alloc_cb alloc_cb; uv_read_cb read_cb; uv_connect_t *connect_req; uv_shutdown_t *shutdown_req; uv__io_t io_watcher; void* write_queue[2]; void* write_completed_queue[2]; uv_connection_cb connection_cb; int delayed_error; int accepted_fd; void* queued_fds;
+  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
+  uv_handle_t* next_closing;
+  unsigned int flags;
+  size_t write_queue_size; uv_alloc_cb alloc_cb; uv_read_cb read_cb;
+  uv_connect_t *connect_req; uv_shutdown_t *shutdown_req; uv__io_t io_watcher; void* write_queue[2]; void* write_completed_queue[2]; uv_connection_cb connection_cb; int delayed_error; int accepted_fd; void* queued_fds;
 };
+
  size_t uv_stream_get_write_queue_size(const uv_stream_t* stream);
  int uv_listen(uv_stream_t* stream, int backlog, uv_connection_cb cb);
  int uv_accept(uv_stream_t* server, uv_stream_t* client);
@@ -2576,15 +1664,19 @@ struct uv_write_s {
   uv_stream_t* handle;
   void* queue[2]; unsigned int write_index; uv_buf_t* bufs; unsigned int nbufs; int error; uv_buf_t bufsml[4];
 };
+
  int uv_is_readable(const uv_stream_t* handle);
  int uv_is_writable(const uv_stream_t* handle);
  int uv_stream_set_blocking(uv_stream_t* handle, int blocking);
  int uv_is_closing(const uv_handle_t* handle);
 struct uv_tcp_s {
-  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u; uv_handle_t* next_closing; unsigned int flags;
-  size_t write_queue_size; uv_alloc_cb alloc_cb; uv_read_cb read_cb; uv_connect_t *connect_req; uv_shutdown_t *shutdown_req; uv__io_t io_watcher; void* write_queue[2]; void* write_completed_queue[2]; uv_connection_cb connection_cb; int delayed_error; int accepted_fd; void* queued_fds;
-
+  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
+  uv_handle_t* next_closing;
+  unsigned int flags;
+  size_t write_queue_size; uv_alloc_cb alloc_cb; uv_read_cb read_cb;
+  uv_connect_t *connect_req; uv_shutdown_t *shutdown_req; uv__io_t io_watcher; void* write_queue[2]; void* write_completed_queue[2]; uv_connection_cb connection_cb; int delayed_error; int accepted_fd; void* queued_fds;
 };
+
  int uv_tcp_init(uv_loop_t*, uv_tcp_t* handle);
  int uv_tcp_init_ex(uv_loop_t*, uv_tcp_t* handle, unsigned int flags);
  int uv_tcp_open(uv_tcp_t* handle, uv_os_sock_t sock);
@@ -2616,6 +1708,7 @@ struct uv_connect_s {
   uv_stream_t* handle;
   void* queue[2];
 };
+
 enum uv_udp_flags {
   UV_UDP_IPV6ONLY = 1,
   UV_UDP_PARTIAL = 2,
@@ -2632,17 +1725,21 @@ typedef void (*uv_udp_recv_cb)(uv_udp_t* handle,
                                const struct sockaddr* addr,
                                unsigned flags);
 struct uv_udp_s {
-  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u; uv_handle_t* next_closing; unsigned int flags;
+  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
+  uv_handle_t* next_closing;
+  unsigned int flags;
   size_t send_queue_size;
   size_t send_queue_count;
   uv_alloc_cb alloc_cb; uv_udp_recv_cb recv_cb; uv__io_t io_watcher; void* write_queue[2]; void* write_completed_queue[2];
 };
+
 struct uv_udp_send_s {
   void* data; uv_req_type type; void* reserved[6];
   uv_udp_t* handle;
   uv_udp_send_cb cb;
   void* queue[2]; struct sockaddr_storage addr; unsigned int nbufs; uv_buf_t* bufs; ssize_t status; uv_udp_send_cb send_cb; uv_buf_t bufsml[4];
 };
+
  int uv_udp_init(uv_loop_t*, uv_udp_t* handle);
  int uv_udp_init_ex(uv_loop_t*, uv_udp_t* handle, unsigned int flags);
  int uv_udp_open(uv_udp_t* handle, uv_os_sock_t sock);
@@ -2688,11 +1785,16 @@ struct uv_udp_send_s {
  int uv_udp_recv_stop(uv_udp_t* handle);
  size_t uv_udp_get_send_queue_size(const uv_udp_t* handle);
  size_t uv_udp_get_send_queue_count(const uv_udp_t* handle);
+
 struct uv_tty_s {
-  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u; uv_handle_t* next_closing; unsigned int flags;
-  size_t write_queue_size; uv_alloc_cb alloc_cb; uv_read_cb read_cb; uv_connect_t *connect_req; uv_shutdown_t *shutdown_req; uv__io_t io_watcher; void* write_queue[2]; void* write_completed_queue[2]; uv_connection_cb connection_cb; int delayed_error; int accepted_fd; void* queued_fds;
+  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
+  uv_handle_t* next_closing;
+  unsigned int flags;
+  size_t write_queue_size; uv_alloc_cb alloc_cb; uv_read_cb read_cb;
+  uv_connect_t *connect_req; uv_shutdown_t *shutdown_req; uv__io_t io_watcher; void* write_queue[2]; void* write_completed_queue[2]; uv_connection_cb connection_cb; int delayed_error; int accepted_fd; void* queued_fds;
   struct termios orig_termios; int mode;
 };
+
 typedef enum {
   UV_TTY_MODE_NORMAL,
   UV_TTY_MODE_RAW,
@@ -2709,12 +1811,17 @@ typedef enum {
  void uv_tty_set_vterm_state(uv_tty_vtermstate_t state);
  int uv_tty_get_vterm_state(uv_tty_vtermstate_t* state);
  uv_handle_type uv_guess_handle(uv_file file);
+
 struct uv_pipe_s {
-  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u; uv_handle_t* next_closing; unsigned int flags;
-  size_t write_queue_size; uv_alloc_cb alloc_cb; uv_read_cb read_cb; uv_connect_t *connect_req; uv_shutdown_t *shutdown_req; uv__io_t io_watcher; void* write_queue[2]; void* write_completed_queue[2]; uv_connection_cb connection_cb; int delayed_error; int accepted_fd; void* queued_fds;
-  int ipc;
+  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
+  uv_handle_t* next_closing;
+  unsigned int flags;
+  size_t write_queue_size; uv_alloc_cb alloc_cb; uv_read_cb read_cb;
+  uv_connect_t *connect_req; uv_shutdown_t *shutdown_req; uv__io_t io_watcher; void* write_queue[2]; void* write_completed_queue[2]; uv_connection_cb connection_cb; int delayed_error; int accepted_fd; void* queued_fds;
+  int ipc; /* non-zero if this pipe is used for passing handles */
   const char* pipe_fname;
 };
+
  int uv_pipe_init(uv_loop_t*, uv_pipe_t* handle, int ipc);
  int uv_pipe_open(uv_pipe_t*, uv_file file);
  int uv_pipe_bind(uv_pipe_t* handle, const char* name);
@@ -2732,11 +1839,15 @@ struct uv_pipe_s {
  int uv_pipe_pending_count(uv_pipe_t* handle);
  uv_handle_type uv_pipe_pending_type(uv_pipe_t* handle);
  int uv_pipe_chmod(uv_pipe_t* handle, int flags);
+
 struct uv_poll_s {
-  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u; uv_handle_t* next_closing; unsigned int flags;
+  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
+  uv_handle_t* next_closing;
+  unsigned int flags;
   uv_poll_cb poll_cb;
   uv__io_t io_watcher;
 };
+
 enum uv_poll_event {
   UV_READABLE = 1,
   UV_WRITABLE = 2,
@@ -2749,39 +1860,65 @@ enum uv_poll_event {
                                   uv_os_sock_t socket);
  int uv_poll_start(uv_poll_t* handle, int events, uv_poll_cb cb);
  int uv_poll_stop(uv_poll_t* handle);
+
 struct uv_prepare_s {
-  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u; uv_handle_t* next_closing; unsigned int flags;
+  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
+  uv_handle_t* next_closing;
+  unsigned int flags;
   uv_prepare_cb prepare_cb; void* queue[2];
 };
+
  int uv_prepare_init(uv_loop_t*, uv_prepare_t* prepare);
  int uv_prepare_start(uv_prepare_t* prepare, uv_prepare_cb cb);
  int uv_prepare_stop(uv_prepare_t* prepare);
+
 struct uv_check_s {
-  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u; uv_handle_t* next_closing; unsigned int flags;
+  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
+  uv_handle_t* next_closing;
+  unsigned int flags;
   uv_check_cb check_cb; void* queue[2];
 };
+
  int uv_check_init(uv_loop_t*, uv_check_t* check);
  int uv_check_start(uv_check_t* check, uv_check_cb cb);
  int uv_check_stop(uv_check_t* check);
+
 struct uv_idle_s {
-  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u; uv_handle_t* next_closing; unsigned int flags;
+  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
+  uv_handle_t* next_closing;
+  unsigned int flags;
   uv_idle_cb idle_cb; void* queue[2];
 };
+
  int uv_idle_init(uv_loop_t*, uv_idle_t* idle);
  int uv_idle_start(uv_idle_t* idle, uv_idle_cb cb);
  int uv_idle_stop(uv_idle_t* idle);
+
 struct uv_async_s {
-  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u; uv_handle_t* next_closing; unsigned int flags;
+  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
+  uv_handle_t* next_closing;
+  unsigned int flags;
   uv_async_cb async_cb; void* queue[2]; int pending;
 };
+
  int uv_async_init(uv_loop_t*,
                             uv_async_t* async,
                             uv_async_cb async_cb);
  int uv_async_send(uv_async_t* async);
+
 struct uv_timer_s {
-  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u; uv_handle_t* next_closing; unsigned int flags;
+  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
+  uv_handle_t* next_closing;
+  unsigned int flags;
+  void* heap_node[3];
+  int unused;
+  uint64_t timeout;
+  uint64_t repeat;
+  uint64_t start_id;
+  uv_timer_cb timer_cb;
   uv_timer_cb timer_cb; void* heap_node[3]; uint64_t timeout; uint64_t repeat; uint64_t start_id;
 };
+
  int uv_timer_init(uv_loop_t*, uv_timer_t* handle);
  int uv_timer_start(uv_timer_t* handle,
                              uv_timer_cb cb,
@@ -2792,11 +1929,13 @@ struct uv_timer_s {
  void uv_timer_set_repeat(uv_timer_t* handle, uint64_t repeat);
  uint64_t uv_timer_get_repeat(const uv_timer_t* handle);
  uint64_t uv_timer_get_due_in(const uv_timer_t* handle);
+
 struct uv_getaddrinfo_s {
   void* data; uv_req_type type; void* reserved[6];
   uv_loop_t* loop;
   struct uv__work work_req; uv_getaddrinfo_cb cb; struct addrinfo* hints; char* hostname; char* service; struct addrinfo* addrinfo; int retcode;
 };
+
  int uv_getaddrinfo(uv_loop_t* loop,
                              uv_getaddrinfo_t* req,
                              uv_getaddrinfo_cb getaddrinfo_cb,
@@ -2804,11 +1943,13 @@ struct uv_getaddrinfo_s {
                              const char* service,
                              const struct addrinfo* hints);
  void uv_freeaddrinfo(struct addrinfo* ai);
+
 struct uv_getnameinfo_s {
   void* data; uv_req_type type; void* reserved[6];
   uv_loop_t* loop;
   struct uv__work work_req; uv_getnameinfo_cb getnameinfo_cb; struct sockaddr_storage storage; int flags; char host[1025]; char service[32]; int retcode;
 };
+
  int uv_getnameinfo(uv_loop_t* loop,
                              uv_getnameinfo_t* req,
                              uv_getnameinfo_cb getnameinfo_cb,
@@ -2852,18 +1993,23 @@ enum uv_process_flags {
   UV_PROCESS_WINDOWS_HIDE_CONSOLE = (1 << 5),
   UV_PROCESS_WINDOWS_HIDE_GUI = (1 << 6)
 };
+
 struct uv_process_s {
-  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u; uv_handle_t* next_closing; unsigned int flags;
+  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
+  uv_handle_t* next_closing;
+  unsigned int flags;
   uv_exit_cb exit_cb;
   int pid;
   void* queue[2]; int status;
 };
+
  int uv_spawn(uv_loop_t* loop,
                        uv_process_t* handle,
                        const uv_process_options_t* options);
  int uv_process_kill(uv_process_t*, int signum);
  int uv_kill(int pid, int signum);
  uv_pid_t uv_process_get_pid(const uv_process_t*);
+
 struct uv_work_s {
   void* data; uv_req_type type; void* reserved[6];
   uv_loop_t* loop;
@@ -2871,6 +2017,7 @@ struct uv_work_s {
   uv_after_work_cb after_work_cb;
   struct uv__work work_req;
 };
+
  int uv_queue_work(uv_loop_t* loop,
                             uv_work_t* req,
                             uv_work_cb work_cb,
@@ -3039,12 +2186,14 @@ typedef enum {
   UV_FS_MKSTEMP,
   UV_FS_LUTIME
 } uv_fs_type;
+
 struct uv_dir_s {
   uv_dirent_t* dirents;
   size_t nentries;
   void* reserved[4];
   DIR* dir;
 };
+
 struct uv_fs_s {
   void* data; uv_req_type type; void* reserved[6];
   uv_fs_type fs_type;
@@ -3056,6 +2205,7 @@ struct uv_fs_s {
   uv_stat_t statbuf;
   const char *new_path; uv_file file; int flags; mode_t mode; unsigned int nbufs; uv_buf_t* bufs; off_t off; uv_uid_t uid; uv_gid_t gid; double atime; double mtime; struct uv__work work_req; uv_buf_t bufsml[4];
 };
+
  uv_fs_type uv_fs_get_type(const uv_fs_t*);
  ssize_t uv_fs_get_result(const uv_fs_t*);
  int uv_fs_get_system_error(const uv_fs_t*);
@@ -3248,15 +2398,22 @@ enum uv_fs_event {
   UV_RENAME = 1,
   UV_CHANGE = 2
 };
+
 struct uv_fs_event_s {
-  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u; uv_handle_t* next_closing; unsigned int flags;
+  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
+  uv_handle_t* next_closing;
+  unsigned int flags;
   char* path;
   uv_fs_event_cb cb; void* watchers[2]; int wd;
 };
+
 struct uv_fs_poll_s {
-  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u; uv_handle_t* next_closing; unsigned int flags;
+  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
+  uv_handle_t* next_closing;
+  unsigned int flags;
   void* poll_ctx;
 };
+
  int uv_fs_poll_init(uv_loop_t* loop, uv_fs_poll_t* handle);
  int uv_fs_poll_start(uv_fs_poll_t* handle,
                                uv_fs_poll_cb poll_cb,
@@ -3266,12 +2423,16 @@ struct uv_fs_poll_s {
  int uv_fs_poll_getpath(uv_fs_poll_t* handle,
                                  char* buffer,
                                  size_t* size);
+
 struct uv_signal_s {
-  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u; uv_handle_t* next_closing; unsigned int flags;
+  void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
+  uv_handle_t* next_closing;
+  unsigned int flags;
   uv_signal_cb signal_cb;
   int signum;
   struct { struct uv_signal_s* rbe_left; struct uv_signal_s* rbe_right; struct uv_signal_s* rbe_parent; int rbe_color; } tree_entry; unsigned int caught_signals; unsigned int dispatched_signals;
 };
+
  int uv_signal_init(uv_loop_t* loop, uv_signal_t* handle);
  int uv_signal_start(uv_signal_t* handle,
                               uv_signal_cb signal_cb,
@@ -3302,6 +2463,7 @@ enum uv_fs_event_flags {
  int uv_ip_name(const struct sockaddr* src, char* dst, size_t size);
  int uv_inet_ntop(int af, const void* src, char* dst, size_t size);
  int uv_inet_pton(int af, const char* src, void* dst);
+
 struct uv_random_s {
   void* data; uv_req_type type; void* reserved[6];
   uv_loop_t* loop;
@@ -3311,6 +2473,7 @@ struct uv_random_s {
   uv_random_cb cb;
   struct uv__work work_req;
 };
+
  int uv_random(uv_loop_t* loop,
                         uv_random_t* req,
                         void *buf,
@@ -3396,6 +2559,7 @@ union uv_any_handle {
 union uv_any_req {
   uv_req_t req; uv_connect_t connect; uv_write_t write; uv_shutdown_t shutdown; uv_udp_send_t udp_send; uv_fs_t fs; uv_work_t work; uv_getaddrinfo_t getaddrinfo; uv_getnameinfo_t getnameinfo; uv_random_t random;
 };
+
 struct uv_loop_s {
   void* data;
   unsigned int active_handles;
@@ -3406,7 +2570,80 @@ struct uv_loop_s {
   } active_reqs;
   void* internal_fields;
   unsigned int stop_flag;
-  unsigned long flags; int backend_fd; void* pending_queue[2]; void* watcher_queue[2]; uv__io_t** watchers; unsigned int nwatchers; unsigned int nfds; void* wq[2]; uv_mutex_t wq_mutex; uv_async_t wq_async; uv_rwlock_t cloexec_lock; uv_handle_t* closing_handles; void* process_handles[2]; void* prepare_handles[2]; void* check_handles[2]; void* idle_handles[2]; void* async_handles[2]; void (*async_unused)(void); uv__io_t async_io_watcher; int async_wfd; struct { void* min; unsigned int nelts; } timer_heap; uint64_t timer_counter; uint64_t time; int signal_pipefd[2]; uv__io_t signal_io_watcher; uv_signal_t child_watcher; int emfile_fd; uv__io_t inotify_read_watcher; void* inotify_watchers; int inotify_fd;
+  unsigned long flags;
+  int backend_fd;
+  void* pending_queue[2];
+  void* watcher_queue[2];
+  uv__io_t** watchers;
+  unsigned int nwatchers;
+  unsigned int nfds;
+  void* wq[2];
+  uv_mutex_t wq_mutex;
+  uv_async_t wq_async;
+  uv_rwlock_t cloexec_lock;
+  uv_handle_t* closing_handles;
+  void* process_handles[2];
+  void* prepare_handles[2];
+  void* check_handles[2];
+  void* idle_handles[2];
+  void* async_handles[2];
+  void (*async_unused)(void);
+  uv__io_t async_io_watcher;
+  int async_wfd;
+  struct {
+    void* min;
+    unsigned int nelts;
+  } timer_heap;
+  uint64_t timer_counter;
+  uint64_t time;
+  int signal_pipefd[2];
+  uv__io_t signal_io_watcher;
+  uv_signal_t child_watcher;
+  int emfile_fd;
+  uv__io_t inotify_read_watcher;
+  void* inotify_watchers;
+  int inotify_fd;
 };
+
  void* uv_loop_get_data(const uv_loop_t*);
  void uv_loop_set_data(uv_loop_t*, void* data);
+
+typedef void *void_t;
+typedef struct _php_uv_s {
+	void* std; // for casting/storage of zval class objects
+
+	int type;
+  // for threading
+	void ***thread_ctx;
+
+	uv_os_sock_t sock;
+	union {
+		uv_tcp_t tcp;
+		uv_udp_t udp;
+		uv_pipe_t pipe;
+		uv_idle_t idle;
+		uv_timer_t timer;
+		uv_async_t async;
+		uv_loop_t loop;
+		uv_handle_t handle;
+		uv_req_t req;
+		uv_stream_t stream;
+		uv_shutdown_t shutdown;
+		uv_udp_send_t udp_send;
+		uv_connect_t connect;
+		uv_getaddrinfo_t addrinfo;
+		uv_prepare_t prepare;
+		uv_check_t check;
+		uv_process_t process;
+		uv_work_t work;
+		uv_fs_t fs;
+		uv_fs_event_t fs_event;
+		uv_tty_t tty;
+		uv_fs_poll_t fs_poll;
+		uv_poll_t poll;
+		uv_signal_t signal;
+	} uv;
+	char *buffer;
+	uv_file fs_fd;
+	uv_file fs_fd_alt;
+} php_uv_t;

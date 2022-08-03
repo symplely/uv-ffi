@@ -1,4 +1,5 @@
 <?php
+require 'vendor/autoload.php';
 
 $in  = uv_pipe_init(uv_default_loop(), ('/' == \DIRECTORY_SEPARATOR));
 $out = uv_pipe_init(uv_default_loop(), ('/' == \DIRECTORY_SEPARATOR));

@@ -1,4 +1,6 @@
 <?php
+require 'vendor/autoload.php';
+
 $loop = \uv_default_loop();
 [$read, $write] = \stream_socket_pair((\stripos(\PHP_OS, "win") === 0 ? \STREAM_PF_INET : \STREAM_PF_UNIX),
     \STREAM_SOCK_STREAM,

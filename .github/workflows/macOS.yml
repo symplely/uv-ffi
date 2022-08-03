@@ -7,12 +7,12 @@ on:
       version:
         description: 'What version of libuv to compile and commit to repo?'
         required: true
-        default: 1.44.1
+        default: 1.44.2
         type: number
 
 jobs:
   macos:
-    runs-on: macos-10.15
+    runs-on: macos-latest
     continue-on-error: true
     env:
       VERSION: ${{ github.event.inputs.version }}
@@ -45,5 +45,5 @@ jobs:
           mkdir -p lib/macOS/
           cp -f libuv-${{ env.VERSION }}/build/libuv.1.0.0.dylib lib/macOS/
           git add lib
-          git commit -m "created libuv.1.0.0.dylib - for macOS 10.15"
+          git commit -m "created libuv.1.0.0.dylib - for macOS latest"
           git push -q

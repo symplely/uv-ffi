@@ -1,7 +1,7 @@
 --TEST--
 Check for uv_write has no memory leak
 --SKIPIF--
-<?php if (extension_loaded("ffi")) print "skip"; ?>
+<?php if (!extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';
@@ -13,7 +13,7 @@ class TestCase {
         $loop = uv_loop_new();
 
         $handler = uv_pipe_init($loop, false);
-        uv_pipe_open($handler, (int) STDOUT);
+        uv_pipe_open($handler, STDOUT);
 
         $a = 0;
 
@@ -23,8 +23,8 @@ class TestCase {
             });
         }
 
-        uv_run($loop, \UV::RUN_DEFAULT);
         uv_close($handler);
+        uv_run($loop, \UV::RUN_DEFAULT);
     }
 }
 
@@ -39,4 +39,4 @@ $memory = memory_get_usage() - $memory;
 echo "$t->counter\n$memory\n";
 --EXPECTF--
 1000
-0
+%-d

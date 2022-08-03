@@ -1,12 +1,15 @@
 {
     "name": "symplely/uv-ffi",
-    "description": " An Foreign Function interface (FFI) of `libuv` cross-platform event-driven asynchronous I/O library.",
+    "description": " Foreign Function Interface (FFI) of `libuv` cross-platform event-driven asynchronous I/O library.",
     "keywords": [
         "ffi",
         "ext-uv",
         "event-driven",
+        "event-loop",
+        "uvLoop",
+        "uv-ffi",
         "parallel",
-        "thread",
+        "threads",
         "uv_spawn",
         "libuv",
         "async",
@@ -23,17 +26,27 @@
         }
     ],
     "require": {
-        "php": ">7.4"
+        "php": ">7.4",
+        "ext-ffi": "*"
     },
     "autoload": {
         "files": [
             "preload.php",
             "ffi/UVConstants.php",
-            "ffi/UVFunctions.php"
+            "ffi/UVFunctions.php",
+            "ffi/ZEFunctions.php"
         ],
         "classmap": [
             "ffi/"
         ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "": "tests/"
+        }
+    },
+    "conflict": {
+        "ext-uv": "*"
     },
     "scripts": {
         "test": "vendor/bin/phpunit --bootstrap vendor/autoload.php tests",

@@ -1,0 +1,27 @@
+--TEST--
+Check uv_async has no memory leak
+--SKIPIF--
+<?php if (!extension_loaded("ffi")) print "skip"; ?>
+--FILE--
+<?php
+require 'vendor/autoload.php';
+
+$m = memory_get_usage();
+
+$loop = uv_loop_new();
+
+$async = uv_async_init($loop, static function ($async) {
+  	echo 'Not executed, should not be echoed.';
+	uv_close($async);
+});
+uv_async_send($async);
+
+unset($async);
+
+uv_run($loop, UV::RUN_DEFAULT);
+uv_loop_close($loop);
+unset($loop);
+
+echo memory_get_usage() - $m, PHP_EOL;
+--EXPECTF--
+-%d

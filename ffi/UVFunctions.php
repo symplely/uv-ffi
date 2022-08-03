@@ -6,10 +6,10 @@ if (!\function_exists('uv_loop_init')) {
     /**
      * Initializes a `UVLoop` instance structure.
      *
-     * @return UVLoop
+     * @return UVLoop|int
      * @link http://docs.libuv.org/en/v1.x/loop.html#c.uv_loop_init
      */
-    function uv_loop_init(bool $compile = true, ?string $library = null, ?string $include = null): ?\UVLoop
+    function uv_loop_init(bool $compile = true, ?string $library = null, ?string $include = null)
     {
         return UVLoop::init($compile, $library, $include);
     }
@@ -20,7 +20,7 @@ if (!\function_exists('uv_loop_init')) {
      * @return UVLoop
      * @deprecated 1.0
      */
-    function uv_loop_new(): UVLoop
+    function uv_loop_new(): \UVLoop
     {
         return \uv_loop_init();
     }
@@ -34,9 +34,9 @@ if (!\function_exists('uv_loop_init')) {
      * @return UVLoop
      * @link http://docs.libuv.org/en/v1.x/loop.html#c.uv_default_loop
      */
-    function uv_default_loop(bool $compile = true, ?string $library = null, ?string $include = null): UVLoop
+    function uv_default_loop(bool $compile = true, ?string $library = null, ?string $include = null): \UVLoop
     {
-        return UVLoop::default($compile, $library, $include);
+        return \UVLoop::default($compile, $library, $include);
     }
 
     /**
@@ -55,12 +55,14 @@ if (!\function_exists('uv_loop_init')) {
      *    pending events.
      * @link http://docs.libuv.org/en/v1.x/loop.html#c.uv_run
      */
-    function uv_run(UVLoop $loop = null, int $mode = UV::RUN_DEFAULT): void
+    function uv_run(\UVLoop $loop = null, int $mode = \UV::RUN_DEFAULT): void
     {
-        if (empty($loop))
+        if (\is_null($loop))
             $loop = \uv_default_loop();
 
         \uv_ffi()->uv_run($loop(), $mode);
+        if ($mode === \UV::RUN_DEFAULT)
+            \zval_del_ref($loop);
     }
 
     /**
@@ -71,10 +73,24 @@ if (!\function_exists('uv_loop_init')) {
      * @return void
      * @deprecated 1.0
      */
-    function uv_loop_delete(UVLoop &$loop): void
+    function uv_loop_delete(\UVLoop &$loop): void
     {
         \uv_ffi()->uv_loop_delete($loop());
-        $loop->free();
+    }
+
+    /**
+     * Release any global state that libuv is holding onto. Libuv will normally do so automatically when it is unloaded but it can be instructed to perform cleanup manually.
+     *
+     * - Warning: Only call uv_library_shutdown() once.
+     * - Warning: Don’t call uv_library_shutdown() when there are still event loops or I/O requests active.
+     * - Warning: Don’t call libuv functions after calling uv_library_shutdown().
+     *
+     * @return void
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=file%20to%20fd#c.uv_library_shutdown
+     */
+    function uv_library_shutdown(): void
+    {
+        \uv_ffi()->uv_library_shutdown();
     }
 
     /**
@@ -86,10 +102,10 @@ if (!\function_exists('uv_loop_init')) {
      * @return void
      * @link http://docs.libuv.org/en/v1.x/loop.html#c.uv_loop_close
      */
-    function uv_loop_close(UVLoop &$loop): void
+    function uv_loop_close(\UVLoop &$loop): void
     {
         \uv_ffi()->uv_loop_close($loop());
-        $loop->free();
+        \zval_del_ref($loop);
     }
 
     /**
@@ -104,16 +120,13 @@ if (!\function_exists('uv_loop_init')) {
      * In-progress requests, like uv_connect or uv_write, are cancelled and
      * have their callbacks called asynchronously with status=UV_ECANCELED.
      *
-     * @param UV $handle
-     * @param callable $callback - expects (UV $handle, int $status)
+     * @param UV|uv_handle_t $handle
+     * @param callable $callback - expect (\UV $handle, int $status)
+     * @link http://docs.libuv.org/en/v1.x/handle.html?highlight=uv_close#c.uv_close
      */
-    function uv_close($handle, ?callable $callback = null)
+    function uv_close(\UV $handle, ?callable $callback = null)
     {
-        if ($handle instanceof UV) {
-            \uv_ffi()->uv_close($handle(), \uv_close_cb($handle, $callback));
-        } else {
-            \uv_ffi()->uv_close($handle->loop->closing_handles, \uv_close_cb($handle, $callback));
-        }
+        return UV::close($handle, $callback);
     }
 
     /**
@@ -125,9 +138,10 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVLoop $loop
      * @link http://docs.libuv.org/en/v1.x/loop.html#c.uv_stop
      */
-    function uv_stop(UVLoop &$loop): void
+    function uv_stop(\UVLoop &$loop): void
     {
         \uv_ffi()->uv_stop($loop());
+        \zval_del_ref($loop);
     }
 
     /**
@@ -143,7 +157,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return int
      */
-    function uv_now(UVLoop $loop = null): int
+    function uv_now(\UVLoop $loop = null): int
     {
         return \uv_ffi()->uv_now($loop());
     }
@@ -153,11 +167,12 @@ if (!\function_exists('uv_loop_init')) {
      * Note: Unlike other handle initialization functions, it immediately starts the handle.
      *
      * @param UVLoop $loop
-     * @param callable $callback expects (UVAsync $handle)
+     * @param callable $callback expect (\UVAsync $handle)
      *
-     * @return UVAsync
+     * @return UVAsync|int
+     * @link http://docs.libuv.org/en/v1.x/async.html?highlight=uv_async_send#c.uv_async_init
      */
-    function uv_async_init(UVLoop $loop, callable $callback): ?\UVAsync
+    function uv_async_init(\UVLoop $loop, callable $callback)
     {
         return UVAsync::init($loop, $callback);
     }
@@ -176,36 +191,591 @@ if (!\function_exists('uv_loop_init')) {
      * 5 times in a row before the callback is called, the callback will only be called once.
      * If `uv_async_send()` is called again after the callback was called, it will be called again.
      *
-     * @param UVAsync $handle uv async handle.
+     * @param UVAsync|uv_async_t $handle uv async handle.
      * @return int
+     * @link http://docs.libuv.org/en/v1.x/async.html?highlight=uv_async_send#c.uv_async_send
      */
-    function uv_async_send(UVAsync $handle)
+    function uv_async_send(\UVAsync $handle)
     {
         return \uv_ffi()->uv_async_send($handle());
     }
 
     /**
-     * Initializes a work request which will run the given `$callback` in a thread from the threadpool.
-     * Once `$callback` is completed, `$after_callback` will be called on the loop thread.
-     * Executes callbacks in another thread (requires Thread Safe enabled PHP).
+     * Create a pair of connected `resource` pipe handles in **array**.
+     * - First is for _writing_.
+     * - Second is for _reading_ .
      *
-     * @param UVLoop $loop
-     * @param callable $callback
-     * @param callable $after_callback
+     * The resulting handles can be passed to `uv_pipe_open`, used with `uv_spawn`, or for any other purpose.
+     *
+     * Valid values for flags are:
+     *- `UV::NONBLOCK_PIPE` Opens the specified socket handle for OVERLAPPED or FIONBIO/O_NONBLOCK I/O usage.
+     * - This is recommended for handles that will be used by libuv, and not usually recommended otherwise.
+     *
+     * *Equivalent to pipe(2) with the UV::O_CLOEXEC flag set.*
+     *
+     * @param integer $read_flags
+     * @param integer $write_flags
+     * @return array<resource,resource>|int
+     * @link http://docs.libuv.org/en/v1.x/pipe.html?highlight=uv_pipe_bind#c.uv_pipe
      */
-    function uv_queue_work(UVLoop $loop, callable $callback, callable $after_callback)
+    function uv_pipe(int $read_flags = \UV::NONBLOCK_PIPE, int $write_flags = \UV::NONBLOCK_PIPE)
     {
+        return UVPipe::pair($read_flags, $write_flags);
     }
 
     /**
-     * Get last error code.
+     * Initialize a pipe handle.
+     * The ipc argument is a boolean to indicate if this pipe will be used for
+     * handle passing between processes (which may change the bytes on the wire).
      *
-     * @param UVLoop|null $uv_loop uv loop handle.
-     * @return int
+     * @param UVLoop $loop
+     * @param int $ipc when use for ipc, set `true` otherwise `false`.
+     * - Note: needs to be `false` on Windows for proper operations.
+     *
+     * @return UVPipe
+     * @link http://docs.libuv.org/en/v1.x/pipe.html?highlight=uv_pipe_open#c.uv_pipe_init
      */
-    function uv_last_error(UVLoop $loop = null)
+    function uv_pipe_init(\UVLoop $loop, int $ipc): ?UVPipe
     {
-        return \uv_ffi()->uv_last_error($loop());
+        return UVPipe::init($loop, $ipc);
+    }
+
+    /**
+     * Open an existing file descriptor or HANDLE as a pipe.
+     *
+     * The file descriptor is set to non-blocking mode.
+     *
+     * `Note:` The passed file descriptor or HANDLE is not checked for its type,
+     * but it’s required that it represents a valid pipe.
+     *
+     * @param UVPipe $handle
+     * @param int|resource $fd
+     *
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/search.html?q=uv_pipe_open
+     */
+    function uv_pipe_open(\UVPipe $handle, $fd, bool $emulated = true)
+    {
+        return $handle->open($fd, $emulated);
+    }
+
+    /**
+     * Constructor for `UVBuffer`, filled with `data`.
+     *
+     * @param string $data
+     * @return UVBuffer
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_buf_init#c.uv_buf_init
+     */
+    function uv_buf_init(?string $data)
+    {
+        return UVBuffer::init($data);
+    }
+
+    /**
+     * Constructor for `uv_buf_t`.
+     *
+     * @param integer $size
+     * @return uv_buf_t
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_buf_init#c.uv_buf_init
+     */
+    function uv_buf_init_alloc(int $size)
+    {
+        return \ffi_ptr(\uv_ffi()->uv_buf_init(
+            \FFI::new('char[' . ($size + 1) . ']'),
+            $size
+        ));
+    }
+
+    /**
+     * Write `data` to `stream` handle.
+     * - Note The memory pointed to by the `$data` must remain valid until the callback gets called.
+     * This also holds for uv_write2().
+     *
+     * @param UVStream|uv_stream_t $handle
+     * @param string $data
+     * @param callable|uv_write_cb $callback expect (\UV $handle, int $status)
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/stream.html?highlight=uv_write#c.uv_write
+     */
+    function uv_write(\UVStream $handle, string $data, callable $callback = null): int
+    {
+        $buffer = \uv_buf_init($data);
+        $req = \UVWriter::init('struct uv_write_s');
+        $writer = $req();
+        $writer->data = \ffi_void($handle());
+        $r = \uv_ffi()->uv_write($writer, \uv_stream($handle), $buffer(), 1, \is_null($callback)
+            ? function () {
+            }
+            :  function (object $writer, int $status) use ($callback, $handle) {
+                $callback($handle, $status);
+                $handle = $writer->data;
+                \FFI::free($writer->data);
+                \FFI::free($writer);
+                \FFI::free($handle);
+                \zval_del_ref($callback);
+            });
+
+        if ($r) {
+            \ze_ffi()->zend_error(\E_WARNING, "write failed");
+            \zval_del_ref($req);
+            \zval_del_ref($buffer);
+        } else {
+            \zval_add_ref($req);
+        }
+
+        return $r;
+    }
+
+    /**
+     * Read data from an incoming stream.
+     *
+     * The `uv_read` callback will be made several times until there is no more data to read
+     * or `uv_read_stop()` is called.
+     *
+     * @param UVTcp|UVPipe|UVTty|uv_stream_t $handle
+     * @param callable|uv_read_cb $callback expect (\UVStream $handle, $nRead, $data)
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/stream.html?highlight=uv_read_alloc#c.uv_read_start
+     */
+    function uv_read_start(\UVStream $handle, callable $callback): int
+    {
+        $r = \UVStream::read($handle, $callback);
+        if ($r) {
+            \ze_ffi()->zend_error(\E_NOTICE, "read failed");
+        }
+
+        return $r;
+    }
+
+    /**
+     * Stop reading data from the stream. The `uv_read` callback will no longer be called.
+     *
+     * This function is idempotent and may be safely called on a stopped stream.
+     *
+     * - This function will always succeed; hence, checking its return value is unnecessary.
+     * A non-zero return indicates that finishing releasing resources may be pending on the next
+     * input event on that TTY on Windows, and does not indicate failure.
+     *
+     * @param UVTcp|UVPipe|UVTty|uv_stream_t $handle UV handle which started uv_read.
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/stream.html?highlight=uv_read_alloc#c.uv_read_stop
+     */
+    function uv_read_stop(\UVStream $handle): int
+    {
+        return \uv_ffi()->uv_read_stop(\uv_stream($handle));
+    }
+
+    /**
+     * Initialize a new TTY stream with the given file descriptor.
+     *
+     * Usually the file descriptor will be:
+     *  - 0 = stdin
+     *  - 1 = stdout
+     *  - 2 = stderr
+     *
+     * On Unix this function will determine the path of the fd of the terminal using ttyname_r(3),
+     * open it, and use it if the passed file descriptor refers to a TTY.
+     *
+     * This lets libuv put the tty in non-blocking mode without affecting other processes that share the tty.
+     *
+     * This function is not thread safe on systems that don’t support ioctl TIOCGPTN or TIOCPTYGNAME,
+     * for instance OpenBSD and Solaris.
+     *
+     * `Note:` If reopening the TTY fails, `libuv` falls back to blocking writes.
+     *
+     * @param UVLoop $loop uv_loop handle.
+     * @param resource|int $fd
+     * @param int $readable unused
+     *
+     * @return UVTty|int
+     * @link http://docs.libuv.org/en/v1.x/tty.html?highlight=uv_tty_set_mode#c.uv_tty_init
+     */
+    function uv_tty_init(\UVLoop $loop, $fd, int $readable)
+    {
+        return \UVTty::init($loop, \fd_from(\zval_stack(1)), $readable);
+    }
+
+    /**
+     * Set the TTY using the specified terminal mode.
+     *
+     * @param UVTty $tty
+     * @param int $mode
+     * - `UV::TTY_MODE_NORMAL` - Initial/normal terminal mode
+     * - `UV::TTY_MODE_RAW` - Raw input mode (On Windows, ENABLE_WINDOW_INPUT is also enabled)
+     * - `UV::TTY_MODE_IO` - Binary-safe I/O mode for IPC (Unix-only)
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/tty.html?highlight=uv_tty_set_mode#c.uv_tty_set_mode
+     */
+    function uv_tty_set_mode(\UVTty $tty, int $mode)
+    {
+        return \uv_ffi()->uv_tty_set_mode($tty(), $mode);
+    }
+
+    /**
+     * To be called when the program exits.
+     *
+     * Resets TTY settings to default values for the next process to take over.
+     *
+     * This function is async signal-safe on Unix platforms but can fail with error code
+     * UV_EBUSY if you call it when execution is inside uv_tty_set_mode().
+     *
+     * @return void
+     * @link http://docs.libuv.org/en/v1.x/tty.html?highlight=uv_tty_set_mode#c.uv_tty_reset_mode
+     */
+    function uv_tty_reset_mode()
+    {
+        return \uv_ffi()->uv_tty_reset_mode();
+    }
+
+    /**
+     * Initialize the handle. No socket is created as of yet.
+     *
+     * @param UVLoop|null $loop uv_loop handle.
+     *
+     * @return UVTcp|int
+     * @link http://docs.libuv.org/en/v1.x/tcp.html#c.uv_tcp_init
+     */
+    function uv_tcp_init(\UVLoop $loop = null)
+    {
+        if (\is_null($loop))
+            $loop = \uv_default_loop();
+
+        return UVTcp::init($loop);
+    }
+
+    /**
+     * Bind the handle to an address and port.
+     *
+     * @param UVTcp $handle uv_tcp handle
+     * @param UVSockAddr $addr uv sockaddr4 handle
+     * @param int $flags
+     *
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/tcp.html#c.uv_tcp_bind
+     */
+    function uv_tcp_bind(\UVTcp $handle, \UVSockAddr $addr, int $flags = 0): int
+    {
+        return \uv_ffi()->uv_tcp_bind($handle(), \uv_sockaddr($addr), $flags);
+    }
+
+    /**
+     * Convert a string containing an IPv4 addresses to a binary structure.
+     *
+     * @param string $ipv4_addr ipv4 address
+     * @param int $port port number.
+     *
+     * @return UVSockAddrIPv4|int handle
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_ip4_addr#c.uv_ip4_addr
+     */
+    function uv_ip4_addr(string $ipv4_addr, int $port = 0)
+    {
+        $ip4 = \UVSockAddrIPv4::init('struct sockaddr_in');
+        $status = \uv_ffi()->uv_ip4_addr($ipv4_addr, $port, $ip4());
+
+        return $status === 0 ? $ip4 : $status;
+    }
+
+    /**
+     * Convert a binary structure containing an IPv4 address to a string.
+     *
+     * @param UVSockAddr $address
+     *
+     * @return string|int
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_ip4_name#c.uv_ip4_name
+     */
+    function uv_ip4_name(\UVSockAddr $address)
+    {
+        $ptr = \ffi_characters(\UV::INET6_ADDRSTRLEN);
+        $status = \uv_ffi()->uv_ip4_name($address(), $ptr, \UV::INET6_ADDRSTRLEN);
+
+        return ($status === 0) ? \ffi_string($ptr) : $status;
+    }
+
+    /**
+     * Convert a string containing an IPv6 addresses to a binary structure.
+     *
+     * @param string $ipv6_addr ipv6 address.
+     * @param int $port port number.
+     *
+     * @return UVSockAddrIPv6 handle
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_ip4_addr#c.uv_ip6_addr
+     */
+    function uv_ip6_addr(string $ipv6_addr, int $port)
+    {
+        $ip6 = \UVSockAddrIPv6::init('struct sockaddr_in6');
+        $status = \uv_ffi()->uv_ip6_addr($ipv6_addr, $port, $ip6());
+
+        return $status === 0 ? $ip6 : $status;
+    }
+
+    /**
+     * Convert a binary structure containing an IPv6 address to a string.
+     *
+     * @param UVSockAddr $address
+     *
+     * @return string
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_ip4_addr#c.uv_ip6_name
+     */
+    function uv_ip6_name(\UVSockAddr $address)
+    {
+        $ptr = \ffi_characters(\UV::INET6_ADDRSTRLEN);
+        $status = \uv_ffi()->uv_ip6_name($address(), $ptr, \UV::INET6_ADDRSTRLEN);
+
+        return ($status === 0) ? \ffi_string($ptr) : $status;
+    }
+
+    /**
+     * This call is used in conjunction with `uv_listen()` to accept incoming connections.
+     *
+     * Call this function after receiving a `uv_connection` to accept the connection.
+     * Before calling this function the `client` handle must be initialized.
+     *
+     * When the `uv_connection_cb` callback is called it is guaranteed that this function
+     * will complete successfully the first time. If you attempt to use it more than once,
+     * it may fail. It is suggested to only call this function once per `uv_connection_cb` call.
+     *
+     * `Note:` _server_ and _client_ must be handles running on the same _loop_.
+     *
+     * @param UVTcp|UVPipe $server uv_tcp or uv_pipe server handle.
+     * @param UVTcp|UVPipe $client uv_tcp or uv_pipe client handle.
+     *
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/stream.html?highlight=uv_accept#c.uv_accept
+     */
+    function uv_accept(object $server, object $client): int
+    {
+        $uv_server = \ffi_object($server);
+        $uv_client = \ffi_object($client);
+        $client_type = \ffi_str_typeof($uv_client);
+        if (\is_typeof($uv_server, $client_type)) {
+            $r = \uv_ffi()->uv_accept(\uv_stream($uv_server), \uv_stream($uv_client));
+            if ($r)
+                \ze_ffi()->zend_error(\E_WARNING, "%s", \uv_strerror($r));
+
+            return $r;
+        }
+
+        return \ze_ffi()->zend_error(
+            \E_WARNING,
+            'Client: \'%s\', expects server and client parameters to be either both of type UVTcp or both of type UVPipe',
+            \reflect_object_name($client)
+        );
+    }
+
+    /**
+     * Start listening for incoming connections.
+     *
+     * backlog indicates the number of connections the kernel might queue, same as listen(2).
+     * When a new incoming connection is received the `uv_connection_cb` callback is called.
+     *
+     * @param UVTcp|UVUdp|UVPipe|uv_stream_t $handle UV handle (tcp, udp and pipe).
+     * @param int $backlog backlog.
+     * @param callable|uv_connection_cb $callback expect (\UVStream $handle, int $status).
+     *
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/stream.html#c.uv_listen
+     */
+    function uv_listen(\UVStream $handle, int $backlog, callable $callback): int
+    {
+        $r = \uv_ffi()->uv_listen(
+            \uv_stream($handle),
+            $backlog,
+            function (object $stream, int $status) use ($callback, $handle) {
+                \zval_add_ref($handle);
+                $callback($handle, $status);
+            }
+        );
+
+        if ($r)
+            \ze_ffi()->zend_error(\E_WARNING, "%s", \uv_strerror($r));
+
+        return $r;
+    }
+
+    /**
+     * Establish an IPv4 TCP connection.
+     *
+     * Provide an initialized TCP handle and an uninitialized uv_connect. addr
+     * should point to an initialized struct sockaddr_in.
+     *
+     * On Windows if the addr is initialized to point to an unspecified address (0.0.0.0 or ::)
+     * it will be changed to point to localhost. This is done to match the behavior of Linux systems.
+     *
+     * The callback is made when the connection has been established
+     * or when a connection error happened.
+     *
+     * @param UVTcp $handle requires uv_tcp_init() handle.
+     * @param UVSockAddr $addr requires uv_sockaddr handle.
+     * @param callable|uv_connect_cb $callback callable expect (\UVTcp $handle, int $status).
+     *
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/tcp.html?highlight=uv_tcp_connect#c.uv_tcp_connect
+     */
+    function uv_tcp_connect(\UVTcp $handle, \UVSockAddr $addr, callable $callback): int
+    {
+        $req = \UVConnect::init('struct uv_connect_s');
+        \zval_add_ref($req);
+        return \uv_ffi()->uv_tcp_connect(
+            $req(),
+            $handle(),
+            \uv_sockaddr($addr),
+            function (object $connect, int $status) use ($callback, $handle, $req) {
+                $callback($handle, $status);
+                \zval_del_ref($req);
+            }
+        );
+    }
+
+    /**
+     * Opens a shared library. The filename is in utf-8. Returns 0 on success and -1 on error. Call `uv_dlerror()` to get the error message.
+     *
+     * @param string $filename
+     * @return UVLib|int
+     * @link http://docs.libuv.org/en/v1.x/dll.html?highlight=uv_lib_t#c.uv_dlopen
+     */
+    function uv_dlopen(string $filename)
+    {
+        return UVLib::init($filename);
+    }
+
+    /**
+     * Close the shared library.
+     *
+     * @param UVLib $lib
+     * @return void
+     * @link http://docs.libuv.org/en/v1.x/dll.html?highlight=uv_lib_t#c.uv_dlclose
+     */
+    function uv_dlclose(\UVLib $lib)
+    {
+        $lib->loadClose();
+    }
+
+    /**
+     * Retrieves a data pointer from a dynamic library. It is legal for a symbol to map to NULL.
+     * Returns `symbol` **pointer** on success or -1 if the symbol was not found.
+     *- Note: The returned object will need to be cast to be executable.
+     *
+     * @param \UVLib $lib
+     * @param string $symbol
+     * @return object|int definition
+     * @link http://docs.libuv.org/en/v1.x/dll.html?highlight=uv_lib_t#c.uv_dlsym
+     */
+    function uv_dlsym(\UVLib $lib, string $symbol)
+    {
+        return $lib->loadSymbol($symbol);
+    }
+
+    /**
+     * Returns the last `uv_dlopen()` or `uv_dlsym()` error message.
+     *
+     * @param \UVLib $lib
+     * @return string
+     * @link http://docs.libuv.org/en/v1.x/dll.html?highlight=uv_lib_t#c.uv_dlerror
+     */
+    function uv_dlerror(\UVLib $lib)
+    {
+        return $lib->loadError();
+    }
+
+    /**
+     * Shutdown the outgoing (write) side of a duplex stream.
+     *
+     * It waits for pending write requests to complete. The handle should refer to a initialized
+     * stream. req should be an uninitialized shutdown request struct. The cb is called after
+     * shutdown is complete.
+     *
+     * @param UVTcp|UVPipe|UVTty|uv_stream_t $handle
+     * @param callable|uv_shutdown_cb $callback - expect (\UVStream $handle, int $status)
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/stream.html?highlight=uv_shutdown#c.uv_shutdown
+     */
+    function uv_shutdown(\UVStream $handle, callable $callback = null): int
+    {
+        $req = \UVShutdown::init('struct uv_shutdown_s');
+        \zval_add_ref($req);
+        $r = \uv_ffi()->uv_shutdown($req(), \uv_stream($handle), !\is_null($callback)
+            ? function (object $shutdown, int $status) use ($callback, $handle) {
+                $callback($handle, $status);
+                \ffi_free($shutdown);
+            } : null);
+
+        if ($r) {
+            \ze_ffi()->zend_error(\E_WARNING, "%s", \uv_strerror($r));
+            \zval_del_ref($req);
+        }
+
+        return $r;
+    }
+
+    /**
+     * Returns an estimate of the default amount of parallelism a program should use.
+     * Always returns a non-zero value.
+     *
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/misc.html#c.uv_available_parallelism
+     */
+    function uv_available_parallelism()
+    {
+        return \uv_ffi()->uv_available_parallelism();
+    }
+
+    /**
+     * For a file descriptor in the `C runtime`, get the OS-dependent handle. On UNIX, returns the `fd intact`,
+     * on Windows, this calls `_get_osfhandle`.
+     * - Note that the return value is still owned by the `C runtime`, any attempts to close it or to use it after closing the fd may lead to malfunction.
+     *
+     * @param integer $fd
+     * @return uv_os_fd_t
+     * @link http://docs.libuv.org/en/v1.x/fs.html?highlight=uv_get_osfhandle#c.uv_get_osfhandle
+     */
+    function uv_get_osfhandle($fd)
+    {
+        return \uv_ffi()->uv_get_osfhandle($fd);
+    }
+
+    /**
+     * For a OS-dependent handle, get the file descriptor in the `C runtime`. On UNIX, returns the `os_fd intact`. On Windows, this calls `_open_osfhandle`.
+     * - Note that this consumes the argument, any attempts to close it or to use it after closing the return value may lead to malfunction.
+     *
+     * @param uv_os_fd_t $fd
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/fs.html?highlight=uv_open_osfhandle#c.uv_open_osfhandle
+     */
+    function uv_open_osfhandle($fd)
+    {
+        return \uv_ffi()->uv_open_osfhandle($fd);
+    }
+
+    /**
+     * Gets the platform dependent file descriptor equivalent.
+     * The following handles are supported: `TCP`, `PIPE`, `TTY`, `UDP` and `POLL`. Passing any other handle type will fail with UV_EINVAL.
+     * If a handle doesn’t have an attached file descriptor yet or the handle itself has been closed, this function will return UV_EBADF.
+     *
+     * - Warning Be very careful when using this function. libuv assumes it’s in control of the file descriptor so any change to it may lead to malfunction.
+     *
+     * @param UV|uv_handle_t $handle
+     * @return Resource<uv_os_fd_t>|int
+     * @link http://docs.libuv.org/en/v1.x/handle.html#c.uv_fileno
+     */
+    function uv_fileno(\UV $handle)
+    {
+        $fd = \fd_type('uv_os_fd_t');
+        $status = \uv_ffi()->uv_fileno($handle(true), $fd());
+        return $status === 0 ? $fd : $status;
+    }
+
+    /**
+     * Used to detect what type of stream should be used with a given `$fd` file descriptor.
+     *
+     * Usually this will be used during initialization to guess the type of the `stdio` streams.
+     *
+     * @param uv_file|int $fd
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_guess_handle#c.uv_guess_handle
+     */
+    function uv_guess_handle($fd)
+    {
+        return \uv_ffi()->uv_guess_handle($fd);
     }
 
     /**
@@ -214,8 +784,9 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param int $error_code libuv error code.
      * @return string
+     * @link http://docs.libuv.org/en/v1.x/errors.html?highlight=uv_strerror#c.uv_err_name_r
      */
-    function uv_err_name(int $error_code)
+    function uv_err_name(int $error_code): string
     {
         return \uv_ffi()->uv_err_name($error_code);
     }
@@ -226,297 +797,11 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param int $error_code libuv error code
      * @return string
+     * @link http://docs.libuv.org/en/v1.x/errors.html?highlight=uv_strerror#c.uv_strerror
      */
-    function uv_strerror(int $error_code)
+    function uv_strerror(int $error_code): string
     {
         return \uv_ffi()->uv_strerror($error_code);
-    }
-
-    /**
-     * Update the event loop’s concept of “now”.
-     *
-     * `Libuv` caches the current time at the start of the event loop tick in order
-     * to reduce the number of time-related system calls.
-     *
-     * You won’t normally need to call this function unless you have callbacks that
-     * block the event loop for longer periods of time, where “longer” is somewhat
-     * subjective but probably on the order of a millisecond or more.
-     *
-     * @param UVLoop $uv_loop uv loop handle.
-     *
-     * @return void
-     */
-    function uv_update_time(UVLoop $loop)
-    {
-    }
-
-    /**
-     * start polling.
-     *
-     * If you want to use a socket. please use `uv_poll_init_socket` instead of this.
-     * Windows can't handle socket with this function.
-     *
-     * @param UVPoll $poll
-     * @param int $events UV::READABLE and UV::WRITABLE flags.
-     * @param uv_poll_cb $callback expects (UVPoll $poll, int $status, int $events, resource $fd)
-     * - the callback `$fd` parameter is the same from `uv_poll_init`.
-     */
-    function uv_poll_start(UVPoll $poll, $events, ?callable $callback = null)
-    {
-    }
-
-    /**
-     * Initialize the poll watcher using a socket descriptor. On unix this is
-     * identical to `uv_poll_init`. On windows it takes a `SOCKET` handle.
-     *
-     * @param UVLoop $loop
-     * @param resource $socket
-     *
-     * @return UVPoll
-     */
-    function uv_poll_init_socket(UVLoop $loop, $socket)
-    {
-    }
-
-    /**
-     * Initialize poll
-     *
-     * @param UVLoop $loop
-     * @param resource $fd PHP `stream`, or `socket`
-     *
-     * @return UVPoll
-     */
-    function uv_poll_init(UVLoop $loop, $fd)
-    {
-    }
-
-    /**
-     * Stops polling the file descriptor.
-     *
-     * @param UVPoll $poll
-     */
-    function uv_poll_stop(UVPoll $poll)
-    {
-    }
-
-    /**
-     * Shutdown the outgoing (write) side of a duplex stream.
-     *
-     * It waits for pending write requests to complete. The handle should refer to a initialized
-     * stream. req should be an uninitialized shutdown request struct. The cb is called after
-     * shutdown is complete.
-     *
-     * @param UVTcp|UVPipe|UVTty $handle
-     * @param callable $callback - expects (UVStream $handle, int $status)
-     */
-    function uv_shutdown(UVStream $handle, ?callable $callback = null)
-    {
-    }
-
-    /**
-     * initialize timer handle.
-     *
-     * @param UVLoop $loop
-     *
-     * @return UVTimer
-     */
-    function uv_timer_init(UVLoop $loop = null)
-    {
-    }
-
-    /**
-     * Start the timer. `$timeout` and `$repeat` are in milliseconds.
-     *
-     * If timeout is zero, the callback fires on the next tick of the event loop.
-     *
-     * If repeat is non-zero, the callback fires first after timeout milliseconds
-     * and then repeatedly after repeat milliseconds.
-     *
-     * @param UVTimer $timer
-     * @param int $timeout
-     * @param int $repeat
-     * @param callable $callback expects (UVTimer $timer, int $status)
-     */
-    function uv_timer_start(UVTimer $timer, int $timeout, int $repeat, callable $callback = null)
-    {
-    }
-
-    /**
-     * stop specified timer.
-     *
-     * @param UVTimer $timer
-     *
-     * @return float
-     */
-    function uv_timer_stop(UVTimer $timer)
-    {
-    }
-
-    /**
-     * send buffer to specified resource `$handle`.
-     *
-     * @param UV $handle
-     * @param string $data
-     * @param callable $callback expects (UV $handle, int $status)
-     */
-    function uv_write(UV $handle, string $data, callable $callback)
-    {
-    }
-
-    /**
-     * Read data from an incoming stream.
-     *
-     * The `uv_read` callback will be made several times until there is no more data to read
-     * or uv_read_stop() is called.
-     *
-     * @param UVTcp|UVPipe|UVTty $handle
-     * @param callable $callback expects (UVStream $handle, $data)
-     */
-    function uv_read_start(UVStream $handle, callable $callback)
-    {
-    }
-
-    /**
-     * open specified file.
-     * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in the specified loop after completion.
-     *
-     * @param UVLoop $loop
-     * @param string $path file path
-     * @param string $flag this should be `UV::O_RDONLY `and some constants flag
-     * - `UV::O_WRONLY` | `UV::O_CREAT` | `UV::O_APPEND `| `UV::S_IRWXU` | `UV::S_IRUSR`
-     * @param int $mode this should be UV::S_IRWXU and some mode flag
-     * @param callable $callback expects (resource $stream)
-     */
-    function uv_fs_open(UVLoop $loop, string $path, int $flag, int $mode, callable $callback)
-    {
-    }
-
-    /**
-     * close specified file descriptor.
-     *
-     * @param UVLoop $loop
-     * @param resource $fd PHP `stream`, or `socket`
-     * @param callable $callback expects (bool $success)
-     */
-    function uv_fs_close(UVLoop $loop, $fd, callable $callback)
-    {
-    }
-
-    /**
-     * async read.
-     * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
-     * the specified loop after completion.
-     *
-     * @param UVLoop $loop
-     * @param resource $fd PHP `stream`, or `socket`
-     * @param int $offset
-     * @param int $length
-     * @param callable $callback - `$callable` expects (resource $fd, $data).
-     *
-     * `$data` is > 0 if there is data available, 0 if libuv is done reading for
-     * now, or < 0 on error.
-     *
-     * The callee is responsible for closing the `$stream` when an error happens.
-     * Trying to read from the `$stream` again is undefined.
-     */
-    function uv_fs_read(UVLoop $loop, $fd, int $offset, int $length, callable $callback)
-    {
-    }
-
-    /**
-     * async write.
-     * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
-     * the specified loop after completion.
-     *
-     * @param UVLoop $loop
-     * @param resource $fd PHP `stream`, or `socket`
-     * @param string $buffer data
-     * @param int $offset
-     * @param callable $callback expects (resource $fd, int $result)
-     */
-    function uv_fs_write(UVLoop $loop, $fd, string $buffer, int $offset = -1, callable $callback)
-    {
-    }
-
-    /**
-     * async fdatasync.
-     * synchronize a file's in-core state with storage device
-     *
-     * @param UVLoop $loop
-     * @param resource $fd
-     * @param callable $callback expects (resource $stream, int $result)
-     */
-    function uv_fs_fdatasync(UVLoop $loop, $fd, callable $callback)
-    {
-    }
-
-    /**
-     * async scandir.
-     * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
-     * the specified loop after completion.
-     *
-     * @param UVLoop $loop
-     * @param string $path
-     * @param int $flags
-     * @param callable $callback expects (int|array $result_or_dir_contents)
-     */
-    function uv_fs_scandir(UVLoop $loop, string $path, int $flags = 0, callable $callback)
-    {
-    }
-
-    /**
-     * async stat.
-     * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
-     * the specified loop after completion.
-     *
-     * @param UVLoop $loop
-     * @param string $path
-     * @param callable $callback expects ($result_or_stat)
-     */
-    function uv_fs_stat(UVLoop $loop, string $path, callable $callback)
-    {
-    }
-
-    /**
-     * async lstat.
-     * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
-     * the specified loop after completion.
-     *
-     * @param UVLoop $loop
-     * @param string $path
-     * @param callable $callback expects ($result_or_stat)
-     */
-    function uv_fs_lstat(UVLoop $loop, string $path, callable $callback)
-    {
-    }
-
-    /**
-     * async fstat,
-     * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
-     * the specified loop after completion.
-     *
-     * @param UVLoop $loop
-     * @param resource $fd
-     * @param callable $callback expects (resource $stream, int $stat)
-     */
-    function uv_fs_fstat(UVLoop $loop, $fd, callable $callback)
-    {
-    }
-
-    /**
-     * async sendfile.
-     * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
-     * the specified loop after completion.
-     *
-     * @param UVLoop $loop
-     * @param resource $out_fd
-     * @param resource $in_fd
-     * @param int $offset
-     * @param int $length
-     * @param callable $callback expects (resource $out_fd, int $result)
-     */
-    function uv_fs_sendfile(UVLoop $loop, $out_fd, $in_fd, int $offset, int $length, callable $callback)
-    {
     }
 
     /**
@@ -538,11 +823,215 @@ if (!\function_exists('uv_loop_init')) {
      * function, then it's active from the moment that function is called.
      * Likewise, uv_foo_stop() deactivates the handle again.
      *
-     * @param UV $handle
+     * @param UV|uv_handle_t $handle
      *
      * @return bool
+     * @link http://docs.libuv.org/en/v1.x/handle.html?highlight=uv_is_active#c.uv_is_active
      */
-    function uv_is_active(UV $handle)
+    function uv_is_active(\UV $handle): bool
+    {
+        return (bool) \uv_ffi()->uv_is_active($handle(true));
+    }
+
+    /**
+     * Returns non-zero if the handle is closing or closed, zero otherwise.
+     *
+     * `Note:` This function should only be used between the initialization of
+     * the handle and the arrival of the close callback.
+     *
+     * @param UV|uv_handle_t $handle
+     *
+     * @return bool
+     * @link http://docs.libuv.org/en/v1.x/handle.html?highlight=uv_is_active#c.uv_is_closing
+     */
+    function uv_is_closing(\UV $handle): bool
+    {
+        return (bool) \uv_ffi()->uv_is_closing($handle(true));
+    }
+
+    /**
+     * Returns 1 if the stream is readable, 0 otherwise.
+     *
+     * @param UVTcp|UVPipe|UVTty|uv_stream_t $handle
+     *
+     * @return bool
+     * @link http://docs.libuv.org/en/v1.x/stream.html?highlight=uv_is_readable#c.uv_is_readable
+     */
+    function uv_is_readable(\UVStream $handle): bool
+    {
+        return (bool) \uv_ffi()->uv_is_readable(\uv_stream($handle));
+    }
+
+    /**
+     * Returns 1 if the stream is writable, 0 otherwise.
+     *
+     * @param UVTcp|UVPipe|UVTty|uv_stream_t $handle
+     *
+     * @return bool
+     * @link http://docs.libuv.org/en/v1.x/stream.html?highlight=uv_is_readable#c.uv_is_writable
+     */
+    function uv_is_writable(\UVStream $handle): bool
+    {
+        return (bool) \uv_ffi()->uv_is_writable(\uv_stream($handle));
+    }
+
+    /**
+     * open specified file.
+     * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in the specified loop after completion.
+     *
+     * @param UVLoop $loop
+     * @param string $path file path
+     * @param string $flag
+     * - `UV::O_RDONLY ` | `UV::O_WRONLY` | `UV::O_CREAT` | `UV::O_APPEND `
+     * @param int $mode mode flag
+     * - `UV::S_IRWXU` | `UV::S_IRUSR`
+     * @param callable|uv_fs_cb $callback expect (resource $stream)
+     * @return int|UVFs
+     * @link http://docs.libuv.org/en/v1.x/fs.html?highlight=uv_fs_open#c.uv_fs_open
+     */
+    function uv_fs_open(\UVLoop $loop, string $path, int $flag, int $mode = \UV::S_IRWXU, callable $callback = null)
+    {
+        return UVFs::init($loop, \UV::FS_OPEN, $path, $flag, $mode, $callback);
+    }
+
+    /**
+     * Cleanup request. Must be called after a request is finished to deallocate any memory
+     * libuv might have allocated.
+     *
+     * @param UVFs $req
+     * @return void
+     * @link http://docs.libuv.org/en/v1.x/fs.html#c.uv_fs_req_cleanup
+     */
+    function uv_fs_req_cleanup(\UVFs $req)
+    {
+        \uv_ffi()->uv_fs_req_cleanup($req());
+    }
+
+    /**
+     * close specified file descriptor.
+     *
+     * @param UVLoop $loop
+     * @param resource $fd PHP `stream`, or `socket`
+     * @param callable $callback expect (bool $success)
+     */
+    function uv_fs_close(\UVLoop $loop, $fd, callable $callback)
+    {
+    }
+
+    /**
+     * async read.
+     * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+     * the specified loop after completion.
+     *
+     * @param UVLoop $loop
+     * @param resource $fd PHP `stream`, or `socket`
+     * @param int $offset
+     * @param int $length
+     * @param callable $callback - `$callable` expect (resource $fd, $data).
+     *
+     * `$data` is > 0 if there is data available, 0 if libuv is done reading for
+     * now, or < 0 on error.
+     *
+     * The callee is responsible for closing the `$stream` when an error happens.
+     * Trying to read from the `$stream` again is undefined.
+     */
+    function uv_fs_read(\UVLoop $loop, $fd, int $offset, int $length, callable $callback)
+    {
+    }
+
+    /**
+     * async write.
+     * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+     * the specified loop after completion.
+     *
+     * @param UVLoop $loop
+     * @param resource $fd PHP `stream`, or `socket`
+     * @param string $buffer data
+     * @param int $offset
+     * @param callable $callback expect (resource $fd, int $result)
+     */
+    function uv_fs_write(\UVLoop $loop, $fd, string $buffer, int $offset = -1, callable $callback)
+    {
+    }
+
+    /**
+     * async fdatasync.
+     * synchronize a file's in-core state with storage device
+     *
+     * @param UVLoop $loop
+     * @param resource $fd
+     * @param callable $callback expect (resource $stream, int $result)
+     */
+    function uv_fs_fdatasync(\UVLoop $loop, $fd, callable $callback)
+    {
+    }
+
+    /**
+     * async scandir.
+     * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+     * the specified loop after completion.
+     *
+     * @param UVLoop $loop
+     * @param string $path
+     * @param int $flags
+     * @param callable $callback expect (int|array $result_or_dir_contents)
+     */
+    function uv_fs_scandir(\UVLoop $loop, string $path, int $flags = 0, callable $callback)
+    {
+    }
+
+    /**
+     * async stat.
+     * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+     * the specified loop after completion.
+     *
+     * @param UVLoop $loop
+     * @param string $path
+     * @param callable $callback expect ($result_or_stat)
+     */
+    function uv_fs_stat(\UVLoop $loop, string $path, callable $callback)
+    {
+    }
+
+    /**
+     * async lstat.
+     * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+     * the specified loop after completion.
+     *
+     * @param UVLoop $loop
+     * @param string $path
+     * @param callable $callback expect ($result_or_stat)
+     */
+    function uv_fs_lstat(\UVLoop $loop, string $path, callable $callback)
+    {
+    }
+
+    /**
+     * async fstat,
+     * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+     * the specified loop after completion.
+     *
+     * @param UVLoop $loop
+     * @param resource $fd
+     * @param callable $callback expect (resource $stream, int $stat)
+     */
+    function uv_fs_fstat(\UVLoop $loop, $fd, callable $callback)
+    {
+    }
+
+    /**
+     * async sendfile.
+     * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+     * the specified loop after completion.
+     *
+     * @param UVLoop $loop
+     * @param resource $out_fd
+     * @param resource $in_fd
+     * @param int $offset
+     * @param int $length
+     * @param callable $callback expect (resource $out_fd, int $result)
+     */
+    function uv_fs_sendfile(\UVLoop $loop, $out_fd, $in_fd, int $offset, int $length, callable $callback)
     {
     }
 
@@ -562,10 +1051,10 @@ if (!\function_exists('uv_loop_init')) {
      * will not detect all changes on many file systems.
      *
      * @param UVPoll $poll
-     * @param callable $callback expects (UVPoll $poll, $status, $old, $new)
+     * @param callable $callback expect (\UVPoll $poll, $status, $old, $new)
      * @param string $path
      */
-    function uv_fs_poll_start(UVPoll $poll, $callback, string $path, int $interval)
+    function uv_fs_poll_start(\UVPoll $poll, $callback, string $path, int $interval)
     {
     }
 
@@ -574,7 +1063,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVPoll $poll
      */
-    function uv_fs_poll_stop(UVPoll $poll)
+    function uv_fs_poll_stop(\UVPoll $poll)
     {
     }
 
@@ -585,7 +1074,113 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return UVPoll
      */
-    function uv_fs_poll_init(UVLoop $loop)
+    function uv_fs_poll_init(\UVLoop $loop)
+    {
+    }
+
+    /**
+     * Update the event loop’s concept of “now”.
+     *
+     * `Libuv` caches the current time at the start of the event loop tick in order
+     * to reduce the number of time-related system calls.
+     *
+     * You won’t normally need to call this function unless you have callbacks that
+     * block the event loop for longer periods of time, where “longer” is somewhat
+     * subjective but probably on the order of a millisecond or more.
+     *
+     * @param UVLoop $loop uv_loop handle.
+     *
+     * @return void
+     */
+    function uv_update_time(\UVLoop $loop)
+    {
+    }
+
+    /**
+     * start polling.
+     *
+     * If you want to use a socket. please use `uv_poll_init_socket` instead of this.
+     * Windows can't handle socket with this function.
+     *
+     * @param UVPoll $poll
+     * @param int $events UV::READABLE and UV::WRITABLE flags.
+     * @param uv_poll_cb $callback expect (\UVPoll $poll, int $status, int $events, resource $fd)
+     * - the callback `$fd` parameter is the same from `uv_poll_init`.
+     */
+    function uv_poll_start(\UVPoll $poll, $events, ?callable $callback = null)
+    {
+    }
+
+    /**
+     * Initialize the poll watcher using a socket descriptor. On unix this is
+     * identical to `uv_poll_init`. On windows it takes a `SOCKET` handle.
+     *
+     * @param UVLoop $loop
+     * @param resource $socket
+     *
+     * @return UVPoll
+     */
+    function uv_poll_init_socket(\UVLoop $loop, $socket)
+    {
+    }
+
+    /**
+     * Initialize poll
+     *
+     * @param UVLoop $loop
+     * @param resource $fd PHP `stream`, or `socket`
+     *
+     * @return UVPoll
+     */
+    function uv_poll_init(\UVLoop $loop, $fd)
+    {
+    }
+
+    /**
+     * Stops polling the file descriptor.
+     *
+     * @param UVPoll $poll
+     */
+    function uv_poll_stop(\UVPoll $poll)
+    {
+    }
+
+    /**
+     * initialize timer handle.
+     *
+     * @param UVLoop $loop
+     *
+     * @return UVTimer
+     */
+    function uv_timer_init(\UVLoop $loop = null)
+    {
+    }
+
+    /**
+     * Start the timer. `$timeout` and `$repeat` are in milliseconds.
+     *
+     * If timeout is zero, the callback fires on the next tick of the event loop.
+     *
+     * If repeat is non-zero, the callback fires first after timeout milliseconds
+     * and then repeatedly after repeat milliseconds.
+     *
+     * @param UVTimer $timer
+     * @param int $timeout
+     * @param int $repeat
+     * @param callable $callback expect (\UVTimer $timer, int $status)
+     */
+    function uv_timer_start(\UVTimer $timer, int $timeout, int $repeat, callable $callback = null)
+    {
+    }
+
+    /**
+     * stop specified timer.
+     *
+     * @param UVTimer $timer
+     *
+     * @return float
+     */
+    function uv_timer_stop(\UVTimer $timer)
     {
     }
 
@@ -623,7 +1218,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return UVSignal
      */
-    function uv_signal_init(UVLoop $loop = null)
+    function uv_signal_init(\UVLoop $loop = null)
     {
     }
 
@@ -631,10 +1226,10 @@ if (!\function_exists('uv_loop_init')) {
      * Start the signal handle with the given callback, watching for the given signal.
      *
      * @param UVSignal $handle
-     * @param callable $callback expects (UVSignal handle, int signal)
+     * @param callable $callback expect (\UVSignal handle, int signal)
      * @param int $signal
      */
-    function uv_signal_start(UVSignal $handle, callable $callback, int $signal)
+    function uv_signal_start(\UVSignal $handle, callable $callback, int $signal)
     {
     }
 
@@ -645,7 +1240,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return int
      */
-    function uv_signal_stop(UVSignal $handle)
+    function uv_signal_stop(\UVSignal $handle)
     {
     }
 
@@ -671,7 +1266,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param null|string $cwd Current working directory for the subprocess.
      * @param array $env Environment for the new process. If NULL the parents environment is used.
      * @param null|callable $callback Callback called after the process exits.
-     * - Expects (UVProcess $process, $stat, $signal)
+     * - Expects (\UVProcess $process, $stat, $signal)
      * @param null|int $flags stdio flags
      * - Flags specifying how the stdio container should be passed to the child.
      * @param null|array $options
@@ -697,7 +1292,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVProcess $process
      * @param int $signal
      */
-    function uv_process_kill(UVProcess $process, int $signal)
+    function uv_process_kill(\UVProcess $process, int $signal)
     {
     }
 
@@ -707,7 +1302,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVProcess $process
      * @return int
      */
-    function uv_process_get_pid(UVProcess $process)
+    function uv_process_get_pid(\UVProcess $process)
     {
     }
 
@@ -722,34 +1317,15 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
-     * Initialize a pipe handle.
-     * The ipc argument is a boolean to indicate if this pipe will be used for
-     * handle passing between processes (which may change the bytes on the wire).
+     * Initializes a work request which will run the given `$callback` in a thread from the threadpool.
+     * Once `$callback` is completed, `$after_callback` will be called on the loop thread.
+     * Executes callbacks in another thread (requires Thread Safe enabled PHP).
      *
      * @param UVLoop $loop
-     * @param bool $ipc when use for ipc, set `true` otherwise `false`.
-     * - Note: needs to be `false` on Windows for proper operations.
-     *
-     * @return UVPipe
+     * @param callable $callback
+     * @param callable $after_callback
      */
-    function uv_pipe_init(UVLoop $loop, bool $ipc)
-    {
-    }
-
-    /**
-     * Open an existing file descriptor or HANDLE as a pipe.
-     *
-     * The file descriptor is set to non-blocking mode.
-     *
-     * `Note:` The passed file descriptor or HANDLE is not checked for its type,
-     * but it’s required that it represents a valid pipe.
-     *
-     * @param UVPipe $handle
-     * @param int|resource $pipe
-     *
-     * @return int|false
-     */
-    function uv_pipe_open(UVPipe $handle, int $pipe)
+    function uv_queue_work(\UVLoop $loop, callable $callback, callable $after_callback)
     {
     }
 
@@ -761,7 +1337,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return int
      */
-    function uv_pipe_bind(UVPipe $handle, string $name)
+    function uv_pipe_bind(\UVPipe $handle, string $name)
     {
     }
 
@@ -770,9 +1346,9 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVPipe $handle uv pipe handle.
      * @param string $path named pipe path.
-     * @param callable $callback this callback parameter expects (UVPipe $pipe, int $status).
+     * @param callable $callback this callback parameter expect (\UVPipe $pipe, int $status).
      */
-    function uv_pipe_connect(UVPipe $handle, string $path, callable $callback)
+    function uv_pipe_connect(\UVPipe $handle, string $path, callable $callback)
     {
     }
 
@@ -783,7 +1359,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVPipe $handle
      * @param void $count
      */
-    function uv_pipe_pending_instances(UVPipe $handle, $count)
+    function uv_pipe_pending_instances(\UVPipe $handle, $count)
     {
     }
 
@@ -806,7 +1382,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return UVIdle
      */
-    function uv_idle_init(UVLoop $loop = null)
+    function uv_idle_init(\UVLoop $loop = null)
     {
     }
 
@@ -829,9 +1405,9 @@ if (!\function_exists('uv_loop_init')) {
      * watcher to keep the UI operational.
      *
      * @param UVIdle $idle uv_idle handle.
-     * @param callable $callback expects (UVIdle $handle)
+     * @param callable $callback expect (\UVIdle $handle)
      */
-    function uv_idle_start(UVIdle $idle, callable $callback)
+    function uv_idle_start(\UVIdle $idle, callable $callback)
     {
     }
 
@@ -841,7 +1417,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVIdle $idle uv_idle handle.
      */
-    function uv_idle_stop(UVIdle $idle)
+    function uv_idle_stop(\UVIdle $idle)
     {
     }
 
@@ -854,11 +1430,11 @@ if (!\function_exists('uv_loop_init')) {
      * use is somewhat advanced. They could be used, for example, to track variable changes,
      * implement your own watchers.
      *
-     * @param UVLoop $loop uv loop handle.
+     * @param UVLoop $loop uv_loop handle.
      *
      * @return UVPrepare
      */
-    function uv_prepare_init(UVLoop $loop = null)
+    function uv_prepare_init(\UVLoop $loop = null)
     {
     }
 
@@ -867,9 +1443,9 @@ if (!\function_exists('uv_loop_init')) {
      * This function always succeeds, except when `callback` is `NULL`.
      *
      * @param UVPrepare $handle UV handle (prepare)
-     * @param callable $callback expects (UVPrepare $prepare, int $status).
+     * @param callable $callback expect (\UVPrepare $prepare, int $status).
      */
-    function uv_prepare_start(UVPrepare $handle, callable $callback)
+    function uv_prepare_start(\UVPrepare $handle, callable $callback)
     {
     }
 
@@ -879,7 +1455,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVPrepare $handle UV handle (prepare).
      */
-    function uv_prepare_stop(UVPrepare $handle)
+    function uv_prepare_stop(\UVPrepare $handle)
     {
     }
 
@@ -892,11 +1468,11 @@ if (!\function_exists('uv_loop_init')) {
      * use is somewhat advanced. They could be used, for example, to track variable changes,
      * implement your own watchers.
      *
-     * @param UVLoop $loop uv loop handle
+     * @param UVLoop $loop uv_loop handle
      *
      * @return UVCheck
      */
-    function uv_check_init(UVLoop $loop = null)
+    function uv_check_init(\UVLoop $loop = null)
     {
     }
 
@@ -905,9 +1481,9 @@ if (!\function_exists('uv_loop_init')) {
      * This function always succeeds, except when `callback` is `NULL`.
      *
      * @param UVCheck $handle UV handle (check).
-     * @param callable $callback expects (UVCheck $check, int $status).
+     * @param callable $callback expect (\UVCheck $check, int $status).
      */
-    function uv_check_start(UVCheck $handle, callable $callback)
+    function uv_check_start(\UVCheck $handle, callable $callback)
     {
     }
 
@@ -917,7 +1493,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVCheck $handle UV handle (check).
      */
-    function uv_check_stop(UVCheck $handle)
+    function uv_check_stop(\UVCheck $handle)
     {
     }
 
@@ -942,7 +1518,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      */
-    function uv_ref(UV $uv_handle)
+    function uv_ref(\UV $uv_handle)
     {
     }
 
@@ -967,19 +1543,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      */
-    function uv_unref(UV $uv_t)
-    {
-    }
-
-    /**
-     * Bind the handle to an address and port.
-     *
-     * @param UVTcp $uv_tcp uv_tcp handle
-     * @param UVSockAddr|resource|int $uv_sockaddr uv sockaddr4 handle.
-     *
-     * @return void
-     */
-    function uv_tcp_bind(UVTcp $uv_tcp, UVSockAddr $uv_sockaddr)
+    function uv_unref(\UV $uv_t)
     {
     }
 
@@ -992,7 +1556,7 @@ if (!\function_exists('uv_loop_init')) {
      * @return void
      * @deprecated 1.0
      */
-    function uv_tcp_bind6(UVTcp $uv_tcp, UVSockAddr $uv_sockaddr)
+    function uv_tcp_bind6(\UVTcp $uv_tcp, UVSockAddr $uv_sockaddr)
     {
     }
 
@@ -1007,11 +1571,11 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVTcp|UVPipe|UVTty $handle
      * @param string $data
      * @param UVTcp|UVPipe $send
-     * @param callable $callback expects (UVStream $handle, int $status).
+     * @param callable $callback expect (\UVStream $handle, int $status).
      *
      * @return void
      */
-    function uv_write2(UVStream $handle, string $data, $send, callable $callback)
+    function uv_write2(\UVStream $handle, string $data, $send, callable $callback)
     {
     }
 
@@ -1021,103 +1585,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVTcp $handle libuv tcp handle.
      * @param bool $enable true means enabled. false means disabled.
      */
-    function uv_tcp_nodelay(UVTcp $handle, bool $enable)
-    {
-    }
-
-    /**
-     * This call is used in conjunction with `uv_listen()` to accept incoming connections.
-     *
-     * Call this function after receiving a `uv_connection` to accept the connection.
-     * Before calling this function the client handle must be initialized.
-     *
-     * When the `uv_connection` callback is called it is guaranteed that this function
-     * will complete successfully the first time. If you attempt to use it more than once,
-     * it may fail. It is suggested to only call this function once per `uv_connection` call.
-     *
-     * `Note:` server and client must be handles running on the same loop.
-     *
-     * @param UVTcp|UVPipe $server uv_tcp or uv_pipe server handle.
-     * @param UVTcp|UVPipe $client uv_tcp or uv_pipe client handle.
-     *
-     * @return void
-     */
-    function uv_accept($server, $client)
-    {
-    }
-
-    /**
-     * Start listening for incoming connections.
-     *
-     * backlog indicates the number of connections the kernel might queue, same as listen(2).
-     * When a new incoming connection is received the `uv_connection` callback is called.
-     *
-     * @param UVTcp|UVPipe $handle UV handle (tcp, udp and pipe).
-     * @param int $backlog backlog.
-     * @param callable $callback expects ($handle, int $status).
-     *
-     * @return void
-     */
-    function uv_listen($handle, int $backlog, callable $callback)
-    {
-    }
-
-    /**
-     * Stop reading data from the stream. The `uv_read` callback will no longer be called.
-     *
-     * This function is idempotent and may be safely called on a stopped stream.
-     *
-     * @param UVTcp|UVPipe|UVTty $handle UV handle which started uv_read.
-     *
-     * @return void
-     */
-    function uv_read_stop(UVStream $handle)
-    {
-    }
-
-    /**
-     * Convert a string containing an IPv4 addresses to a binary structure.
-     *
-     * @param string $ipv4_addr ipv4 address
-     * @param int $port port number.
-     *
-     * @return UVSockAddrIPv4 handle
-     */
-    function uv_ip4_addr(string $ipv4_addr, int $port)
-    {
-    }
-
-    /**
-     * Convert a string containing an IPv6 addresses to a binary structure.
-     *
-     * @param string $ipv6_addr ipv6 address.
-     * @param int $port port number.
-     *
-     * @return UVSockAddrIPv6 handle
-     */
-    function uv_ip6_addr(string $ipv6_addr, int $port)
-    {
-    }
-
-    /**
-     * Establish an IPv4 TCP connection.
-     *
-     * Provide an initialized TCP handle and an uninitialized uv_connect. addr
-     * should point to an initialized struct sockaddr_in.
-     *
-     * On Windows if the addr is initialized to point to an unspecified address (0.0.0.0 or ::)
-     * it will be changed to point to localhost. This is done to match the behavior of Linux systems.
-     *
-     * The callback is made when the connection has been established
-     * or when a connection error happened.
-     *
-     * @param UVTcp $handle requires uv_tcp_init() handle.
-     * @param UVSockAddr $ipv4_addr requires uv_sockaddr handle.
-     * @param callable $callback callable expects (UVTcp $tcp_handle, int $status).
-     *
-     * @return void
-     */
-    function uv_tcp_connect(UVTcp $handle, UVSockAddr $ipv4_addr, callable $callback)
+    function uv_tcp_nodelay(\UVTcp $handle, bool $enable)
     {
     }
 
@@ -1135,11 +1603,11 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVTcp $handle requires uv_tcp_init() handle.
      * @param UVSockAddrIPv6 $ipv6_addr requires uv_sockaddr handle.
-     * @param callable $callback callable expects (UVTcp $tcp_handle, int $status).
+     * @param callable $callback callable expect (\UVTcp $tcp_handle, int $status).
      *
      * @return void
      */
-    function uv_tcp_connect6(UVTcp $handle, UVSockAddrIPv6 $ipv6_addr, callable $callback)
+    function uv_tcp_connect6(\UVTcp $handle, UVSockAddrIPv6 $ipv6_addr, callable $callback)
     {
     }
 
@@ -1150,7 +1618,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      */
-    function uv_timer_again(UVTimer $timer)
+    function uv_timer_again(\UVTimer $timer)
     {
     }
 
@@ -1176,7 +1644,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      */
-    function uv_timer_set_repeat(UVTimer $timer, int $repeat)
+    function uv_timer_set_repeat(\UVTimer $timer, int $repeat)
     {
     }
 
@@ -1187,7 +1655,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return int
      */
-    function uv_timer_get_repeat(UVTimer $timer)
+    function uv_timer_get_repeat(\UVTimer $timer)
     {
     }
 
@@ -1208,48 +1676,14 @@ if (!\function_exists('uv_loop_init')) {
      * called sometime in the future with the lookup result, which is either:
      *
      * @param UVLoop $loop
-     * @param callable $callback callable expects (array|int $addresses_or_error).
+     * @param callable $callback callable expect (array|int $addresses_or_error).
      * @param string $node
      * @param string $service
      * @param array $hints
      *
      * @return void
      */
-    function uv_getaddrinfo(UVLoop $loop, callable $callback, string $node = null, string $service = null, array $hints = [])
-    {
-    }
-
-    /**
-     * Convert a binary structure containing an IPv4 address to a string.
-     *
-     * @param UVSockAddr $address
-     *
-     * @return string
-     */
-    function uv_ip4_name(UVSockAddr $address)
-    {
-    }
-
-    /**
-     * Convert a binary structure containing an IPv6 address to a string.
-     *
-     * @param UVSockAddr $address
-     *
-     * @return string
-     */
-    function uv_ip6_name(UVSockAddr $address)
-    {
-    }
-
-    /**
-     * Initialize the handle. No socket is created as of yet.
-     *
-     * @param UVLoop|null $loop loop handle or null.
-     * - if not specified loop handle then use uv_default_loop handle.
-     *
-     * @return UVTcp UV which initialized for tcp.
-     */
-    function uv_tcp_init(UVLoop $loop = null)
+    function uv_getaddrinfo(\UVLoop $loop, callable $callback, string $node = null, string $service = null, array $hints = [])
     {
     }
 
@@ -1261,7 +1695,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return UVUdp UV which initialized for udp.
      */
-    function uv_udp_init(UVLoop $loop = null)
+    function uv_udp_init(\UVLoop $loop = null)
     {
     }
 
@@ -1278,7 +1712,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      */
-    function uv_udp_bind(UVUdp $handle, UVSockAddr $address, int $flags = 0)
+    function uv_udp_bind(\UVUdp $handle, UVSockAddr $address, int $flags = 0)
     {
     }
 
@@ -1295,7 +1729,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      */
-    function uv_udp_bind6(UVUdp $handle, UVSockAddr $address, int $flags = 0)
+    function uv_udp_bind6(\UVUdp $handle, UVSockAddr $address, int $flags = 0)
     {
     }
 
@@ -1309,11 +1743,11 @@ if (!\function_exists('uv_loop_init')) {
      * - callback – Callback to invoke with received data.
      *
      * @param UVUdp $handle UV handle (udp).
-     * @param callable $callback callback expects (UVUdp $handle, $data, int $flags).
+     * @param callable $callback callback expect (\UVUdp $handle, $data, int $flags).
      *
      * @return void
      */
-    function uv_udp_recv_start(UVUdp $handle, callable $callback)
+    function uv_udp_recv_start(\UVUdp $handle, callable $callback)
     {
     }
 
@@ -1326,7 +1760,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      */
-    function uv_udp_recv_stop(UVUdp $handle)
+    function uv_udp_recv_stop(\UVUdp $handle)
     {
     }
 
@@ -1345,7 +1779,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return int 0 on success, or an error code < 0 on failure.
      */
-    function uv_udp_set_membership(UVUdp $handle, string $multicast_addr, string $interface_addr, int $membership)
+    function uv_udp_set_membership(\UVUdp $handle, string $multicast_addr, string $interface_addr, int $membership)
     {
     }
 
@@ -1362,7 +1796,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      */
-    function uv_udp_set_multicast_loop(UVUdp $handle, bool $enabled)
+    function uv_udp_set_multicast_loop(\UVUdp $handle, bool $enabled)
     {
     }
 
@@ -1377,7 +1811,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      */
-    function uv_udp_set_multicast_ttl(UVUdp $handle, int $ttl)
+    function uv_udp_set_multicast_ttl(\UVUdp $handle, int $ttl)
     {
     }
 
@@ -1392,7 +1826,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      */
-    function uv_udp_set_broadcast(UVUdp $handle, bool $enabled)
+    function uv_udp_set_broadcast(\UVUdp $handle, bool $enabled)
     {
     }
 
@@ -1413,11 +1847,11 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVUdp $handle UV handle (udp).
      * @param string $data data.
      * @param UVSockAddr $uv_addr uv_ip4_addr.
-     * @param callable $callback callback expects (UVUdp $handle, int $status).
+     * @param callable $callback callback expect (\UVUdp $handle, int $status).
      *
      * @return void
      */
-    function uv_udp_send(UVUdp $handle, string $data, UVSockAddr $uv_addr, callable $callback)
+    function uv_udp_send(\UVUdp $handle, string $data, UVSockAddr $uv_addr, callable $callback)
     {
     }
 
@@ -1438,33 +1872,11 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVUdp $handle UV handle (udp).
      * @param string $data data.
      * @param UVSockAddrIPv6 $uv_addr6 uv_ip6_addr.
-     * @param callable $callback callback expects (UVUdp $handle, int $status).
+     * @param callable $callback callback expect (\UVUdp $handle, int $status).
      *
      * @return void
      */
-    function uv_udp_send6(UVUdp $handle, string $data, UVSockAddrIPv6 $uv_addr6, callable $callback)
-    {
-    }
-
-    /**
-     * Returns 1 if the stream is readable, 0 otherwise.
-     *
-     * @param UVTcp|UVPipe|UVTty $handle
-     *
-     * @return bool
-     */
-    function uv_is_readable(UVStream $handle)
-    {
-    }
-
-    /**
-     * Returns 1 if the stream is writable, 0 otherwise.
-     *
-     * @param UVTcp|UVPipe|UVTty $handle
-     *
-     * @return bool
-     */
-    function uv_is_writable(UVStream $handle)
+    function uv_udp_send6(\UVUdp $handle, string $data, UVSockAddrIPv6 $uv_addr6, callable $callback)
     {
     }
 
@@ -1477,20 +1889,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return bool
      */
-    function uv_walk(UVLoop $loop, callable $closure, array $opaque = null)
-    {
-    }
-
-    /**
-     * Used to detect what type of stream should be used with a given file descriptor.
-     *
-     * Usually this will be used during initialization to guess the type of the stdio streams.
-     *
-     * @param resource $uv
-     *
-     * @return int
-     */
-    function uv_guess_handle($uv)
+    function uv_walk(\UVLoop $loop, callable $closure, array $opaque = null)
     {
     }
 
@@ -1517,9 +1916,9 @@ if (!\function_exists('uv_loop_init')) {
     /**
      * Set read lock.
      *
-     * @param UVLock $handle UV handle (uv rwlock).
+     * @param UVLock $handle UV handle (\UV rwlock).
      */
-    function uv_rwlock_rdlock(UVLock $handle)
+    function uv_rwlock_rdlock(\UVLock $handle)
     {
     }
 
@@ -1528,45 +1927,45 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return bool
      */
-    function uv_rwlock_tryrdlock(UVLock $handle)
+    function uv_rwlock_tryrdlock(\UVLock $handle)
     {
     }
 
     /**
      * Unlock read lock.
      *
-     * @param UVLock $handle UV handle (uv rwlock)
+     * @param UVLock $handle UV handle (\UV rwlock)
      *
      * @return void
      */
-    function uv_rwlock_rdunlock(UVLock $handle)
+    function uv_rwlock_rdunlock(\UVLock $handle)
     {
     }
 
     /**
      * Set write lock.
      *
-     * @param UVLock $handle UV handle (uv rwlock).
+     * @param UVLock $handle UV handle (\UV rwlock).
      *
      * @return void
      */
-    function uv_rwlock_wrlock(UVLock $handle)
+    function uv_rwlock_wrlock(\UVLock $handle)
     {
     }
 
     /**
      * @param UVLock $handle
      */
-    function uv_rwlock_trywrlock(UVLock $handle)
+    function uv_rwlock_trywrlock(\UVLock $handle)
     {
     }
 
     /**
      * Unlock write lock.
      *
-     * @param UVLock $handle UV handle (uv rwlock).
+     * @param UVLock $handle UV handle (\UV rwlock).
      */
-    function uv_rwlock_wrunlock(UVLock $handle)
+    function uv_rwlock_wrunlock(\UVLock $handle)
     {
     }
 
@@ -1582,22 +1981,22 @@ if (!\function_exists('uv_loop_init')) {
     /**
      * Lock mutex.
      *
-     * @param UVLock $lock UV handle (uv mutex).
+     * @param UVLock $lock UV handle (\UV mutex).
      *
      * @return void
      */
-    function uv_mutex_lock(UVLock $lock)
+    function uv_mutex_lock(\UVLock $lock)
     {
     }
 
     /**
      * Unlock mutex.
      *
-     * @param UVLock $lock UV handle (uv mutex).
+     * @param UVLock $lock UV handle (\UV mutex).
      *
      * @return void
      */
-    function uv_mutex_unlock(UVLock $lock)
+    function uv_mutex_unlock(\UVLock $lock)
     {
     }
 
@@ -1606,7 +2005,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return bool
      */
-    function uv_mutex_trylock(UVLock $lock)
+    function uv_mutex_trylock(\UVLock $lock)
     {
     }
 
@@ -1623,11 +2022,11 @@ if (!\function_exists('uv_loop_init')) {
     /**
      * Post semaphore.
      *
-     * @param UVLock $sem UV handle (uv sem).
+     * @param UVLock $sem UV handle (\UV sem).
      *
      * @return void
      */
-    function uv_sem_post(UVLock $sem)
+    function uv_sem_post(\UVLock $sem)
     {
     }
 
@@ -1636,7 +2035,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      */
-    function uv_sem_wait(UVLock $sem)
+    function uv_sem_wait(\UVLock $sem)
     {
     }
 
@@ -1645,7 +2044,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      */
-    function uv_sem_trywait(UVLock $sem)
+    function uv_sem_trywait(\UVLock $sem)
     {
     }
 
@@ -1670,13 +2069,13 @@ if (!\function_exists('uv_loop_init')) {
      * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
      * the specified loop after completion.
      *
-     * @param UVLoop $loop uv loop handle.
+     * @param UVLoop $loop uv_loop handle.
      * @param resource $fd
-     * @param callable $callback callback expects (resource $fd, int $result).
+     * @param callable $callback callback expect (resource $fd, int $result).
      *
      * @return void
      */
-    function uv_fs_fsync(UVLoop $loop, $fd, callable $callback)
+    function uv_fs_fsync(\UVLoop $loop, $fd, callable $callback)
     {
     }
 
@@ -1685,14 +2084,14 @@ if (!\function_exists('uv_loop_init')) {
      * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
      * the specified loop after completion.
      *
-     * @param UVLoop $loop uv loop handle.
+     * @param UVLoop $loop uv_loop handle.
      * @param resource $fd
      * @param int $offset
-     * @param callable $callback callback expects (resource $fd, int $result).
+     * @param callable $callback callback expect (resource $fd, int $result).
      *
      * @return void
      */
-    function uv_fs_ftruncate(UVLoop $loop, $fd, int $offset, callable $callback)
+    function uv_fs_ftruncate(\UVLoop $loop, $fd, int $offset, callable $callback)
     {
     }
 
@@ -1701,14 +2100,14 @@ if (!\function_exists('uv_loop_init')) {
      * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
      * the specified loop after completion.
      *
-     * @param UVLoop $loop uv loop handle
+     * @param UVLoop $loop uv_loop handle
      * @param string $path
      * @param int $mode
-     * @param callable $callback callback expects (int $result).
+     * @param callable $callback callback expect (int $result).
      *
      * @return void
      */
-    function uv_fs_mkdir(UVLoop $loop, string $path, int $mode, callable $callback)
+    function uv_fs_mkdir(\UVLoop $loop, string $path, int $mode, callable $callback)
     {
     }
 
@@ -1717,13 +2116,13 @@ if (!\function_exists('uv_loop_init')) {
      * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
      * the specified loop after completion.
      *
-     * @param UVLoop $loop uv loop handle
+     * @param UVLoop $loop uv_loop handle
      * @param string $path
-     * @param callable $callback callback expects (int $result).
+     * @param callable $callback callback expect (int $result).
      *
      * @return void
      */
-    function uv_fs_rmdir(UVLoop $loop, string $path, callable $callback)
+    function uv_fs_rmdir(\UVLoop $loop, string $path, callable $callback)
     {
     }
 
@@ -1732,13 +2131,13 @@ if (!\function_exists('uv_loop_init')) {
      * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
      * the specified loop after completion.
      *
-     * @param UVLoop $loop uv loop handle
+     * @param UVLoop $loop uv_loop handle
      * @param string $path
-     * @param callable $callback callback expects (int $result).
+     * @param callable $callback callback expect (int $result).
      *
      * @return void
      */
-    function uv_fs_unlink(UVLoop $loop, string $path, callable $callback)
+    function uv_fs_unlink(\UVLoop $loop, string $path, callable $callback)
     {
     }
 
@@ -1747,14 +2146,14 @@ if (!\function_exists('uv_loop_init')) {
      * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
      * the specified loop after completion.
      *
-     * @param UVLoop $loop uv loop handle.
+     * @param UVLoop $loop uv_loop handle.
      * @param string $from
      * @param string $to
-     * @param callable $callback callback expects (int $result).
+     * @param callable $callback callback expect (int $result).
      *
      * @return void
      */
-    function uv_fs_rename(UVLoop $loop, string $from, string $to, callable $callback)
+    function uv_fs_rename(\UVLoop $loop, string $from, string $to, callable $callback)
     {
     }
 
@@ -1763,15 +2162,15 @@ if (!\function_exists('uv_loop_init')) {
      * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
      * the specified loop after completion.
      *
-     * @param UVLoop $loop uv loop handle.
+     * @param UVLoop $loop uv_loop handle.
      * @param string $path
      * @param int $utime
      * @param int $atime
-     * @param callable $callback callback expects (int $result).
+     * @param callable $callback callback expect (int $result).
      *
      * @return void
      */
-    function uv_fs_utime(UVLoop $loop, string $path, int $utime, int $atime, callable $callback)
+    function uv_fs_utime(\UVLoop $loop, string $path, int $utime, int $atime, callable $callback)
     {
     }
 
@@ -1780,15 +2179,15 @@ if (!\function_exists('uv_loop_init')) {
      * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
      * the specified loop after completion.
      *
-     * @param UVLoop $loop uv loop handle.
+     * @param UVLoop $loop uv_loop handle.
      * @param resource $fd
      * @param int $utime
      * @param int $atime
-     * @param callable $callback callback expects (int $result).
+     * @param callable $callback callback expect (int $result).
      *
      * @return void
      */
-    function uv_fs_futime(UVLoop $loop, $fd, int $utime, int $atime, callable $callback)
+    function uv_fs_futime(\UVLoop $loop, $fd, int $utime, int $atime, callable $callback)
     {
     }
 
@@ -1797,14 +2196,14 @@ if (!\function_exists('uv_loop_init')) {
      * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
      * the specified loop after completion.
      *
-     * @param UVLoop $loop uv loop handle.
+     * @param UVLoop $loop uv_loop handle.
      * @param string $path
      * @param int $mode
-     * @param callable $callback callback expects (int $result).
+     * @param callable $callback callback expect (int $result).
      *
      * @return void
      */
-    function uv_fs_chmod(UVLoop $loop, string $path, int $mode, callable $callback)
+    function uv_fs_chmod(\UVLoop $loop, string $path, int $mode, callable $callback)
     {
     }
 
@@ -1813,14 +2212,14 @@ if (!\function_exists('uv_loop_init')) {
      * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
      * the specified loop after completion.
      *
-     * @param UVLoop $loop uv loop handle.
+     * @param UVLoop $loop uv_loop handle.
      * @param resource $fd
      * @param int $mode
-     * @param callable $callback callback expects (int $result).
+     * @param callable $callback callback expect (int $result).
      *
      * @return void
      */
-    function uv_fs_fchmod(UVLoop $loop, $fd, int $mode, callable $callback)
+    function uv_fs_fchmod(\UVLoop $loop, $fd, int $mode, callable $callback)
     {
     }
 
@@ -1829,15 +2228,15 @@ if (!\function_exists('uv_loop_init')) {
      * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
      * the specified loop after completion.
      *
-     * @param UVLoop $loop uv loop handle.
+     * @param UVLoop $loop uv_loop handle.
      * @param string $path
      * @param int $uid
      * @param int $gid
-     * @param callable $callback callback expects (int $result).
+     * @param callable $callback callback expect (int $result).
      *
      * @return void
      */
-    function uv_fs_chown(UVLoop $loop, string $path, int $uid, int $gid, callable $callback)
+    function uv_fs_chown(\UVLoop $loop, string $path, int $uid, int $gid, callable $callback)
     {
     }
 
@@ -1846,15 +2245,15 @@ if (!\function_exists('uv_loop_init')) {
      * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
      * the specified loop after completion.
      *
-     * @param UVLoop $loop uv loop handle.
+     * @param UVLoop $loop uv_loop handle.
      * @param resource $fd
      * @param int $uid
      * @param int $gid
-     * @param callable $callback callback expects (int $result).
+     * @param callable $callback callback expect (int $result).
      *
      * @return void
      */
-    function uv_fs_fchown(UVLoop $loop, $fd, int $uid, int $gid, callable $callback)
+    function uv_fs_fchown(\UVLoop $loop, $fd, int $uid, int $gid, callable $callback)
     {
     }
 
@@ -1863,14 +2262,14 @@ if (!\function_exists('uv_loop_init')) {
      * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
      * the specified loop after completion.
      *
-     * @param UVLoop $loop uv loop handle.
+     * @param UVLoop $loop uv_loop handle.
      * @param string $from
      * @param string $to
-     * @param callable $callback callback expects (int $result).
+     * @param callable $callback callback expect (int $result).
      *
      * @return void
      */
-    function uv_fs_link(UVLoop $loop, string $from, string $to, callable $callback)
+    function uv_fs_link(\UVLoop $loop, string $from, string $to, callable $callback)
     {
     }
 
@@ -1883,15 +2282,15 @@ if (!\function_exists('uv_loop_init')) {
      * - UV_FS_SYMLINK_DIR: indicates that path points to a directory.
      * - UV_FS_SYMLINK_JUNCTION: request that the symlink is created using junction points.
      *
-     * @param UVLoop $loop uv loop handle.
+     * @param UVLoop $loop uv_loop handle.
      * @param string $from
      * @param string $to
      * @param int $flags
-     * @param callable $callback callback expects (int $result).
+     * @param callable $callback callback expect (int $result).
      *
      * @return void
      */
-    function uv_fs_symlink(UVLoop $loop, string $from, string $to, int $flags, callable $callback)
+    function uv_fs_symlink(\UVLoop $loop, string $from, string $to, int $flags, callable $callback)
     {
     }
 
@@ -1900,13 +2299,13 @@ if (!\function_exists('uv_loop_init')) {
      * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
      * the specified loop after completion.
      *
-     * @param UVLoop $loop uv loop handle
+     * @param UVLoop $loop uv_loop handle
      * @param string $path
-     * @param callable $callback callback expects ($result_or_link_contents).
+     * @param callable $callback callback expect ($result_or_link_contents).
      *
      * @return void
      */
-    function uv_fs_readlink(UVLoop $loop, string $path, callable $callback)
+    function uv_fs_readlink(\UVLoop $loop, string $path, callable $callback)
     {
     }
 
@@ -1915,14 +2314,14 @@ if (!\function_exists('uv_loop_init')) {
      * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
      * the specified loop after completion.
      *
-     * @param UVLoop $loop  uv loop handle
+     * @param UVLoop $loop uv_loop handle
      * @param string $path
      * @param int $flags
-     * @param callable $callback callback expects ($result_or_dir_contents).
+     * @param callable $callback callback expect ($result_or_dir_contents).
      *
      * @return void
      */
-    function uv_fs_readdir(UVLoop $loop, string $path, int $flags, callable $callback)
+    function uv_fs_readdir(\UVLoop $loop, string $path, int $flags, callable $callback)
     {
     }
 
@@ -1938,9 +2337,9 @@ if (!\function_exists('uv_loop_init')) {
      * `events` - one of `UV::RENAME` or `UV::CHANGE`, or a bitwise OR of both.
      * `status` - Currently 0, or `error` if < 0.
      *
-     * @param UVLoop $loop uv loop handle
+     * @param UVLoop $loop uv_loop handle
      * @param string $path
-     * @param callable $callback callback expects (UVFsEvent $handle, ?string $filename, int $events, int $status).
+     * @param callable $callback callback expect (\UVFsEvent $handle, ?string $filename, int $events, int $status).
      *
      * @param int $flags - `uv_fs_event_flags` that can be passed to control its behavior.
      *
@@ -1968,34 +2367,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return UVFsEvent
      */
-    function uv_fs_event_init(UVLoop $loop, string $path, callable $callback, int $flags = 0)
-    {
-    }
-
-    /**
-     * Initialize a new TTY stream with the given file descriptor.
-     *
-     * Usually the file descriptor will be:
-     *  0 = stdin
-     *  1 = stdout
-     *  2 = stderr
-     *
-     * On Unix this function will determine the path of the fd of the terminal using ttyname_r(3),
-     * open it, and use it if the passed file descriptor refers to a TTY. This lets libuv put the
-     * tty in non-blocking mode without affecting other processes that share the tty.
-     *
-     * This function is not thread safe on systems that don’t support ioctl TIOCGPTN or TIOCPTYGNAME,
-     * for instance OpenBSD and Solaris.
-     *
-     * `Note:` If reopening the TTY fails, `libuv` falls back to blocking writes.
-     *
-     * @param UVLoop $loop uv loop handle.
-     * @param resource $fd
-     * @param int $readable
-     *
-     * @return UVTty
-     */
-    function uv_tty_init(UVLoop $loop, $fd, int $readable)
+    function uv_fs_event_init(\UVLoop $loop, string $path, callable $callback, int $flags = 0)
     {
     }
 
@@ -2008,33 +2380,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return int
      */
-    function uv_tty_get_winsize(UVTty $tty, int &$width, int &$height)
-    {
-    }
-
-    /**
-     * Set the TTY using the specified terminal mode.
-     *
-     * @param UVTty $tty
-     * @param int $mode
-     *
-     * @return int
-     */
-    function uv_tty_set_mode(UVTty $tty, int $mode)
-    {
-    }
-
-    /**
-     * To be called when the program exits.
-     *
-     * Resets TTY settings to default values for the next process to take over.
-     *
-     * This function is async signal-safe on Unix platforms but can fail with error code
-     * UV_EBUSY if you call it when execution is inside uv_tty_set_mode().
-     *
-     * @return void
-     */
-    function uv_tty_reset_mode()
+    function uv_tty_get_winsize(\UVTty $tty, int &$width, int &$height)
     {
     }
 
@@ -2094,7 +2440,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return array ['address'], ['port'], ['family']
      */
-    function uv_tcp_getsockname(UVTcp $uv_sock)
+    function uv_tcp_getsockname(\UVTcp $uv_sock)
     {
     }
 
@@ -2105,7 +2451,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return array ['address'], ['port'], ['family']
      */
-    function uv_tcp_getpeername(UVTcp $uv_sock)
+    function uv_tcp_getpeername(\UVTcp $uv_sock)
     {
     }
 
@@ -2116,7 +2462,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return array ['address'], ['port'], ['family']
      */
-    function uv_udp_getsockname(UVUdp $uv_sock)
+    function uv_udp_getsockname(\UVUdp $uv_sock)
     {
     }
 
@@ -2132,7 +2478,7 @@ if (!\function_exists('uv_loop_init')) {
     /**
      * Returns UV handle type.
      *
-     * @param UV $uv uv_handle.
+     * @param UV|uv_handle_t $handle.
      *
      * @return int
      * The kind of the `libuv` handle.
@@ -2156,8 +2502,9 @@ if (!\function_exists('uv_loop_init')) {
      * - UV_FILE = 17;
      * - UV_HANDLE_TYPE_MAX = 18;
      */
-    function uv_handle_get_type(UV $uv)
+    function uv_handle_get_type(\UV $handle)
     {
+        return \uv_ffi()->uv_handle_get_type($handle(true));
     }
 
     /**
@@ -2173,7 +2520,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return int|false
      */
-    function uv_tcp_open(UVTcp $handle, int $tcpfd)
+    function uv_tcp_open(\UVTcp $handle, int $tcpfd)
     {
     }
 
@@ -2195,21 +2542,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return int|false
      */
-    function uv_udp_open(UVUdp $handle, int $udpfd)
-    {
-    }
-
-    /**
-     * Returns non-zero if the handle is closing or closed, zero otherwise.
-     *
-     * `Note:` This function should only be used between the initialization of
-     * the handle and the arrival of the close callback.
-     *
-     * @param UV $handle
-     *
-     * @return bool
-     */
-    function uv_is_closing(UV $handle)
+    function uv_udp_open(\UVUdp $handle, int $udpfd)
     {
     }
 
@@ -2222,7 +2555,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      */
-    function uv_run_once(UVLoop $uv_loop = null)
+    function uv_run_once(\UVLoop $uv_loop = null)
     {
     }
 }

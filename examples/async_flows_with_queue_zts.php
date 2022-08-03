@@ -1,4 +1,6 @@
 <?php
+require 'vendor/autoload.php';
+
 if (\ZEND_THREAD_SAFE) {
     $loop = uv_default_loop();
     $count = 1;
