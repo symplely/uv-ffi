@@ -9,7 +9,7 @@ if (!\class_exists('UVLoop')) {
      * The event loop is the central part of `libuv's` functionality.
      * It takes care of polling for i/o and scheduling callbacks to
      * be run based on different sources of events.
-     * @return uv_Loop_t **pointer** by invoking `$UVLoop()`
+     * @return uv_loop_t **pointer** by invoking `$UVLoop()`
      */
     final class UVLoop
     {
@@ -462,6 +462,15 @@ if (!\class_exists('UVIdle')) {
      */
     final class UVIdle extends \UV
     {
+        public static function init(?UVLoop $loop, ...$arguments)
+        {
+            if (\is_null($loop))
+                $loop = \uv_default_loop();
+
+            $idle = new self('struct _php_uv_s', 'idle');
+            $status = \uv_ffi()->uv_idle_init($loop(), $idle());
+            return $status === 0 ? $idle : $status;
+        }
     }
 }
 
@@ -483,6 +492,15 @@ if (!\class_exists('UVCheck')) {
      */
     final class UVCheck extends \UV
     {
+        public static function init(?UVLoop $loop, ...$arguments)
+        {
+            if (\is_null($loop))
+                $loop = \uv_default_loop();
+
+            $check = new self('struct _php_uv_s', 'check');
+            $status = \uv_ffi()->uv_check_init($loop(), $check());
+            return $status === 0 ? $check : $status;
+        }
     }
 }
 

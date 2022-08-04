@@ -242,6 +242,15 @@ abstract class UVPipe extends uv_pipe_t
 abstract class UVTty extends uv_tty_t
 {
 }
+abstract class UVLoop extends uv_loop_t
+{
+}
+abstract class UVCheck extends uv_check_t
+{
+}
+abstract class UVIdle extends uv_idle_t
+{
+}
 abstract class UVFs extends uv_fs_t
 {
 }
@@ -513,11 +522,6 @@ interface FFI
 
     public function uv_queue_work(uv_loop_t &$loop, callable $callback, callable $after_callback);
 
-    public function uv_idle_init(uv_loop_t $loop = null);
-
-    public function uv_idle_start(UVIdle $idle, callable $callback);
-
-    public function uv_idle_stop(UVIdle $idle);
 
     /** @return int */
     public function uv_prepare_init(uv_loop_t $loop = null);
@@ -527,12 +531,22 @@ interface FFI
     public function uv_prepare_stop(UVPrepare $handle);
 
     /** @return int */
-    public function uv_check_init(uv_loop_t &$loop = null);
+    public function uv_check_init(uv_loop_t &$loop, uv_check_t &$check);
 
     /** @return int */
-    public function uv_check_start(UVCheck &$handle, callable $callback);
+    public function uv_check_start(uv_check_t &$check, uv_check_cb $callback);
 
-    public function uv_check_stop(UVCheck $handle);
+    /** @return int */
+    public function uv_check_stop(uv_check_t $check);
+
+    /** @return int */
+    public function uv_idle_init(uv_loop_t $loop, uv_idle_t &$idle);
+
+    /** @return int */
+    public function uv_idle_start(uv_idle_t &$idle, uv_idle_cb $callback);
+
+    /** @return int */
+    public function uv_idle_stop(uv_idle_t &$idle);
 
     /** @return void */
     public function uv_ref(uv_handle_t &$uv_handle);

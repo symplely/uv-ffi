@@ -159,6 +159,9 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_now(\UVLoop $loop = null): int
     {
+        if (\is_null($loop))
+            $loop = \uv_default_loop();
+
         return \uv_ffi()->uv_now($loop());
     }
 
@@ -586,8 +589,10 @@ if (!\function_exists('uv_loop_init')) {
             }
         );
 
-        if ($r)
+        if ($r) {
             \ze_ffi()->zend_error(\E_WARNING, "%s", \uv_strerror($r));
+            \zval_del_ref($handle);
+        }
 
         return $r;
     }
@@ -1380,10 +1385,12 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVLoop $loop uv_loop handle.
      *
-     * @return UVIdle
+     * @return UVIdle|int
+     * @link http://docs.libuv.org/en/v1.x/idle.html?highlight=uv_idle_init#c.uv_idle_init
      */
     function uv_idle_init(\UVLoop $loop = null)
     {
+        return \UVIdle::init($loop);
     }
 
     /**
@@ -1405,10 +1412,20 @@ if (!\function_exists('uv_loop_init')) {
      * watcher to keep the UI operational.
      *
      * @param UVIdle $idle uv_idle handle.
-     * @param callable $callback expect (\UVIdle $handle)
+     * @param callable|uv_idle_cb $callback expect (\UVIdle $handle)
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/idle.html?highlight=uv_idle_init#c.uv_idle_start
      */
     function uv_idle_start(\UVIdle $idle, callable $callback)
     {
+        if (\uv_is_active($idle)) {
+            return \ze_ffi()->zend_error(\E_WARNING, "passed uv_idle resource has already started.");
+        }
+
+        \zval_add_ref($idle);
+        return \uv_ffi()->uv_idle_start($idle(), function (object $check) use ($callback, $idle) {
+            $callback($idle);
+        });
     }
 
     /**
@@ -1416,9 +1433,19 @@ if (!\function_exists('uv_loop_init')) {
      * This function always succeeds.
      *
      * @param UVIdle $idle uv_idle handle.
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/idle.html?highlight=uv_idle_init#c.uv_idle_stop
      */
     function uv_idle_stop(\UVIdle $idle)
     {
+        if (!\uv_is_active($idle)) {
+            return \ze_ffi()->zend_error(\E_NOTICE, "passed uv_idle resource does not start yet.");
+        }
+
+        $status = \uv_ffi()->uv_idle_stop($idle());
+        \zval_del_ref($idle);
+
+        return $status;
     }
 
     /**
@@ -1470,10 +1497,12 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVLoop $loop uv_loop handle
      *
-     * @return UVCheck
+     * @return UVCheck|int
+     * @link http://docs.libuv.org/en/v1.x/check.html?highlight=uv_check_init#c.uv_check_init
      */
     function uv_check_init(\UVLoop $loop = null)
     {
+        return \UVCheck::init($loop);
     }
 
     /**
@@ -1481,10 +1510,20 @@ if (!\function_exists('uv_loop_init')) {
      * This function always succeeds, except when `callback` is `NULL`.
      *
      * @param UVCheck $handle UV handle (check).
-     * @param callable $callback expect (\UVCheck $check, int $status).
+     * @param callable|uv_check_cb $callback expect (\UVCheck $check).
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/check.html?highlight=uv_check_init#c.uv_check_start
      */
-    function uv_check_start(\UVCheck $handle, callable $callback)
+    function uv_check_start(\UVCheck $handle, callable $callback): int
     {
+        if (\uv_is_active($handle)) {
+            return \ze_ffi()->zend_error(\E_WARNING, "passed uv_check resource has already started");
+        }
+
+        \zval_add_ref($handle);
+        return \uv_ffi()->uv_check_start($handle(), function (object $check) use ($callback, $handle) {
+            $callback($handle);
+        });
     }
 
     /**
@@ -1492,9 +1531,19 @@ if (!\function_exists('uv_loop_init')) {
      * This function always succeeds.
      *
      * @param UVCheck $handle UV handle (check).
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/check.html?highlight=uv_check_init#c.uv_check_stop
      */
-    function uv_check_stop(\UVCheck $handle)
+    function uv_check_stop(\UVCheck $handle): int
     {
+        if (!\uv_is_active($handle)) {
+            return \ze_ffi()->zend_error(\E_NOTICE, "passed uv_check resource hasn't start yet.");
+        }
+
+        $status = \uv_ffi()->uv_check_stop($handle());
+        \zval_del_ref($handle);
+
+        return $status;
     }
 
     /**
