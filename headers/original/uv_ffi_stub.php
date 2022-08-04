@@ -248,6 +248,12 @@ abstract class UVLoop extends uv_loop_t
 abstract class UVCheck extends uv_check_t
 {
 }
+abstract class UVPrepare extends uv_prepare_t
+{
+}
+abstract class UVStream extends uv_stream_t
+{
+}
 abstract class UVIdle extends uv_idle_t
 {
 }

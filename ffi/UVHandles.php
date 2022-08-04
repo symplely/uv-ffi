@@ -482,6 +482,15 @@ if (!\class_exists('UVPrepare')) {
      */
     final class UVPrepare extends \UV
     {
+        public static function init(?UVLoop $loop, ...$arguments)
+        {
+            if (\is_null($loop))
+                $loop = \uv_default_loop();
+
+            $prepare = new self('struct _php_uv_s', 'prepare');
+            $status = \uv_ffi()->uv_prepare_init($loop(), $prepare());
+            return $status === 0 ? $prepare : $status;
+        }
     }
 }
 

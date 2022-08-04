@@ -1416,14 +1416,14 @@ if (!\function_exists('uv_loop_init')) {
      * @return int
      * @link http://docs.libuv.org/en/v1.x/idle.html?highlight=uv_idle_init#c.uv_idle_start
      */
-    function uv_idle_start(\UVIdle $idle, callable $callback)
+    function uv_idle_start(\UVIdle $idle, callable $callback): int
     {
         if (\uv_is_active($idle)) {
             return \ze_ffi()->zend_error(\E_WARNING, "passed uv_idle resource has already started.");
         }
 
         \zval_add_ref($idle);
-        return \uv_ffi()->uv_idle_start($idle(), function (object $check) use ($callback, $idle) {
+        return \uv_ffi()->uv_idle_start($idle(), function (object $handle) use ($callback, $idle) {
             $callback($idle);
         });
     }
@@ -1436,7 +1436,7 @@ if (!\function_exists('uv_loop_init')) {
      * @return int
      * @link http://docs.libuv.org/en/v1.x/idle.html?highlight=uv_idle_init#c.uv_idle_stop
      */
-    function uv_idle_stop(\UVIdle $idle)
+    function uv_idle_stop(\UVIdle $idle): int
     {
         if (!\uv_is_active($idle)) {
             return \ze_ffi()->zend_error(\E_NOTICE, "passed uv_idle resource does not start yet.");
@@ -1459,10 +1459,12 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVLoop $loop uv_loop handle.
      *
-     * @return UVPrepare
+     * @return UVPrepare|int
+     * @link http://docs.libuv.org/en/v1.x/prepare.html?highlight=uv_prepare_init#c.uv_prepare_init
      */
     function uv_prepare_init(\UVLoop $loop = null)
     {
+        return \UVPrepare::init($loop);
     }
 
     /**
@@ -1470,10 +1472,20 @@ if (!\function_exists('uv_loop_init')) {
      * This function always succeeds, except when `callback` is `NULL`.
      *
      * @param UVPrepare $handle UV handle (prepare)
-     * @param callable $callback expect (\UVPrepare $prepare, int $status).
+     * @param callable|uv_prepare_cb $callback expect (\UVPrepare $prepare).
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/prepare.html?highlight=uv_prepare_init#c.uv_prepare_init
      */
-    function uv_prepare_start(\UVPrepare $handle, callable $callback)
+    function uv_prepare_start(\UVPrepare $handle, callable $callback): int
     {
+        if (\uv_is_active($handle)) {
+            return \ze_ffi()->zend_error(\E_WARNING, "passed uv_prepare resource has been started.");
+        }
+
+        \zval_add_ref($handle);
+        return \uv_ffi()->uv_prepare_start($handle(), function (object $prepare) use ($callback, $handle) {
+            $callback($handle);
+        });
     }
 
     /**
@@ -1481,9 +1493,19 @@ if (!\function_exists('uv_loop_init')) {
      * This function always succeeds.
      *
      * @param UVPrepare $handle UV handle (prepare).
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/prepare.html?highlight=uv_prepare_init#c.uv_prepare_stop
      */
-    function uv_prepare_stop(\UVPrepare $handle)
+    function uv_prepare_stop(\UVPrepare $handle): int
     {
+        if (!\uv_is_active($handle)) {
+            return \ze_ffi()->zend_error(\E_NOTICE, "passed uv_prepare resource has been stopped.");
+        }
+
+        $status = \uv_ffi()->uv_prepare_stop($handle());
+        \zval_del_ref($handle);
+
+        return $status;
     }
 
     /**
@@ -1588,12 +1610,14 @@ if (!\function_exists('uv_loop_init')) {
      * All handles are referenced when active by default, see `uv_is_active()` for a more detailed
      * explanation on what being active involves.
      *
-     * @param UV $uv_t UV handle.
+     * @param UV $handle UV handle.
      *
      * @return void
+     * @link http://docs.libuv.org/en/v1.x/handle.html?highlight=uv_unref#c.uv_unref
      */
-    function uv_unref(\UV $uv_t)
+    function uv_unref(\UV $handle): void
     {
+        \uv_ffi()->uv_unref($handle(true));
     }
 
     /**

@@ -1453,6 +1453,7 @@ typedef struct _zend_fcall_info_cache {
 extern const zend_fcall_info empty_fcall_info;
 extern const zend_fcall_info_cache empty_fcall_info_cache;
 
+/*
 zend_result zend_startup_module(zend_module_entry *module_entry);
 zend_module_entry* zend_register_internal_module(zend_module_entry *module_entry);
 zend_module_entry* zend_register_module_ex(zend_module_entry *module);
@@ -1463,3 +1464,7 @@ void php_info_print_table_start(void);
 void php_info_print_table_header(int num_cols, ...);
 void php_info_print_table_row(int num_cols, ...);
 void php_info_print_table_end(void);
+int php_request_startup(void);
+int php_execute_script(zend_file_handle *primary_file);
+void php_request_shutdown(void *dummy);
+*/
