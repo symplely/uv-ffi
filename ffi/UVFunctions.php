@@ -136,10 +136,14 @@ if (!\function_exists('uv_loop_init')) {
      * the loop won’t block for i/o on this iteration.
      *
      * @param UVLoop $loop
+     * @return void
      * @link http://docs.libuv.org/en/v1.x/loop.html#c.uv_stop
      */
-    function uv_stop(\UVLoop &$loop): void
+    function uv_stop(\UVLoop &$loop = null): void
     {
+        if (\is_null($loop))
+            $loop = \uv_default_loop();
+
         \uv_ffi()->uv_stop($loop());
         \zval_del_ref($loop);
     }
@@ -1155,10 +1159,12 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVLoop $loop
      *
-     * @return UVTimer
+     * @return UVTimer|int
+     * @link http://docs.libuv.org/en/v1.x/timer.html?highlight=uv_timer_init#c.uv_timer_init
      */
     function uv_timer_init(\UVLoop $loop = null)
     {
+        return \UVTimer::init($loop);
     }
 
     /**
@@ -1172,10 +1178,31 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVTimer $timer
      * @param int $timeout
      * @param int $repeat
-     * @param callable $callback expect (\UVTimer $timer, int $status)
+     * @param callable|uv_timer_cb $callback expect (\UVTimer $timer)
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/timer.html?highlight=uv_timer_init#c.uv_timer_start
      */
-    function uv_timer_start(\UVTimer $timer, int $timeout, int $repeat, callable $callback = null)
+    function uv_timer_start(\UVTimer $timer, int $timeout, int $repeat, callable $callback = null): int
     {
+        if ($timeout < 0)
+            return \ze_ffi()->zend_error(\E_WARNING, "timeout value have to be larger than 0. given %lld", $timeout);
+
+        if ($repeat < 0)
+            return \ze_ffi()->zend_error(\E_WARNING, "repeat value have to be larger than 0. given %lld", $repeat);
+
+        if (\uv_is_active($timer))
+            return \ze_ffi()->zend_error(\E_NOTICE, "Passed uv timer resource has been started. You don't have to call this method");
+
+        \zval_add_ref($timer);
+        return \uv_ffi()->uv_timer_start(
+            $timer(),
+            \is_null($callback) ? function () {
+            } :  function (object $handle) use ($callback, $timer) {
+                $callback($timer);
+            },
+            $timeout,
+            $repeat
+        );
     }
 
     /**
@@ -1183,10 +1210,18 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVTimer $timer
      *
-     * @return float
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/timer.html?highlight=uv_timer_init#c.uv_timer_stop
      */
-    function uv_timer_stop(\UVTimer $timer)
+    function uv_timer_stop(\UVTimer $timer): int
     {
+        if (!\uv_is_active($timer))
+            return \ze_ffi()->zend_error(\E_NOTICE, "Passed uv timer resource has been stopped. You don't have to call this method");
+
+        $r = \uv_ffi()->uv_timer_stop($timer());
+        \zval_del_ref($timer);
+
+        return $r;
     }
 
     /**

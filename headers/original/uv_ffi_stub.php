@@ -195,6 +195,9 @@ abstract class uv_handle_type extends int
 abstract class uv_fs_type extends int
 {
 }
+abstract class uint64_t extends int
+{
+}
 /** Abstract representation of a file descriptor. On Unix systems this is a typedef of `int`
  * and on Windows a `HANDLE` */
 abstract class uv_os_fd_t extends Resource
@@ -243,6 +246,9 @@ abstract class UVTty extends uv_tty_t
 {
 }
 abstract class UVLoop extends uv_loop_t
+{
+}
+abstract class UVTimer extends uv_timer_t
 {
 }
 abstract class UVCheck extends uv_check_t
@@ -413,11 +419,25 @@ interface FFI
     public function uv_poll_stop(uv_poll_t &$poll);
 
     /** @return int */
-    public function uv_timer_init(uv_loop_t &$loop = null);
+    public function uv_timer_init(uv_loop_t &$loop = null, uv_timer_t &$handle);
 
-    public function uv_timer_start(uv_timer_t &$timer, int $timeout, int $repeat, uv_timer_cb $callback = null);
+    /** @return int */
+    public function uv_timer_start(uv_timer_t &$timer, uv_timer_cb $callback = null, uint64_t $timeout, uint64_t $repeat);
 
+    /** @return int */
     public function uv_timer_stop(uv_timer_t &$timer);
+
+    /** @return int */
+    public function  uv_timer_again(uv_timer_t &$handle);
+
+    /** @return void */
+    public function  uv_timer_set_repeat(uv_timer_t &$handle, uint64_t $repeat);
+
+    /** @return uint64_t */
+    public function  uv_timer_get_repeat(uv_timer_t &$handle);
+
+    /** @return uint64_t */
+    public function uv_timer_get_due_in(uv_timer_t &$handle);
 
     /** @return int */
     public function uv_fs_open(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, int $flags, int $mode, uv_fs_cb $callback);
@@ -594,12 +614,6 @@ interface FFI
     public function uv_tcp_connect(uv_connect_t &$req, uv_tcp_t &$handle, sockaddr &$addr, uv_connect_cb $cb);
 
     public function uv_tcp_connect6(uv_tcp_t $handle, UVSockAddrIPv6 $ipv6_addr, callable $callback);
-
-    public function uv_timer_again(uv_timer_t $timer);
-
-    public function uv_timer_set_repeat(uv_timer_t $timer, int $repeat);
-
-    public function uv_timer_get_repeat(uv_timer_t $timer);
 
     public function uv_getaddrinfo(uv_loop_t $loop, callable $callback, string $node = null, string $service = null, array $hints = []);
 

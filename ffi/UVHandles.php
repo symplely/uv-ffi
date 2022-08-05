@@ -390,6 +390,15 @@ if (!\class_exists('UVTimer')) {
      */
     final class UVTimer extends \UV
     {
+        public static function init(?UVLoop $loop, ...$arguments)
+        {
+            if (\is_null($loop))
+                $loop = \uv_default_loop();
+
+            $timer = new self('struct _php_uv_s', 'timer');
+            $status = \uv_ffi()->uv_timer_init($loop(), $timer());
+            return $status === 0 ? $timer : $status;
+        }
     }
 }
 
