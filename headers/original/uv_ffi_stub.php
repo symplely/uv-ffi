@@ -179,12 +179,16 @@ abstract class uv_tty_t extends uv_stream_t
 abstract class uv_udp_t extends uv_stream_t
 {
 }
-/** FS Event handle */
+/** FS Event request */
 abstract class uv_fs_event_t extends uv_req_t
 {
 }
-/** FS Poll handle */
+/** FS Poll request */
 abstract class uv_fs_poll_t extends uv_req_t
+{
+}
+/** getaddrinfo request type */
+abstract class uv_getaddrinfo_t extends uv_getaddrinfo_s
 {
 }
 /** The kind of the libuv handle */
@@ -220,6 +224,15 @@ abstract class sockaddr_in extends FFI\CData
 {
 }
 abstract class sockaddr_in6 extends FFI\CData
+{
+}
+abstract class addrinfo extends FFI\CData
+{
+}
+abstract class uv_getaddrinfo_s extends uv_req_t
+{
+}
+abstract class UVGetAddrinfo extends uv_getaddrinfo_t
 {
 }
 abstract class DWORD extends int
@@ -615,8 +628,17 @@ interface FFI
 
     public function uv_tcp_connect6(uv_tcp_t $handle, UVSockAddrIPv6 $ipv6_addr, callable $callback);
 
-    public function uv_getaddrinfo(uv_loop_t $loop, callable $callback, string $node = null, string $service = null, array $hints = []);
+    /** @return int */
+    public function uv_getaddrinfo(uv_loop_t &$loop, uv_getaddrinfo_t &$req, uv_getaddrinfo_cb $getaddrinfo_cb, const_char $node, const_char $service, addrinfo &$hints);
 
+    /** @return void */
+    public function uv_freeaddrinfo(?addrinfo &$ai);
+
+    /** @return int */
+    public function uv_inet_ntop(int $af, void_ptr &$src, char &$dst, size_t $size);
+
+    /** @return int */
+    public function uv_inet_pton(int $af, const_char $src, void_ptr &$dst);
 
     public function uv_udp_init(uv_loop_t $loop = null);
 

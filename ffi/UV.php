@@ -241,9 +241,25 @@ class UV extends UVHandler
      */
     const S_IFSOCK = 0140000;
 
-    const AF_INET = 1;
-    const AF_INET6 = 2;
-    const AF_UNSPEC = 3;
+    const AF_INET = \AF_INET;
+    const AF_INET6 = \AF_INET6;
+    const AF_UNIX = \AF_UNIX;
+    const AF_UNSPEC = 0;
+
+    /** dummy for IP */
+    const IPPROTO_IP = 0;
+
+    /** control message protocol */
+    const IPPROTO_ICMP = 1;
+
+    /** tcp */
+    const IPPROTO_TCP = 6;
+
+    /** user datagram protocol */
+    const IPPROTO_UDP = 17;
+    const IPPROTO_IPV6 = 41;
+    const IPPROTO_RAW = 255;
+    const IPPROTO_RSVP = 46;
 
     const LEAVE_GROUP = 1;
     const JOIN_GROUP = 2;

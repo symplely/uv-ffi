@@ -722,7 +722,7 @@ if (!\class_exists('ZendString')) {
          */
         public function value(): string
         {
-            $zval = Zval::new(ZE::IS_STRING, $this->ze_other_ptr[0]);
+            $zval = Zval::new(ZE::IS_STRING, $this->ze_other_ptr);
             $zval->native_value($realString);
             \ffi_free($zval());
 
@@ -1150,15 +1150,16 @@ if (!\class_exists('HashTable')) {
          * Represents `zend_hash_str_find_ptr()` inline _macro_.
          *
          * @param string $key
-         * @return Zval
+         * @return Zval|null
          */
-        public function find_ptr(string $key): Zval
+        public function str_find(string $key): ?Zval
         {
             $string = ZendString::init($key);
-            return Zval::init_value((\PHP_ZTS)
-                    ? \ze_ffi()->zend_ts_hash_str_find($this->ze_other_ptr, $string->value(), $string->length())
-                    : \ze_ffi()->zend_hash_str_find($this->ze_other_ptr, $string->value(), $string->length())
-            );
+            $result = (\PHP_ZTS)
+                ? \ze_ffi()->zend_ts_hash_str_find($this->ze_other_ptr, $string->value(), $string->length())
+                : \ze_ffi()->zend_hash_str_find($this->ze_other_ptr, $string->value(), $string->length());
+
+            return \is_cdata($result) ? Zval::init_value($result) : $result;
         }
 
         /**
@@ -1171,15 +1172,11 @@ if (!\class_exists('HashTable')) {
         public function find(string $key): ?Zval
         {
             $string = ZendString::init($key);
-            $pointer = (\PHP_ZTS)
+            $result = (\PHP_ZTS)
                 ? \ze_ffi()->zend_ts_hash_find($this->ze_other_ptr, \ffi_ptr($string()))
                 : \ze_ffi()->zend_hash_find($this->ze_other_ptr, \ffi_ptr($string()));
 
-            if ($pointer !== null) {
-                $pointer = Zval::init_value($pointer);
-            }
-
-            return $pointer;
+            return \is_cdata($result) ? Zval::init_value($result) : $result;
         }
 
         /**
@@ -1813,6 +1810,7 @@ if (!\class_exists('Zval')) {
                         : ZE::IS_STRING_EX;
                     break;
                 case ZE::ARR_P:
+                case ZE::ARRVAL_P:
                     if (\is_null($valuePtr))
                         return $this->ze_ptr->value->arr;
 

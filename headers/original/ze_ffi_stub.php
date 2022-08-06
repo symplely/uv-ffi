@@ -346,6 +346,12 @@ abstract class uint32_t extends int
 abstract class long extends int
 {
 }
+abstract class zend_long extends long
+{
+}
+abstract class double extends float
+{
+}
 abstract class intptr_t extends long
 {
 }
@@ -478,6 +484,36 @@ interface FFI
 
     /** @return HashTable */
     public function zend_new_pair(zval &$val1, zval &$val2);
+
+    /** @return void */
+    public function add_assoc_long_ex(zval &$arg, const_char $key, size_t $key_len, zend_long $n);
+
+    /** @return void */
+    public function add_assoc_null_ex(zval &$arg, const_char $key, size_t $key_len);
+
+    /** @return void */
+    public function add_assoc_bool_ex(zval &$arg, const_char $key, size_t $key_len, bool $b);
+
+    /** @return void */
+    public function add_assoc_resource_ex(zval &$arg, const_char $key, size_t $key_len, zend_resource &$r);
+
+    /** @return void */
+    public function add_assoc_double_ex(zval &$arg, const_char $key, size_t $key_len, double $d);
+
+    /** @return void */
+    public function add_assoc_str_ex(zval &$arg, const_char $key, size_t $key_len, zend_string &$str);
+
+    /** @return void */
+    public function add_assoc_string_ex(zval &$arg, const_char $key, size_t $key_len, const_char $str);
+
+    /** @return void */
+    public function add_assoc_stringl_ex(zval &$arg, const_char $key, size_t $key_len, const_char $str, size_t $length);
+
+    /** @return void */
+    public function add_assoc_zval_ex(zval &$arg, const_char $key, size_t $key_len, zval &$value);
+
+    /** @return zend_result */
+    public function add_next_index_string(zval &$arg, const_char &$str);
 
     /** @return zend_module_entry */
     public function zend_register_module_ex(zend_module_entry &$module);

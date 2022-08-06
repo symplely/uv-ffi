@@ -1274,6 +1274,16 @@ int _php_stream_cast(php_stream *stream, int castas, void **ret, int show_err);
 __declspec(dllimport) HashTable* __vectorcall _zend_new_array(uint32_t size);
 __declspec(dllimport) uint32_t zend_array_count(HashTable *ht);
 __declspec(dllimport) HashTable* __vectorcall zend_new_pair(zval *val1, zval *val2);
+void add_assoc_long_ex(zval *arg, const char *key, size_t key_len, zend_long n);
+void add_assoc_null_ex(zval *arg, const char *key, size_t key_len);
+void add_assoc_bool_ex(zval *arg, const char *key, size_t key_len, bool b);
+void add_assoc_resource_ex(zval *arg, const char *key, size_t key_len, zend_resource *r);
+void add_assoc_double_ex(zval *arg, const char *key, size_t key_len, double d);
+void add_assoc_str_ex(zval *arg, const char *key, size_t key_len, zend_string *str);
+void add_assoc_string_ex(zval *arg, const char *key, size_t key_len, const char *str);
+void add_assoc_stringl_ex(zval *arg, const char *key, size_t key_len, const char *str, size_t length);
+void add_assoc_zval_ex(zval *arg, const char *key, size_t key_len, zval *value);
+zend_result add_next_index_string(zval *arg, const char *str);
 
 __declspec(dllimport) int __vectorcall zend_hash_del(HashTable *ht, zend_string *key);
 __declspec(dllimport) zval __vectorcall *zend_hash_find(const HashTable *ht, zend_string *key);

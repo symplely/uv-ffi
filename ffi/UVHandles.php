@@ -576,6 +576,101 @@ if (!\class_exists('UVLock')) {
     }
 }
 
+if (!\class_exists('UVGetAddrinfo')) {
+    final class UVGetAddrinfo extends \UVRequest
+    {
+        /**
+         * @param UVLoop $loop
+         * @param callable|uv_getaddrinfo_cb $callback callable expect (array|int $addresses_or_error).
+         * @param string $node
+         * @param string $service
+         * @param array $hints
+         *
+         * @return int
+         */
+        public static function getaddrinfo(\UVLoop $loop, callable $callback, string $node, ?string $service, array $hints = [])
+        {
+            $addrinfo = \Addrinfo::init('struct addrinfo');
+            $hint = $addrinfo();
+            if (!\is_null($hints)) {
+                /** @var HashTable */
+                $h = HashTable::init_value(\zval_stack(4)()->value->arr);
+                if ($data = $h->str_find("ai_family")) {
+                    $hint->ai_family = $data->macro(ZE::LVAL_P);
+                }
+
+                if (($data = $h->str_find("ai_socktype"))) {
+                    $hint->ai_socktype = $data->macro(ZE::LVAL_P);
+                }
+
+                if (($data = $h->str_find("ai_protocol"))) {
+                    $hint->ai_socktype = $data->macro(ZE::LVAL_P);
+                }
+
+                if (($data = $h->str_find("ai_flags"))) {
+                    $hint->ai_flags = $data->macro(ZE::LVAL_P);
+                }
+            }
+
+            $addrinfo_req = new self('struct uv_getaddrinfo_s');
+
+            return \uv_ffi()->uv_getaddrinfo(
+                $loop(),
+                $addrinfo_req(),
+                function (object $handle, int $status, $res) use ($callback, $addrinfo_req, $addrinfo) {
+                    if ($status != 0) {
+                        $result = null;
+                    } else {
+                        $params = \zval_array(\ze_ffi()->_zend_new_array(0));
+                        $address = $res;
+                        while (!\is_null($address)) {
+                            if ($address->ai_family == AF_INET) {
+                                $ip = \uv_inet_ntop(
+                                    $address->ai_family,
+                                    (\is_null($address->ai_addr)
+                                        ? $address
+                                        : \uv_cast('struct sockaddr_in*', $address->ai_addr))
+                                );
+                                \ze_ffi()->add_next_index_string($params(), $ip);
+                            }
+
+                            $address = $address->ai_next;
+                        }
+
+                        $address = $res;
+                        while (!\is_null($address)) {
+                            if ($address->ai_family == AF_INET6) {
+                                $ip = \uv_inet_ntop(
+                                    $address->ai_family,
+                                    (\is_null($address->ai_addr)
+                                        ? $address
+                                        : \uv_cast('struct sockaddr_in6*', $address->ai_addr))
+                                );
+                                \ze_ffi()->add_next_index_string($params(), $ip);
+                            }
+
+                            $address = $address->ai_next;
+                        }
+
+                        $result = \zval_native($params);
+                    }
+
+                    $callback($status, $result);
+
+                    unset($result);
+                    \uv_freeaddrinfo($res);
+                    \zval_del_ref($callback);
+                    $addrinfo_req->free();
+                    $addrinfo->free();
+                },
+                $node,
+                $service,
+                $addrinfo()
+            );
+        }
+    }
+}
+
 if (!\class_exists('UVFs')) {
     /**
      * File system operations. All functions defined in this document take a callback, which is allowed to be NULL.
@@ -792,6 +887,11 @@ if (!\class_exists('UVBuffer')) {
         {
             return new static($data, \is_null($data) ? null : \uv_buf_init_alloc(\strlen($data)));
         }
+    }
+}
+if (!\class_exists('Addrinfo')) {
+    final class Addrinfo extends \UVTypes
+    {
     }
 }
 

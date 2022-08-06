@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use FFI\CData;
+
 if (!\function_exists('uv_loop_init')) {
     /**
      * Initializes a `UVLoop` instance structure.
@@ -1784,15 +1786,61 @@ if (!\function_exists('uv_loop_init')) {
      * called sometime in the future with the lookup result, which is either:
      *
      * @param UVLoop $loop
-     * @param callable $callback callable expect (array|int $addresses_or_error).
+     * @param callable|uv_getaddrinfo_cb $callback callable expect (array|int $addresses_or_error).
      * @param string $node
      * @param string $service
      * @param array $hints
      *
-     * @return void
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/dns.html?highlight=uv_getaddrinfo_t#c.uv_getaddrinfo
      */
-    function uv_getaddrinfo(\UVLoop $loop, callable $callback, string $node = null, string $service = null, array $hints = [])
+    function uv_getaddrinfo(\UVLoop $loop, callable $callback, string $node, ?string $service, array $hints = [])
     {
+        return \UVGetAddrinfo::getaddrinfo($loop, $callback, $node, $service, $hints);
+    }
+
+    /**
+     * Free the struct addrinfo. Passing NULL is allowed and is a no-op
+     *
+     * @param addrinfo|CData $ai
+     * @return void
+     * @link http://docs.libuv.org/en/v1.x/dns.html?highlight=uv_freeaddrinfo#c.uv_freeaddrinfo
+     */
+    function uv_freeaddrinfo(CData $ai = null)
+    {
+        \uv_ffi()->uv_freeaddrinfo($ai);
+    }
+
+    /**
+     * Cross-platform IPv6-capable implementation of `inet_ntop(3)`. On success return `string`.
+     * - convert IPv4 and IPv6 addresses from binary to text form.
+     *
+     * @param integer $af
+     * @param CData|object $src a `struct in_addr` (in network byte order) will be casted to `void*`
+     * @return string|int
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_inet_ntop#c.uv_inet_ntop
+     */
+    function uv_inet_ntop(int $af, object $src)
+    {
+        $dst = \ffi_characters(\UV::INET6_ADDRSTRLEN);
+        $status = \uv_ffi()->uv_inet_ntop($af, \ffi_void($src), $dst, \UV::INET6_ADDRSTRLEN);
+        return $status === 0 ? \ffi_string($dst) : $status;
+    }
+
+    /**
+     * Cross-platform IPv6-capable implementation of `inet_pton(3)`. On success return `C data` pointer.
+     * - convert IPv4 and IPv6 addresses from text to binary form.
+     *
+     * @param integer $af
+     * @param string $src
+     * @return CData|int `binary` pointer
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_inet_ntop#c.uv_inet_pton
+     */
+    function uv_inet_pton(int $af, string $src)
+    {
+        $dst = \uv_ffi()->new('void_t');
+        $status = \uv_ffi()->uv_inet_pton($af, $src, $dst);
+        return $status === 0 ? $dst : $status;
     }
 
     /**
