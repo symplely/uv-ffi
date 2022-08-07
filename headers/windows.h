@@ -24,6 +24,15 @@ typedef char                CHAR;
 typedef unsigned char       BYTE;
 typedef BYTE                BOOLEAN;
 typedef DWORD               ULONG;
+typedef unsigned short      USHORT;
+typedef unsigned char       UCHAR;
+typedef WCHAR               *PWSTR;
+typedef USHORT              ADDRESS_FAMILY;
+
+typedef struct sockaddr {
+    ADDRESS_FAMILY sa_family;           // Address family.
+    CHAR sa_data[14];                   // Up to 14 bytes of direct address.
+} SOCKADDR, *PSOCKADDR, *LPSOCKADDR;
 
 typedef struct _COORD {
     SHORT X;
@@ -599,17 +608,21 @@ enum __socket_type
   SOCK_NONBLOCK = 00004000
 };
 typedef unsigned short int sa_family_t;
-struct sockaddr
-  {
-    sa_family_t sa_family;
-    char sa_data[14];
-  };
-struct sockaddr_storage
-  {
-    sa_family_t ss_family;
-    char __ss_padding[(128 - (sizeof (unsigned short int)) - sizeof (unsigned long int))];
-    unsigned long int __ss_align;
-  };
+
+typedef struct sockaddr_storage {
+    ADDRESS_FAMILY ss_family;      // address family
+
+    CHAR __ss_pad1[((sizeof(__int64))- sizeof(USHORT))];  // 6 byte pad, this is to make
+                                   //   implementation specific pad up to
+                                   //   alignment field that follows explicit
+                                   //   in the data structure
+    __int64 __ss_align;            // Field to force desired structure
+    CHAR __ss_pad2[(128 - (sizeof(USHORT) + ((sizeof(__int64))- sizeof(USHORT)) +  (sizeof(__int64))))];  // 112 byte pad to achieve desired size;
+                                   //   _SS_MAXSIZE value minus size of
+                                   //   ss_family, __ss_pad1, and
+                                   //   __ss_align fields is 112
+} SOCKADDR_STORAGE_LH, *PSOCKADDR_STORAGE_LH, *LPSOCKADDR_STORAGE_LH;
+
 enum
   {
     MSG_OOB = 0x01,
@@ -712,10 +725,14 @@ enum
 };
 
 typedef uint32_t in_addr_t;
-struct in_addr
-  {
-    in_addr_t s_addr;
-  };
+typedef struct in_addr {
+        union {
+                struct { UCHAR s_b1,s_b2,s_b3,s_b4; } S_un_b;
+                struct { USHORT s_w1,s_w2; } S_un_w;
+                ULONG S_addr;
+        } S_un;
+} IN_ADDR, *PIN_ADDR, *LPIN_ADDR;
+
 struct ip_opts
   {
     struct in_addr ip_dst;
@@ -802,33 +819,42 @@ enum
     IPPORT_RESERVED = 1024,
     IPPORT_USERRESERVED = 5000
   };
-struct in6_addr
-  {
-    union
-      {
- uint8_t __u6_addr8[16];
- uint16_t __u6_addr16[8];
- uint32_t __u6_addr32[4];
-      } __in6_u;
-  };
-struct sockaddr_in
-  {
-    sa_family_t sin_family;
-    in_port_t sin_port;
-    struct in_addr sin_addr;
-    unsigned char sin_zero[sizeof (struct sockaddr)
-      - (sizeof (unsigned short int))
-      - sizeof (in_port_t)
-      - sizeof (struct in_addr)];
-  };
-struct sockaddr_in6
-  {
-    sa_family_t sin6_family;
-    in_port_t sin6_port;
-    uint32_t sin6_flowinfo;
-    struct in6_addr sin6_addr;
-    uint32_t sin6_scope_id;
-  };
+
+typedef struct in6_addr {
+    union {
+        UCHAR       Byte[16];
+        USHORT      Word[8];
+    } u;
+} IN6_ADDR, *PIN6_ADDR, *LPIN6_ADDR;
+
+typedef struct sockaddr_in {
+    ADDRESS_FAMILY sin_family;
+    USHORT sin_port;
+    IN_ADDR sin_addr;
+    CHAR sin_zero[8];
+} SOCKADDR_IN, *PSOCKADDR_IN;
+
+typedef struct {
+    union {
+        struct {
+            ULONG Zone : 28;
+            ULONG Level : 4;
+        };
+        ULONG Value;
+    };
+} SCOPE_ID, *PSCOPE_ID;
+
+typedef struct sockaddr_in6 {
+    ADDRESS_FAMILY sin6_family; // AF_INET6.
+    USHORT sin6_port;           // Transport level port number.
+    ULONG  sin6_flowinfo;       // IPv6 flow information.
+    IN6_ADDR sin6_addr;         // IPv6 address.
+    union {
+        ULONG sin6_scope_id;     // Set of interfaces for a scope.
+        SCOPE_ID sin6_scope_struct;
+    };
+} SOCKADDR_IN6_LH, *PSOCKADDR_IN6_LH, *LPSOCKADDR_IN6_LH;
+
 struct ip_mreq
   {
     struct in_addr imr_multiaddr;
@@ -1052,17 +1078,29 @@ struct protoent
   int p_proto;
 };
 
-struct addrinfo
+typedef struct addrinfoW
 {
-  int ai_flags;
-  int ai_family;
-  int ai_socktype;
-  int ai_protocol;
-  socklen_t ai_addrlen;
-  struct sockaddr *ai_addr;
-  char *ai_canonname;
-  struct addrinfo *ai_next;
-};
+    int                 ai_flags;       // AI_PASSIVE, AI_CANONNAME, AI_NUMERICHOST
+    int                 ai_family;      // PF_xxx
+    int                 ai_socktype;    // SOCK_xxx
+    int                 ai_protocol;    // 0 or IPPROTO_xxx for IPv4 and IPv6
+    size_t              ai_addrlen;     // Length of ai_addr
+    PWSTR               ai_canonname;   // Canonical name for nodename
+    struct sockaddr    *ai_addr;        // Binary address
+    struct addrinfoW   *ai_next;        // Next structure in linked list
+} ADDRINFOW, *PADDRINFOW;
+
+typedef struct addrinfo
+{
+    int                 ai_flags;       // AI_PASSIVE, AI_CANONNAME, AI_NUMERICHOST
+    int                 ai_family;      // PF_xxx
+    int                 ai_socktype;    // SOCK_xxx
+    int                 ai_protocol;    // 0 or IPPROTO_xxx for IPv4 and IPv6
+    size_t              ai_addrlen;     // Length of ai_addr
+    char               *ai_canonname;   // Canonical name for nodename
+    struct sockaddr    *ai_addr;        // Binary address
+    struct addrinfo    *ai_next;        // Next structure in linked list
+} ADDRINFOA, *PADDRINFOA;
 
 typedef unsigned char cc_t;
 typedef unsigned int speed_t;

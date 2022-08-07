@@ -612,7 +612,7 @@ if (!\class_exists('UVGetAddrinfo')) {
                 }
             }
 
-            $addrinfo_req = new self('struct uv_getaddrinfo_s');
+            $addrinfo_req = new static('struct uv_getaddrinfo_s');
 
             return \uv_ffi()->uv_getaddrinfo(
                 $loop(),
@@ -624,12 +624,12 @@ if (!\class_exists('UVGetAddrinfo')) {
                         $params = \zval_array(\ze_ffi()->_zend_new_array(0));
                         $address = $res;
                         while (!\is_null($address)) {
-                            if ($address->ai_family == AF_INET) {
+                            if ($address->ai_family == \AF_INET) {
                                 $ip = \uv_inet_ntop(
                                     $address->ai_family,
                                     (\is_null($address->ai_addr)
                                         ? $address
-                                        : \uv_cast('struct sockaddr_in*', $address->ai_addr))
+                                        : \ffi_ptr(\uv_cast('struct sockaddr_in*', $address->ai_addr)->sin_addr))
                                 );
                                 \ze_ffi()->add_next_index_string($params(), $ip);
                             }
@@ -639,12 +639,12 @@ if (!\class_exists('UVGetAddrinfo')) {
 
                         $address = $res;
                         while (!\is_null($address)) {
-                            if ($address->ai_family == AF_INET6) {
+                            if ($address->ai_family == \AF_INET6) {
                                 $ip = \uv_inet_ntop(
                                     $address->ai_family,
                                     (\is_null($address->ai_addr)
                                         ? $address
-                                        : \uv_cast('struct sockaddr_in6*', $address->ai_addr))
+                                        : \ffi_ptr(\uv_cast('struct sockaddr_in6*', $address->ai_addr)->sin6_addr))
                                 );
                                 \ze_ffi()->add_next_index_string($params(), $ip);
                             }
