@@ -247,6 +247,9 @@ abstract class uv_dir_t extends FFI\CData
 abstract class uv_dirent_t extends FFI\CData
 {
 }
+abstract class UVDirent extends uv_dirent_t
+{
+}
 abstract class uv_getaddrinfo_s extends uv_req_t
 {
 }

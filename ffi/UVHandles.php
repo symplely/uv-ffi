@@ -758,19 +758,20 @@ if (!\class_exists('UVFs')) {
                         else
                             $params[0] = \create_uv_fs_resource($req, $result, $uv_fSystem);
                         break;
-
-                        //	case \UV::FS_SCANDIR:
-                        //		argc = 1;
-                        //		if (uv->uv.fs.result < 0) { /* req->ptr may be NULL here, but uv_fs_scandir_next() knows to handle it */
-                        //			ZVAL_LONG(&params[0], uv->uv.fs.result);
-                        //		} else {
-                        //			uv_dirent_t dent;
-                        //			array_init(&params[0]);
-                        //			while (UV_EOF != uv_fs_scandir_next(req, &dent)) {
-                        //				add_next_index_string(&params[0], dent.name);
-                        //			}
-                        //		}
-                        //		break;
+                    case \UV::FS_SCANDIR:
+                        /* req->ptr may be NULL here, but uv_fs_scandir_next() knows to handle it */
+                        if ($result < 0) {
+                            $params[0] = $result;
+                        } else {
+                            //uv_dirent_t dent;
+                            $zval = \zval_array(\ze_ffi()->_zend_new_array(0));
+                            $dent = \UVDirent::init('struct uv_dirent_s');
+                            while (\UV::EOF != \uv_ffi()->uv_fs_scandir_next($req, $dent())) {
+                                \ze_ffi()->add_next_index_string($zval(), $dent()->name);
+                            }
+                            $params[0] = \zval_native($zval);
+                        }
+                        break;
                         //	case \UV::FS_LSTAT:
                         //	case \UV::FS_STAT:
                         //		argc = 1;
@@ -847,6 +848,9 @@ if (!\class_exists('UVFs')) {
                         break;
                     case \UV::FS_MKDIR:
                         $result = \uv_ffi()->uv_fs_mkdir($loop(), $uv_fSystem(), $fdStringObject, \array_shift($arguments), $uv_fs_cb);
+                        break;
+                    case \UV::FS_SCANDIR:
+                        $result = \uv_ffi()->uv_fs_scandir($loop(), $uv_fSystem(), $fdStringObject, \array_shift($arguments), $uv_fs_cb);
                         break;
                 }
             } elseif (\is_resource($fdStringObject)) {
@@ -955,6 +959,15 @@ if (!\class_exists('UVFsEvent')) {
      * @return uv_fs_event_t **pointer** by invoking `$UVFsEvent()`
      */
     final class UVFsEvent extends \UVRequest
+    {
+    }
+}
+
+if (!\class_exists('UVDirent')) {
+    /**
+     * @return uv_dirent_t **pointer** by invoking `$UVDirent()`
+     */
+    final class UVDirent extends \UVTypes
     {
     }
 }

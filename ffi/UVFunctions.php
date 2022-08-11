@@ -1040,10 +1040,11 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVLoop $loop
      * @param string $path
      * @param int $flags
-     * @param callable $callback expect (int|array $result_or_dir_contents)
+     * @param callable|uv_fs_cb $callback expect (int|array $result_or_dir_contents)
      */
-    function uv_fs_scandir(\UVLoop $loop, string $path, int $flags = 0, callable $callback)
+    function uv_fs_scandir(\UVLoop $loop, string $path, int $flags = 0, callable $callback = null)
     {
+        return \UVFs::init($loop, \UV::FS_SCANDIR, $path, $flags, $callback);
     }
 
     /**
