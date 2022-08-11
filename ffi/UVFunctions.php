@@ -2314,12 +2314,13 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVLoop $loop uv_loop handle
      * @param string $path
      * @param int $mode
-     * @param callable $callback callback expect (int $result).
+     * @param callable|uv_fs_cb $callback callback expect (int $result).
      *
-     * @return void
+     * @return int
      */
-    function uv_fs_mkdir(\UVLoop $loop, string $path, int $mode, callable $callback)
+    function uv_fs_mkdir(\UVLoop $loop, string $path, int $mode, callable $callback = null)
     {
+        return \UVFs::init($loop, \UV::FS_MKDIR, $path, $mode, $callback);
     }
 
     /**

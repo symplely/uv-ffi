@@ -845,6 +845,9 @@ if (!\class_exists('UVFs')) {
                     case \UV::FS_UNLINK:
                         $result = \uv_ffi()->uv_fs_unlink($loop(), $uv_fSystem(), $fdStringObject, $uv_fs_cb);
                         break;
+                    case \UV::FS_MKDIR:
+                        $result = \uv_ffi()->uv_fs_mkdir($loop(), $uv_fSystem(), $fdStringObject, \array_shift($arguments), $uv_fs_cb);
+                        break;
                 }
             } elseif (\is_resource($fdStringObject)) {
                 $zval = Resource::get_fd((int)$fdStringObject, true);
