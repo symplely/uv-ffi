@@ -728,6 +728,8 @@ if (!\class_exists('UVFs')) {
                 $result = \uv_ffi()->uv_fs_get_result($req);
                 $fs_type = \uv_ffi()->uv_fs_get_type($req);
                 switch ($fs_type) {
+                    case \UV::FS_CLOSE:
+                        Resource::remove_fd((int)\zval_native($zval));
                     case \UV::FS_SYMLINK:
                     case \UV::FS_LINK:
                     case \UV::FS_CHMOD:
@@ -738,10 +740,6 @@ if (!\class_exists('UVFs')) {
                     case \UV::FS_CHOWN:
                     case \UV::FS_UTIME:
                     case \UV::FS_FUTIME:
-                        $params[0] = $result;
-                        break;
-                    case \UV::FS_CLOSE:
-                        Resource::remove_fd((int)\zval_native($zval));
                         $params[0] = $result;
                         break;
                     case \UV::FS_FCHMOD:
@@ -848,6 +846,9 @@ if (!\class_exists('UVFs')) {
                         break;
                     case \UV::FS_MKDIR:
                         $result = \uv_ffi()->uv_fs_mkdir($loop(), $uv_fSystem(), $fdStringObject, \array_shift($arguments), $uv_fs_cb);
+                        break;
+                    case \UV::FS_RMDIR:
+                        $result = \uv_ffi()->uv_fs_rmdir($loop(), $uv_fSystem(), $fdStringObject, $uv_fs_cb);
                         break;
                     case \UV::FS_SCANDIR:
                         $result = \uv_ffi()->uv_fs_scandir($loop(), $uv_fSystem(), $fdStringObject, \array_shift($arguments), $uv_fs_cb);

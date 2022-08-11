@@ -2283,9 +2283,9 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVLoop $loop uv_loop handle.
      * @param resource $fd
-     * @param callable $callback callback expect (resource $fd, int $result).
+     * @param callable|uv_fs_cb $callback callback expect (resource $fd, int $result).
      *
-     * @return void
+     * @return int
      */
     function uv_fs_fsync(\UVLoop $loop, $fd, callable $callback)
     {
@@ -2299,9 +2299,9 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVLoop $loop uv_loop handle.
      * @param resource $fd
      * @param int $offset
-     * @param callable $callback callback expect (resource $fd, int $result).
+     * @param callable|uv_fs_cb $callback callback expect (resource $fd, int $result).
      *
-     * @return void
+     * @return int
      */
     function uv_fs_ftruncate(\UVLoop $loop, $fd, int $offset, callable $callback)
     {
@@ -2331,12 +2331,13 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVLoop $loop uv_loop handle
      * @param string $path
-     * @param callable $callback callback expect (int $result).
+     * @param callable|uv_fs_cb $callback callback expect (int $result).
      *
-     * @return void
+     * @return int
      */
-    function uv_fs_rmdir(\UVLoop $loop, string $path, callable $callback)
+    function uv_fs_rmdir(\UVLoop $loop, string $path, callable $callback = null)
     {
+        return \UVFs::init($loop, \UV::FS_RMDIR, $path, $callback);
     }
 
     /**
@@ -2346,9 +2347,9 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVLoop $loop uv_loop handle
      * @param string $path
-     * @param callable $callback callback expect (int $result).
+     * @param callable|uv_fs_cb $callback callback expect (int $result).
      *
-     * @return void
+     * @return int
      */
     function uv_fs_unlink(\UVLoop $loop, string $path, callable $callback)
     {
@@ -2364,7 +2365,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param string $to
      * @param callable $callback callback expect (int $result).
      *
-     * @return void
+     * @return int
      */
     function uv_fs_rename(\UVLoop $loop, string $from, string $to, callable $callback)
     {
@@ -2381,7 +2382,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param int $atime
      * @param callable $callback callback expect (int $result).
      *
-     * @return void
+     * @return int
      */
     function uv_fs_utime(\UVLoop $loop, string $path, int $utime, int $atime, callable $callback)
     {
@@ -2398,7 +2399,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param int $atime
      * @param callable $callback callback expect (int $result).
      *
-     * @return void
+     * @return int
      */
     function uv_fs_futime(\UVLoop $loop, $fd, int $utime, int $atime, callable $callback)
     {
@@ -2414,7 +2415,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param int $mode
      * @param callable $callback callback expect (int $result).
      *
-     * @return void
+     * @return int
      */
     function uv_fs_chmod(\UVLoop $loop, string $path, int $mode, callable $callback)
     {
@@ -2430,7 +2431,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param int $mode
      * @param callable $callback callback expect (int $result).
      *
-     * @return void
+     * @return int
      */
     function uv_fs_fchmod(\UVLoop $loop, $fd, int $mode, callable $callback)
     {
@@ -2447,7 +2448,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param int $gid
      * @param callable $callback callback expect (int $result).
      *
-     * @return void
+     * @return int
      */
     function uv_fs_chown(\UVLoop $loop, string $path, int $uid, int $gid, callable $callback)
     {
@@ -2464,7 +2465,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param int $gid
      * @param callable $callback callback expect (int $result).
      *
-     * @return void
+     * @return int
      */
     function uv_fs_fchown(\UVLoop $loop, $fd, int $uid, int $gid, callable $callback)
     {
@@ -2480,7 +2481,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param string $to
      * @param callable $callback callback expect (int $result).
      *
-     * @return void
+     * @return int
      */
     function uv_fs_link(\UVLoop $loop, string $from, string $to, callable $callback)
     {
@@ -2501,7 +2502,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param int $flags
      * @param callable $callback callback expect (int $result).
      *
-     * @return void
+     * @return int
      */
     function uv_fs_symlink(\UVLoop $loop, string $from, string $to, int $flags, callable $callback)
     {
@@ -2516,7 +2517,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param string $path
      * @param callable $callback callback expect ($result_or_link_contents).
      *
-     * @return void
+     * @return int
      */
     function uv_fs_readlink(\UVLoop $loop, string $path, callable $callback)
     {
@@ -2532,7 +2533,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param int $flags
      * @param callable $callback callback expect ($result_or_dir_contents).
      *
-     * @return void
+     * @return int
      */
     function uv_fs_readdir(\UVLoop $loop, string $path, int $flags, callable $callback)
     {
