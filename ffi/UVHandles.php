@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use FFI\CData;
+use LDAP\Result;
 
 if (!\class_exists('UVLoop')) {
     /**
@@ -105,6 +106,9 @@ if (!\class_exists('UVRequest')) {
      */
     abstract class UVRequest extends \UVTypes
     {
+        protected ?Zval $fd = null;
+        protected ?\UVBuffer $buffer = null;
+
         public function __invoke(bool $by_req = false): ?\FFI\CData
         {
             if ($by_req)
@@ -118,6 +122,8 @@ if (!\class_exists('UVRequest')) {
             if (\is_cdata($this->uv_type_ptr) && \is_typeof($this->uv_type_ptr, 'struct uv_fs_s*'))
                 \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
 
+            $this->fd = null;
+            $this->buffer = null;
             parent::free();
         }
 
@@ -149,11 +155,11 @@ if (!\class_exists('UVStream')) {
 
             $r = \uv_ffi()->uv_read_start(
                 \uv_stream($handle),
-                function (object $handle, int $suggested_size, CData $buf) {
+                function (CData $handle, int $suggested_size, CData $buf) {
                     $buf->base = \FFI::new('char[' . ($suggested_size + 1) . ']', false);
                     $buf->len = $suggested_size;
                 },
-                function (object $stream, int $nRead, CData $data) use ($callback, $handle) {
+                function (CData $stream, int $nRead, CData $data) use ($callback, $handle) {
                     if ($nRead > 0 || $nRead === \UV::EOF)
                         \zval_add_ref($handle);
 
@@ -191,11 +197,11 @@ if (!\class_exists('UVPipe')) {
             // $handler->data = \ffi_void($pipe(true));
             \uv_ffi()->uv_read_start(
                 $handler,
-                function (object $handle, int $suggested_size, CData $buf) {
+                function (CData $handle, int $suggested_size, CData $buf) {
                     $buf->base = \FFI::new('char[' . ($suggested_size + 1) . ']', false);
                     $buf->len = $suggested_size;
                 },
-                function (object $stream, int $nRead, CData $data) use ($pipe) {
+                function (CData $stream, int $nRead, CData $data) use ($pipe) {
                     if ($nRead > 0)
                         \ze_ffi()->_php_stream_printf(\stream_stdout(), \FFI::string($data->base));
 
@@ -243,7 +249,7 @@ if (!\class_exists('UVPipe')) {
                     $io = $pipe[$which];
                     $isPipeEmulated = true;
                 } else {
-                    $io = \fd_from(\zval_stack(0));
+                    $io = \get_fd_resource($pipe);
                 }
             }
 
@@ -617,7 +623,7 @@ if (!\class_exists('UVGetAddrinfo')) {
             return \uv_ffi()->uv_getaddrinfo(
                 $loop(),
                 $addrinfo_req(),
-                function (object $handle, int $status, $res) use ($callback, $addrinfo_req, $addrinfo) {
+                function (CData $handle, int $status, $res) use ($callback, $addrinfo_req, $addrinfo) {
                     if ($status != 0) {
                         $result = null;
                     } else {
@@ -684,57 +690,206 @@ if (!\class_exists('UVFs')) {
      */
     final class UVFs extends \UVRequest
     {
-        protected ?int $index = null;
-        protected static $instances = null;
-        protected static int $type_index = 0;
-
-        protected ?string $uv_fs_type = null;
-
-        protected function __construct(string $typedef, string $fs_type)
+        /**
+         * @param Zval $resource
+         * @return Zval|null|void
+         */
+        public function fd($resource = null)
         {
-            parent::__construct($typedef);
-            $this->uv_fs_type = $fs_type;
+            if (\is_null($resource))
+                return $this->fd;
+
+            $this->fd = $resource instanceof Zval ? $resource : null;
+        }
+
+        /**
+         * @param UVBuffer $read
+         * @return UVBuffer|null|void
+         */
+        public function buffer($read = null)
+        {
+            if (\is_null($read))
+                return $this->buffer;
+
+            $this->buffer = $read instanceof UVBuffer ? $read : null;
         }
 
         public static function init(...$arguments)
         {
-            /*
+            $result = -4058;
             $loop = \array_shift($arguments);
             $fs_type = \array_shift($arguments);
-            $fdCharObject = \array_shift($arguments);
+            $fdStringObject = \array_shift($arguments);
             $callback = \array_pop($arguments);
-            if (\is_string($fdCharObject)) {
-                $uv_fSystem = new static('struct uv_fs_s', (string) $fs_type);
-                $fSystem = $uv_fSystem();
-                $fSystem->cb = $callback;
-                \array_push($arguments, $fSystem->cb);
+            $uv_fSystem = new static('struct uv_fs_s');
+            $uv_fs_cb = \is_null($callback) ? null : function (CData $req) use ($callback, $uv_fSystem) {
+                $zval = $uv_fSystem->fd();
+                $params = [];
+                $result = \uv_ffi()->uv_fs_get_result($req);
+                $fs_type = \uv_ffi()->uv_fs_get_type($req);
                 switch ($fs_type) {
-                    case \UV::FS_OPEN:
-                        $result = \uv_ffi()->uv_fs_open($loop(), $fSystem, $fdCharObject, ...$arguments);
-                        break;
+                    case \UV::FS_SYMLINK:
+                    case \UV::FS_LINK:
+                    case \UV::FS_CHMOD:
+                    case \UV::FS_RENAME:
                     case \UV::FS_UNLINK:
-                        $result = \uv_ffi()->uv_fs_unlink($loop(), $fSystem, $fdCharObject, ...$arguments);
+                    case \UV::FS_RMDIR:
+                    case \UV::FS_MKDIR:
+                    case \UV::FS_CHOWN:
+                    case \UV::FS_UTIME:
+                    case \UV::FS_FUTIME:
+                        $params[0] = $result;
+                        break;
+                    case \UV::FS_CLOSE:
+                        Resource::remove_fd((int)\zval_native($zval));
+                        $params[0] = $result;
+                        break;
+                    case \UV::FS_FCHMOD:
+                    case \UV::FS_FCHOWN:
+                    case \UV::FS_FTRUNCATE:
+                    case \UV::FS_FDATASYNC:
+                    case \UV::FS_FSYNC:
+                        $params[0] = \zval_native($zval);
+                        $params[1] = $result;
+                        break;
+                    case \UV::FS_OPEN:
+                        if ($result < 0)
+                            $params[0] = $result;
+                        else
+                            $params[0] = \create_uv_fs_resource($req, $result, $uv_fSystem);
+                        break;
+
+                        //	case \UV::FS_SCANDIR:
+                        //		argc = 1;
+                        //		if (uv->uv.fs.result < 0) { /* req->ptr may be NULL here, but uv_fs_scandir_next() knows to handle it */
+                        //			ZVAL_LONG(&params[0], uv->uv.fs.result);
+                        //		} else {
+                        //			uv_dirent_t dent;
+                        //			array_init(&params[0]);
+                        //			while (UV_EOF != uv_fs_scandir_next(req, &dent)) {
+                        //				add_next_index_string(&params[0], dent.name);
+                        //			}
+                        //		}
+                        //		break;
+                        //	case \UV::FS_LSTAT:
+                        //	case \UV::FS_STAT:
+                        //		argc = 1;
+                        //		if (req->ptr != NULL) {
+                        //			params[0] = php_uv_make_stat((const uv_stat_t *) req->ptr);
+                        //		} else {
+                        //			ZVAL_LONG(&params[0], uv->uv.fs.result);
+                        //		}
+                        //		break;
+                        //	case \UV::FS_FSTAT:
+                        //		argc = 2;
+                        //		if (req->ptr != NULL) {
+                        //			params[1] = php_uv_make_stat((const uv_stat_t *) req->ptr);
+                        //		} else {
+                        //			ZVAL_LONG(&params[1], uv->uv.fs.result);
+                        //		}
+                        //		break;
+
+                    case \UV::FS_READLINK:
+                        if ($result == 0)
+                            $params[0] = \ffi_string(\ze_ffi()->uv_fs_get_ptr($req));
+                        else
+                            $params[0] = $result;
+                        break;
+                    case \UV::FS_READ:
+                        $params[0] = \zval_native($zval);
+                        $buffer = $uv_fSystem->buffer();
+                        if ($result >= 0)
+                            $params[1] = $buffer->getString($result);
+                        else
+                            $params[1] = $result;
+                        $uv_fSystem->buffer('free');
+                        \zval_del_ref($buffer);
+                        break;
+                    case \UV::FS_SENDFILE:
+                        $params[0] = \zval_native($zval);
+                        $params[1] = $result;
+                        break;
+                    case \UV::FS_WRITE:
+                        $params[0] = \zval_native($zval);
+                        $params[1] = $result;
+                        $buffer = $uv_fSystem->buffer();
+                        $uv_fSystem->buffer('free');
+                        \zval_del_ref($buffer);
+                        break;
+                    case \UV::FS_UNKNOWN:
+                    case \UV::FS_CUSTOM:
+                    default:
+                        \ze_ffi()->zend_error(\E_ERROR, "type; %d does not support yet.", $fs_type);
                         break;
                 }
 
-                $uv_fSystem->add($result);
-            } elseif ($fdCharObject instanceof Resource || \is_resource($fdCharObject)) {
-                if (static::is_valid($fdCharObject))
-                    $fSystem =  static::get_request($fdCharObject);
+                $callback(...$params);
 
-                $fSystem->cb = $callback;
-                \array_push($arguments, $fSystem->cb);
+                if ($fs_type !== \UV::FS_OPEN) {
+                    $uv_fSystem->free();
+                    \zval_del_ref($uv_fSystem);
+                }
+
+                \zval_del_ref($callback);
+                unset($params);
+            };
+
+            \zval_add_ref($uv_fSystem);
+            if (\is_string($fdStringObject)) {
+                switch ($fs_type) {
+                    case \UV::FS_OPEN:
+                        $flags = \array_shift($arguments);
+                        $mode = \array_shift($arguments);
+                        $result = \uv_ffi()->uv_fs_open($loop(), $uv_fSystem(), $fdStringObject, $flags, $mode, $uv_fs_cb);
+                        break;
+                    case \UV::FS_UNLINK:
+                        $result = \uv_ffi()->uv_fs_unlink($loop(), $uv_fSystem(), $fdStringObject, $uv_fs_cb);
+                        break;
+                }
+            } elseif (\is_resource($fdStringObject)) {
+                $zval = Resource::get_fd((int)$fdStringObject, true);
+                $fd = $zval instanceof Zval ? Resource::get_fd((int)$fdStringObject, false, false, true) : null;
+                if (!\is_integer($fd)) {
+                    $zval = Zval::constructor($fdStringObject);
+                    $fd = PhpStream::zval_to_fd($zval, true);
+                }
+
+                $uv_fSystem->fd($zval);
                 switch ($fs_type) {
                     case \UV::FS_CLOSE:
-                        $result = \uv_ffi()->uv_fs_close($loop(), $fSystem, $fdCharObject, ...$arguments);
+                        $result = \uv_ffi()->uv_fs_close($loop(), $uv_fSystem(), $fd, $uv_fs_cb);
+                        if ($callback === null) {
+                            Resource::remove_fd($fd);
+                            $uv_fSystem->free();
+                            \zval_del_ref($uv_fSystem);
+                        }
+
+                        break;
+                    case \UV::FS_READ;
+                        $offset = \array_shift($arguments);
+                        $length = \array_shift($arguments);
+                        if ($length <= 0)
+                            $length = 0;
+
+                        if ($offset < 0)
+                            $offset = -1;
+
+                        $buf = \uv_buf_init($length);
+                        $uv_fSystem->buffer($buf);
+                        $result = \uv_ffi()->uv_fs_read($loop(), $uv_fSystem(), $fd, $buf(), 1, $offset, $uv_fs_cb);
                         break;
                 }
             }
 
+            if ($result < 0) {
+                \zval_del_ref($uv_fSystem);
+                \ze_ffi()->zend_error(\E_WARNING, "uv_%s failed: %s",  \strtolower(UV::name($fs_type)), \uv_strerror($result));
+            } elseif ($callback === null && $fs_type === \UV::FS_OPEN) {
+                return \create_uv_fs_resource($uv_fSystem(), $result, $uv_fSystem);
+            }
+
             return  $result;
             /*
-\uv_ffi()->uv_fs_close(uv_loop_t* loop, uv_fs_t* req, uv_file file, uv_fs_cb cb);
-\uv_ffi()->uv_fs_read(uv_loop_t* loop, uv_fs_t* req, uv_file file, const uv_buf_t bufs[], unsigned int nbufs, int64_t offset, uv_fs_cb cb);
 \uv_ffi()->uv_fs_write(uv_loop_t* loop, uv_fs_t* req, uv_file file, const uv_buf_t bufs[], unsigned int nbufs, int64_t offset, uv_fs_cb cb);
 \uv_ffi()->uv_fs_fstat(uv_loop_t* loop, uv_fs_t* req, uv_file file, uv_fs_cb cb);
 \uv_ffi()->uv_fs_fsync(uv_loop_t* loop, uv_fs_t* req, uv_file file, uv_fs_cb cb);
@@ -745,7 +900,6 @@ if (!\class_exists('UVFs')) {
 \uv_ffi()->uv_fs_fchmod(uv_loop_t* loop, uv_fs_t* req, uv_file file, int mode, uv_fs_cb cb);
 \uv_ffi()->uv_fs_fchown(uv_loop_t* loop, uv_fs_t* req, uv_file file, uv_uid_t uid, uv_gid_t gid, uv_fs_cb cb);
 
-\uv_ffi()->uv_fs_open(uv_loop_t* loop, uv_fs_t* req, const char* path, int flags, int mode, uv_fs_cb cb);
 \uv_ffi()->uv_fs_unlink(uv_loop_t* loop, uv_fs_t* req, const char* path, uv_fs_cb cb);
 \uv_ffi()->uv_fs_copyfile(uv_loop_t* loop, uv_fs_t* req, const char* path, const char* new_path, int flags, uv_fs_cb cb);
 \uv_ffi()->uv_fs_mkdir(uv_loop_t* loop, uv_fs_t* req, const char* path, int mode, uv_fs_cb cb);
@@ -773,46 +927,6 @@ if (!\class_exists('UVFs')) {
 \uv_ffi()->uv_fs_readdir(uv_loop_t* loop, uv_fs_t* req, uv_dir_t* dir, uv_fs_cb cb);
 \uv_ffi()->uv_fs_closedir(uv_loop_t* loop, uv_fs_t* req, uv_dir_t* dir, uv_fs_cb cb);
 */
-        }
-
-        public function add(int $fd): self
-        {
-            if (!isset(static::$instances[$fd])) {
-                static::$instances[$fd] = $this;
-                $this->index = $fd;
-            }
-
-            return $this;
-        }
-
-        public function clear(): void
-        {
-            if (isset(static::$instances[$this->index])) {
-                static::$instances[$this->index] = null;
-                $this->index = null;
-            }
-        }
-
-        /**
-         * @param resource $fd
-         * @return bool
-         */
-        public static function is_valid($fd): bool
-        {
-            return isset(static::$instances[$fd]) && static::$instances[$fd] instanceof static;
-        }
-
-        /**
-         * @param resource $fd
-         * @return uv_fs_t
-         */
-        public static function get_request($fd)
-        {
-            if (static::is_valid($fd)) {
-                /** @var UVfs */
-                $fs = static::$instances[$fd];
-                return $fs();
-            }
         }
     }
 }
@@ -850,15 +964,15 @@ if (!\class_exists('UVBuffer')) {
      */
     final class UVBuffer extends \UVTypes
     {
-        protected function __construct(string $data = null, CData $init = null)
+        protected function __construct(?string $data, int $size = null)
         {
-            if (\is_null($init)) {
-                parent::__construct('struct uv_buf_t');
-            } else {
-                $this->uv_type_ptr = $init;
-            }
+            $this->uv_type = \uv_ffi()->uv_buf_init(\FFI::new('char[' . ($size + 1) . ']'), (int)$size);
+            $this->uv_type_ptr = \ffi_ptr($this->uv_type);
 
-            if (!\is_null($data)) {
+            if (!\is_null($size) && \is_null($data)) {
+                $this->uv_type_ptr->base = \ffi_characters($size, false);
+                $this->uv_type_ptr->len = $size;
+            } elseif (!\is_null($data)) {
                 $this->uv_type_ptr->base = \ffi_char($data);
                 $this->uv_type_ptr->len = \strlen($data);
             }
@@ -866,26 +980,26 @@ if (!\class_exists('UVBuffer')) {
 
         public function free(): void
         {
-            if (
-                \is_null($this->uv_type)
-                && \is_cdata($this->uv_type_ptr->base)
-                && !\is_null_ptr($this->uv_type_ptr->base)
-            )
+            if (\is_cdata($this->uv_type_ptr->base) && !\is_null_ptr($this->uv_type_ptr->base))
                 \FFI::free($this->uv_type_ptr->base);
 
             parent::free();
         }
 
-        public function getString()
+        public function getString(int $length = null)
         {
             if (\is_cdata($this->uv_type_ptr->base) && !\is_null_ptr($this->uv_type_ptr->base)) {
-                return \FFI::string($this->uv_type_ptr->base);
+                return \is_null($length)
+                    ? \FFI::string($this->uv_type_ptr->base)
+                    : \FFI::string($this->uv_type_ptr->base, $length);
             }
         }
 
         public static function init($data = null, ...$arguments)
         {
-            return new static($data, \is_null($data) ? null : \uv_buf_init_alloc(\strlen($data)));
+            $size = \array_shift($arguments);
+            $size = \is_null($size) && \is_string($data) ? \strlen($data) : $size;
+            return new static($data, $size);
         }
     }
 }

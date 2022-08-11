@@ -595,30 +595,11 @@ if (!\function_exists('ffi_cdef')) {
 
   function win_ffi_loader()
   {
-    /** open for reading only - windows only */
-    \define('_O_RDONLY', 0x0000);
-    /** open for writing only - windows only */
-    \define('_O_WRONLY', 0x0001);
-    /** open for reading and writing - windows only */
-    \define('_O_RDWR', 0x0002);
-    /** writes done at eof - windows only */
-    \define('_O_APPEND', 0x0008);
-    /** create and open file - windows only */
-    \define('_O_CREAT', 0x0100);
-    /** open and truncate - windows only */
-    \define('_O_TRUNC', 0x0200);
-    /** open only if file doesn't already exist - windows only */
-    \define('_O_EXCL', 0x0400);
-    /** file mode is binary (untranslated) - windows only */
-    \define('_O_BINARY', 0x8000);
-
-    $php = \FFI::load('.\\headers\\msvcrt.h');
-
-    Core::set('win', $php);
+    Core::set('win', \FFI::load('.\\headers\\msvcrt.h'));
   }
 
   \uv_ffi_loader();
   \ze_ffi_loader();
-  //if ('\\' === \DIRECTORY_SEPARATOR)
-  //  \win_ffi_loader();
+  // if ('\\' === \DIRECTORY_SEPARATOR)
+  //   \win_ffi_loader();
 }

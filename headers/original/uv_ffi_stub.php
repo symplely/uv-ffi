@@ -12,15 +12,15 @@ interface uv_alloc_cb extends closure
 interface uv_read_cb extends closure
 {
 }
-/** @var callable (uv_write_t* req, int status) */
+/** @var callable (uv_write_t &$req, int status) */
 interface uv_write_cb extends closure
 {
 }
-/** @var callable (uv_connect_t* req, int status) */
+/** @var callable (uv_connect_t &$req, int status) */
 interface uv_connect_cb extends closure
 {
 }
-/** @var callable (uv_shutdown_t* req, int status) */
+/** @var callable (uv_shutdown_t &$req, int status) */
 interface uv_shutdown_cb extends closure
 {
 }
@@ -65,31 +65,31 @@ interface uv_exit_cb extends closure
 interface uv_walk_cb extends closure
 {
 }
-/** @var callable (uv_fs_t* req) */
+/** @var callable (uv_fs_t &$req) */
 interface uv_fs_cb extends closure
 {
 }
-/** @var callable (uv_work_t* req) */
+/** @var callable (uv_work_t &$req) */
 interface uv_work_cb extends closure
 {
 }
-/** @var callable (uv_work_t* req, int status) */
+/** @var callable (uv_work_t &$req, int status) */
 interface uv_after_work_cb extends closure
 {
 }
-/** @var callable (uv_getaddrinfo_t* req, int status, struct addrinfo* res) */
+/** @var callable (uv_getaddrinfo_t &$req, int status, struct addrinfo* res) */
 interface uv_getaddrinfo_cb extends closure
 {
 }
-/** @var callable (uv_getnameinfo_t* req, int status, const char* hostname, const char* service) */
+/** @var callable (uv_getnameinfo_t &$req, int status, const_char $hostname, const_char $service) */
 interface uv_getnameinfo_cb extends closure
 {
 }
-/** @var callable (uv_random_t* req, int status, void* buf, size_t buflen) */
+/** @var callable (uv_random_t &$req, int status, void* buf, size_t buflen) */
 interface uv_random_cb extends closure
 {
 }
-/** @var callable (uv_fs_event_t* handle, const char* filename, int events, int status) */
+/** @var callable (uv_fs_event_t* handle, const_char $filename, int events, int status) */
 interface uv_fs_event_cb extends closure
 {
 }
@@ -199,7 +199,13 @@ abstract class uv_handle_type extends int
 abstract class uv_fs_type extends int
 {
 }
+abstract class uv_req_type extends int
+{
+}
 abstract class uint64_t extends int
+{
+}
+abstract class int64_t extends int
 {
 }
 /** Abstract representation of a file descriptor. On Unix systems this is a typedef of `int`
@@ -227,6 +233,18 @@ abstract class sockaddr_in6 extends FFI\CData
 {
 }
 abstract class addrinfo extends FFI\CData
+{
+}
+abstract class uv_uid_t extends string
+{
+}
+abstract class uv_gid_t extends string
+{
+}
+abstract class uv_dir_t extends FFI\CData
+{
+}
+abstract class uv_dirent_t extends FFI\CData
 {
 }
 abstract class uv_getaddrinfo_s extends uv_req_t
@@ -453,62 +471,151 @@ interface FFI
     public function uv_timer_get_due_in(uv_timer_t &$handle);
 
     /** @return int */
-    public function uv_fs_open(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, int $flags, int $mode, uv_fs_cb $callback);
+    public function uv_cancel(uv_req_t &$req);
+
+    /** @return void_ptr|object */
+    public function uv_req_get_data(uv_req_t &$req);
+
+    /** @return void */
+    public function uv_req_set_data(uv_req_t &$req, void_ptr &$data);
+
+    /** @return uv_req_type|int */
+    public function uv_req_get_type(uv_req_t &$req);
+
+    /** @return const_char|string */
+    public function uv_req_type_name(uv_req_type $type);
+
+    /** @return uv_fs_type|int */
+    public function uv_fs_get_type(uv_fs_t &$ptr);
+
+    /** @return ssize_t|int */
+    public function uv_fs_get_result(uv_fs_t &$ptr);
 
     /** @return int */
-    public function uv_fs_unlink(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, uv_fs_cb $callback);
+    public function uv_fs_get_system_error(uv_fs_t &$ptr);
+
+    /** @return void_ptr|object */
+    public function uv_fs_get_ptr(uv_fs_t &$ptr);
+
+    /** @return const_char|string */
+    public function uv_fs_get_path(uv_fs_t &$ptr);
+
+    /** @return uv_stat_t* */
+    public function uv_fs_get_statbuf(uv_fs_t &$ptr);
 
     /** @return void */
     public function uv_fs_req_cleanup(uv_fs_t &$req);
 
     /** @return int */
+    public function uv_fs_open(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, int $flags, int $mode, uv_fs_cb $callback);
+
+    /** @return int */
+    public function uv_fs_unlink(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, uv_fs_cb $callback);
+
+    /** @return int */
     public function uv_fs_close(uv_loop_t &$loop, uv_fs_t &$req, uv_file $file, uv_fs_cb $callback);
 
-    public function uv_fs_read(uv_loop_t $loop, $fd, int $offset, int $length, callable $callback);
+    /** @return int */
+    public function uv_fs_read(uv_loop_t &$loop, uv_fs_t &$req, uv_file $file, uv_buf_t $bufs, int $nbufs, int64_t $offset, uv_fs_cb $cb);
 
-    public function uv_fs_write(uv_loop_t $loop, $fd, string $buffer, int $offset = -1, callable $callback);
+    /** @return int */
+    public function uv_fs_write(uv_loop_t &$loop, uv_fs_t &$req, uv_file $file, uv_buf_t $bufs, int $nbufs, int64_t $offset, uv_fs_cb $cb);
 
-    public function uv_fs_fdatasync(uv_loop_t $loop, $fd, callable $callback);
+    /** @return int */
+    public function uv_fs_copyfile(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, const_char $new_path, int $flags, uv_fs_cb $cb);
 
-    public function uv_fs_scandir(uv_loop_t $loop, string $path, int $flags = 0, callable $callback);
+    /** @return int */
+    public function uv_fs_mkdir(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, int $mode, uv_fs_cb $cb);
 
-    public function uv_fs_stat(uv_loop_t $loop, string $path, callable $callback);
+    /** @return int */
+    public function uv_fs_mkdtemp(uv_loop_t &$loop, uv_fs_t &$req, const_char $tpl, uv_fs_cb $cb);
 
-    public function uv_fs_lstat(uv_loop_t $loop, string $path, callable $callback);
+    /** @return int */
+    public function uv_fs_mkstemp(uv_loop_t &$loop, uv_fs_t &$req, const_char $tpl, uv_fs_cb $cb);
 
-    public function uv_fs_fstat(uv_loop_t $loop, $fd, callable $callback);
+    /** @return int */
+    public function uv_fs_rmdir(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, uv_fs_cb $cb);
 
-    public function uv_fs_sendfile(uv_loop_t $loop, $out_fd, $in_fd, int $offset, int $length, callable $callback);
+    /** @return int */
+    public function uv_fs_scandir(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, int $flags, uv_fs_cb $cb);
 
-    public function uv_fs_fsync(uv_loop_t $loop, $fd, callable $callback);
+    /** @return int */
+    public function uv_fs_scandir_next(uv_fs_t &$req, uv_dirent_t &$ent);
 
-    public function uv_fs_ftruncate(uv_loop_t $loop, $fd, int $offset, callable $callback);
+    /** @return int */
+    public function uv_fs_opendir(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, uv_fs_cb $cb);
 
-    public function uv_fs_mkdir(uv_loop_t $loop, string $path, int $mode, callable $callback);
+    /** @return int */
+    public function uv_fs_readdir(uv_loop_t &$loop, uv_fs_t &$req, uv_dir_t &$dir, uv_fs_cb $cb);
 
-    public function uv_fs_rmdir(uv_loop_t $loop, string $path, callable $callback);
+    /** @return int */
+    public function uv_fs_closedir(uv_loop_t &$loop, uv_fs_t &$req, uv_dir_t &$dir, uv_fs_cb $cb);
 
-    public function uv_fs_rename(uv_loop_t $loop, string $from, string $to, callable $callback);
+    /** @return int */
+    public function uv_fs_stat(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, uv_fs_cb $cb);
 
-    public function uv_fs_utime(uv_loop_t $loop, string $path, int $utime, int $atime, callable $callback);
+    /** @return int */
+    public function uv_fs_fstat(uv_loop_t &$loop, uv_fs_t &$req, uv_file $file, uv_fs_cb $cb);
 
-    public function uv_fs_futime(uv_loop_t $loop, $fd, int $utime, int $atime, callable $callback);
+    /** @return int */
+    public function uv_fs_rename(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, const_char $new_path, uv_fs_cb $cb);
 
-    public function uv_fs_chmod(uv_loop_t $loop, string $path, int $mode, callable $callback);
+    /** @return int */
+    public function uv_fs_fsync(uv_loop_t &$loop, uv_fs_t &$req, uv_file $file, uv_fs_cb $cb);
 
-    public function uv_fs_fchmod(uv_loop_t $loop, $fd, int $mode, callable $callback);
+    /** @return int */
+    public function uv_fs_fdatasync(uv_loop_t &$loop, uv_fs_t &$req, uv_file $file, uv_fs_cb $cb);
 
-    public function uv_fs_chown(uv_loop_t $loop, string $path, int $uid, int $gid, callable $callback);
+    /** @return int */
+    public function uv_fs_ftruncate(uv_loop_t &$loop, uv_fs_t &$req, uv_file $file, int64_t $offset, uv_fs_cb $cb);
 
-    public function uv_fs_fchown(uv_loop_t $loop, $fd, int $uid, int $gid, callable $callback);
+    /** @return int */
+    public function uv_fs_sendfile(uv_loop_t &$loop, uv_fs_t &$req, uv_file $out_fd, uv_file $in_fd, int64_t $in_offset, size_t $length, uv_fs_cb $cb);
 
-    public function uv_fs_link(uv_loop_t $loop, string $from, string $to, callable $callback);
+    /** @return int */
+    public function uv_fs_access(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, int $mode, uv_fs_cb $cb);
 
-    public function uv_fs_symlink(uv_loop_t $loop, string $from, string $to, int $flags, callable $callback);
+    /** @return int */
+    public function uv_fs_chmod(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, int $mode, uv_fs_cb $cb);
 
-    public function uv_fs_readlink(uv_loop_t $loop, string $path, callable $callback);
+    /** @return int */
+    public function uv_fs_utime(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, double $atime, double $mtime, uv_fs_cb $cb);
 
-    public function uv_fs_readdir(uv_loop_t $loop, string $path, int $flags, callable $callback);
+    /** @return int */
+    public function uv_fs_futime(uv_loop_t &$loop, uv_fs_t &$req, uv_file $file, double $atime, double $mtime, uv_fs_cb $cb);
+
+    /** @return int */
+    public function uv_fs_lutime(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, double $atime, double $mtime, uv_fs_cb $cb);
+
+    /** @return int */
+    public function uv_fs_lstat(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, uv_fs_cb $cb);
+
+    /** @return int */
+    public function uv_fs_link(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, const_char $new_path, uv_fs_cb $cb);
+
+    /** @return int */
+    public function uv_fs_symlink(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, const_char $new_path, int $flags, uv_fs_cb $cb);
+
+    /** @return int */
+    public function uv_fs_readlink(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, uv_fs_cb $cb);
+
+    /** @return int */
+    public function uv_fs_realpath(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, uv_fs_cb $cb);
+
+    /** @return int */
+    public function uv_fs_fchmod(uv_loop_t &$loop, uv_fs_t &$req, uv_file $file, int $mode, uv_fs_cb $cb);
+
+    /** @return int */
+    public function uv_fs_chown(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, uv_uid_t $uid, uv_gid_t $gid, uv_fs_cb $cb);
+
+    /** @return int */
+    public function uv_fs_fchown(uv_loop_t &$loop, uv_fs_t &$req, uv_file $file, uv_uid_t $uid, uv_gid_t $gid, uv_fs_cb $cb);
+
+    /** @return int */
+    public function uv_fs_lchown(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, uv_uid_t $uid, uv_gid_t $gid, uv_fs_cb $cb);
+
+    /** @return int */
+    public function uv_fs_statfs(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, uv_fs_cb $cb);
 
     public function uv_fs_poll_start(uv_poll_t $poll, $callback, string $path, int $interval);
 

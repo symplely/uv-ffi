@@ -141,6 +141,8 @@ trait ZETrait
     public function gc_add_flags($flags)
     {
         $this->gc()->gc->u->type_info |= ($flags) << ZE::GC_FLAGS_SHIFT;
+
+        return $this->gc()->gc->u->type_info;
     }
 
     /**

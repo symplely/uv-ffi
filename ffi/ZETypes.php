@@ -1234,14 +1234,21 @@ if (!\class_exists('Resource')) {
         protected $isZval = false;
         protected $fd = [];
         protected ?int $index = null;
-
-        private ?Zval $zval = null;
+        protected ?object $extra = null;
+        protected ?Zval $zval = null;
 
         /** @var Resource|PhpStream */
-        private static $instances = null;
+        protected static $instances = null;
 
         public function __destruct()
         {
+            if (!\is_null($this->extra)) {
+                $object = $this->extra;
+                $this->extra = null;
+                $object->free();
+                \zval_del_ref($object);
+            }
+
             $this->free();
         }
 
@@ -1254,6 +1261,18 @@ if (!\class_exists('Resource')) {
             }
 
             return $this;
+        }
+
+        public function add_object(object $extra): self
+        {
+            $this->extra = $extra;
+
+            return $this;
+        }
+
+        public function fd(): int
+        {
+            return $this->index;
         }
 
         public function clear(int $handle): void
@@ -1269,6 +1288,7 @@ if (!\class_exists('Resource')) {
             if (\count($this->fd) === 0) {
                 $zval = $this->zval;
                 $this->zval = null;
+                $this->index = null;
                 static::$instances = null;
                 $zval->free();
             }
@@ -1307,19 +1327,25 @@ if (!\class_exists('Resource')) {
          * @param integer $handle
          * @param boolean $getZval
          * @param boolean $getPair
+         * @param boolean $isStream
          * @return Zval|int|CData|null
          */
-        public static function get_fd(int $handle, bool $getZval = false, bool $getPair = false)
+        public static function get_fd(int $handle, bool $getZval = false, bool $getPair = false, bool $isStream = false)
         {
             if (static::is_valid($handle)) {
+                /** @var Resource|PhpStream */
                 $resource = static::$instances[$handle];
                 if ($getZval)
                     return $resource->get_zval();
                 elseif ($getPair)
                     return $resource->get_pair($handle);
+                elseif ($isStream)
+                    return $resource->fd();
                 else
                     return $resource();
             }
+
+            return null;
         }
 
         public static function remove_fd(int $handle): void
@@ -1415,18 +1441,21 @@ if (!\class_exists('PhpStream')) {
          *
          * @param int $fd
          * @param string $mode
-         * @return resource
+         * @param bool $getZval
+         * @return resource|Zval
          */
         public static function fd_to_zval($fd, $mode = 'wb+', bool $getZval = false)
         {
-            $zval = PhpStream::get_fd($fd);
+            $zval = PhpStream::get_fd($fd, true);
+            $resource = null;
             if (!$zval instanceof Zval) {
                 $stream = \ze_ffi()->_php_stream_fopen_from_fd($fd, $mode, null);
                 try {
                     $zval = PhpStream::init_stream($stream);
                     /** @var PhpStream */
                     $php_stream = static::init_value($stream);
-                    $php_stream->add($zval, $fd);
+                    $resource = \zval_native($zval);
+                    $php_stream->add_pair($zval, $fd, (int)$resource);
                 } catch (\Throwable $e) {
                     return \ze_ffi()->_php_stream_free($stream, ZE::PHP_STREAM_FREE_CLOSE);
                 }
@@ -1435,7 +1464,7 @@ if (!\class_exists('PhpStream')) {
             if ($getZval)
                 return $zval;
 
-            return \zval_native($zval);
+            return \is_null($resource) ? \zval_native($zval) : $resource;
         }
 
         public static function php_stream_from_zval(Zval $pZval)
@@ -1473,16 +1502,16 @@ if (!\class_exists('PhpStream')) {
          * Represents `ext-uv` _function_ `php_uv_zval_to_fd()`.
          *
          * @param Zval $ptr
-         * @return int `fd`
+         * @return int|uv_file `fd`
          */
-        public static function zval_to_fd(Zval $ptr): int
+        public static function zval_to_fd(Zval $ptr, bool $isStream = false): int
         {
             $fd = -1;
             if ($ptr->macro(ZE::TYPE_P) === ZE::IS_RESOURCE) {
                 $handle = $ptr()->value->res->handle;
                 $zval_fd = Resource::get_fd($handle, true);
                 if ($zval_fd instanceof Zval)
-                    return Resource::get_fd($handle)[0];
+                    return !$isStream ? Resource::get_fd($handle, false, true) : Resource::get_fd($handle, false, false, true);
 
                 $zval_fd = \fd_type();
                 $fd = $zval_fd();
@@ -1519,13 +1548,13 @@ if (!\class_exists('PhpStream')) {
                 /* make sure that a valid resource handle was passed - issue #36 */
                 $err = \uv_guess_handle($fd);
                 if ($err == UV::UNKNOWN_HANDLE) {
-                    \ze_ffi()->zend_error(E_WARNING, "invalid resource type detected");
+                    \ze_ffi()->zend_error(\E_WARNING, "invalid resource type detected");
                     $fd = -1;
                 }
             }
 
             if (\is_cdata($fd)) {
-                $zval_fd->add($ptr, $handle);
+                $zval_fd->add_pair($ptr, $fd[0], $handle);
                 return $fd[0];
             }
 
@@ -1692,9 +1721,10 @@ if (!\class_exists('Zval')) {
          * Represents `ZVAL_COPY()` _macro_.
          *
          * @param CData $dstZval
+         * @param bool $isValue use `ZVAL_COPY_VALUE()` _macro_.
          * @return void
          */
-        public function copy(CData $dstZval): void
+        public function copy(CData $dstZval, bool $isValue = false): void
         {
             $typeInfo = $this->ze_ptr->u1->type_info;
             $gc = $this->gc();
@@ -1712,7 +1742,7 @@ if (!\class_exists('Zval')) {
                 \ze_ffi()->zend_error(\E_ERROR, 'Unknown SIZEOF_SIZE_T');
             }
 
-            if ($this->is_type_info_refcounted($typeInfo)) {
+            if (!$isValue && $this->is_type_info_refcounted($typeInfo)) {
                 $this->gc_addRef();
             }
         }

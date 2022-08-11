@@ -6,7 +6,7 @@ This **libuv ffi** implementation is based on extension [ext-uv](https://github.
 
 The _ext-uv_ extension is on version _1.6_ of **libuv**, 1.6 is actually _1.06_, or about _39_ releases behind current 1.44.2.
 
-Getting _ext-uv_ tests implemented will indicate overall progress and follow the tests number ordering for each libuv feature being implemented. Currently **19** out of **53** _tests_ has been actually implemented. **PR** are welcome, see [Documentation] and [Contributing], to get compatibility around unreleased **ext-uv 0.3.0** version, current release version is _0.2.4beta_.
+Getting _ext-uv_ tests implemented will indicate overall progress and follow the tests number ordering for each libuv feature being implemented. Currently **20** out of **53** _tests_ has been actually implemented. **PR** are welcome, see [Documentation] and [Contributing], to get compatibility around unreleased **ext-uv 0.3.0** version, current release version is _0.2.4beta_.
 
 Future versions of `uv-ffi` belong **ext-uv 0.3.0** will include all current `libuv` features.
 
@@ -263,6 +263,7 @@ The functions in [preload.php](https://github.com/symplely/uv-ffi/blob/main/prel
 - [Zend API - Hacking the Core of PHP](https://www.cs.helsinki.fi/u/laine/php/zend.html)
 - [PHP Internals Book](https://www.phpinternalsbook.com/index.html)
 - [Upgrading PHP extensions from PHP5 to NG](https://wiki.php.net/phpng-upgrading)
+- [Extending and Embedding PHP](https://flylib.com/books/en/2.565.1/)
 - [Getting Started with PHP-FFI](https://www.youtube.com/watch?v=7pfjvRupoqg) **Youtube**
 - [Awesome PHP FFI](https://github.com/gabrielrcouto/awesome-php-ffi)
 - [Z-Engine library](https://github.com/lisachenko/z-engine)

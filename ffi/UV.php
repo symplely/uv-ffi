@@ -95,40 +95,40 @@ class UV extends UVHandler
     /**
      * Open the file for read-only access.
      */
-    const O_RDONLY = 1;
+    const O_RDONLY = \IS_WINDOWS ? 0x0000 : 1;
 
     /**
      * Open the file for write-only access.
      */
-    const O_WRONLY = 2;
+    const O_WRONLY = \IS_WINDOWS ? 0x0001 : 2;
 
     /**
      * Open the file for read-write access.
      */
-    const O_RDWR = 3;
+    const O_RDWR = \IS_WINDOWS ? 0x0002 : 3;
 
     /**
      * The file is created if it does not already exist.
      */
-    const O_CREAT = 4;
+    const O_CREAT = \IS_WINDOWS ? 0x0100 : 4;
 
     /**
      * If the O_CREAT flag is set and the file already exists,
      * fail the open.
      */
-    const O_EXCL = 5;
+    const O_EXCL = \IS_WINDOWS ? 0x0400 : 5;
 
     /**
      * If the file exists and is a regular file, and the file is
      * opened successfully for write access, its length shall be truncated to zero.
      */
-    const O_TRUNC = 6;
+    const O_TRUNC = \IS_WINDOWS ? 0x0200 : 6;
 
     /**
      * The file is opened in append mode. Before each write,
      * the file offset is positioned at the end of the file.
      */
-    const O_APPEND = 7;
+    const O_APPEND = \IS_WINDOWS ? 0x0008 : 7;
 
     /**
      * If the path identifies a terminal device, opening the path will not cause that
@@ -723,4 +723,25 @@ class UV extends UVHandler
     const FS_STATFS = 34;
     const FS_MKSTEMP = 35;
     const FS_LUTIME = 36;
+
+    private static array $constant_names = [];
+    /**
+     * Returns the type name of code
+     *
+     * @param int $valueCode Integer value of type
+     */
+    public static function name(int $valueCode): string
+    {
+        if (empty(self::$constant_names)) {
+            static::$constant_names = \array_flip((new \ReflectionClass(static::class))->getConstants());
+        }
+
+        // We should use only low byte to get the name of constant
+        $valueCode &= 0xFF;
+        if (!isset(static::$constant_names[$valueCode])) {
+            return \ze_ffi()->zend_error(\E_WARNING, 'Unknown code %s', $valueCode);
+        }
+
+        return static::$constant_names[$valueCode];
+    }
 }

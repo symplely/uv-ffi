@@ -269,30 +269,18 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
-     * Constructor for `UVBuffer`, filled with `data`.
+     * Constructor for `UVBuffer`, **filled** with `data` or **set** to specific `size`.
      *
-     * @param string $data
+     * @param string|int $dataOrSize
      * @return UVBuffer
      * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_buf_init#c.uv_buf_init
      */
-    function uv_buf_init(?string $data)
+    function uv_buf_init($dataOrSize): \UVBuffer
     {
-        return UVBuffer::init($data);
-    }
-
-    /**
-     * Constructor for `uv_buf_t`.
-     *
-     * @param integer $size
-     * @return uv_buf_t
-     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_buf_init#c.uv_buf_init
-     */
-    function uv_buf_init_alloc(int $size)
-    {
-        return \ffi_ptr(\uv_ffi()->uv_buf_init(
-            \FFI::new('char[' . ($size + 1) . ']'),
-            $size
-        ));
+        if (\is_string($dataOrSize))
+            return \UVBuffer::init($dataOrSize);
+        elseif (\is_integer($dataOrSize))
+            return \UVBuffer::init(null, $dataOrSize);
     }
 
     /**
@@ -315,7 +303,7 @@ if (!\function_exists('uv_loop_init')) {
         $r = \uv_ffi()->uv_write($writer, \uv_stream($handle), $buffer(), 1, \is_null($callback)
             ? function () {
             }
-            :  function (object $writer, int $status) use ($callback, $handle) {
+            :  function (CData $writer, int $status) use ($callback, $handle) {
                 $callback($handle, $status);
                 $handle = $writer->data;
                 \FFI::free($writer->data);
@@ -393,7 +381,7 @@ if (!\function_exists('uv_loop_init')) {
      * `Note:` If reopening the TTY fails, `libuv` falls back to blocking writes.
      *
      * @param UVLoop $loop uv_loop handle.
-     * @param resource|int $fd
+     * @param resource $fd
      * @param int $readable unused
      *
      * @return UVTty|int
@@ -401,7 +389,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_tty_init(\UVLoop $loop, $fd, int $readable)
     {
-        return \UVTty::init($loop, \fd_from(\zval_stack(1)), $readable);
+        return \UVTty::init($loop, \get_fd_resource($fd), $readable);
     }
 
     /**
@@ -589,7 +577,7 @@ if (!\function_exists('uv_loop_init')) {
         $r = \uv_ffi()->uv_listen(
             \uv_stream($handle),
             $backlog,
-            function (object $stream, int $status) use ($callback, $handle) {
+            function (CData $stream, int $status) use ($callback, $handle) {
                 \zval_add_ref($handle);
                 $callback($handle, $status);
             }
@@ -630,7 +618,7 @@ if (!\function_exists('uv_loop_init')) {
             $req(),
             $handle(),
             \uv_sockaddr($addr),
-            function (object $connect, int $status) use ($callback, $handle, $req) {
+            function (CData $connect, int $status) use ($callback, $handle, $req) {
                 $callback($handle, $status);
                 \zval_del_ref($req);
             }
@@ -705,7 +693,7 @@ if (!\function_exists('uv_loop_init')) {
         $req = \UVShutdown::init('struct uv_shutdown_s');
         \zval_add_ref($req);
         $r = \uv_ffi()->uv_shutdown($req(), \uv_stream($handle), !\is_null($callback)
-            ? function (object $shutdown, int $status) use ($callback, $handle) {
+            ? function (CData $shutdown, int $status) use ($callback, $handle) {
                 $callback($handle, $status);
                 \ffi_free($shutdown);
             } : null);
@@ -731,8 +719,8 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
-     * For a file descriptor in the `C runtime`, get the OS-dependent handle. On UNIX, returns the `fd intact`,
-     * on Windows, this calls `_get_osfhandle`.
+     * For a file descriptor in the `C runtime`, get the OS-dependent handle.
+     * On UNIX, returns the `fd intact`, on Windows, this calls `_get_osfhandle`.
      * - Note that the return value is still owned by the `C runtime`, any attempts to close it or to use it after closing the fd may lead to malfunction.
      *
      * @param integer $fd
@@ -745,7 +733,8 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
-     * For a OS-dependent handle, get the file descriptor in the `C runtime`. On UNIX, returns the `os_fd intact`. On Windows, this calls `_open_osfhandle`.
+     * For a OS-dependent handle, get the file descriptor in the `C runtime`.
+     * On UNIX, returns the `os_fd intact`. On Windows, this calls `_open_osfhandle`.
      * - Note that this consumes the argument, any attempts to close it or to use it after closing the return value may lead to malfunction.
      *
      * @param uv_os_fd_t $fd
@@ -897,7 +886,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param int $mode mode flag
      * - `UV::S_IRWXU` | `UV::S_IRUSR`
      * @param callable|uv_fs_cb $callback expect (resource $stream)
-     * @return int|UVFs
+     * @return int|resource
      * @link http://docs.libuv.org/en/v1.x/fs.html?highlight=uv_fs_open#c.uv_fs_open
      */
     function uv_fs_open(\UVLoop $loop, string $path, int $flag, int $mode = \UV::S_IRWXU, callable $callback = null)
@@ -913,9 +902,69 @@ if (!\function_exists('uv_loop_init')) {
      * @return void
      * @link http://docs.libuv.org/en/v1.x/fs.html#c.uv_fs_req_cleanup
      */
-    function uv_fs_req_cleanup(\UVFs $req)
+    function uv_fs_req_cleanup(\UVFs $req): void
     {
         \uv_ffi()->uv_fs_req_cleanup($req());
+    }
+
+    /**
+     * @param UVFs $req
+     * @return uv_fs_type
+     * @link http://docs.libuv.org/en/v1.x/fs.html?highlight=uv_fs_get_type#c.uv_fs_get_type
+     */
+    function uv_fs_get_type(\UVFs $req): int
+    {
+        return \uv_ffi()->uv_fs_get_type($req());
+    }
+
+    /**
+     * @param UVFs $req
+     * @return ssize_t
+     * @link http://docs.libuv.org/en/v1.x/fs.html#c.uv_fs_get_result
+     */
+    function uv_fs_get_result(\UVFs $req)
+    {
+        return \uv_ffi()->uv_fs_get_result($req());
+    }
+
+    /**
+     * @param UVFs $req
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/fs.html#c.uv_fs_get_system_error
+     */
+    function uv_fs_get_system_error(\UVFs $req): int
+    {
+        return \uv_ffi()->uv_fs_get_system_error($req());
+    }
+
+    /**
+     * @param UVFs $req
+     * @return CData void_ptr
+     * @link http://docs.libuv.org/en/v1.x/fs.html#c.uv_fs_get_ptr
+     */
+    function uv_fs_get_ptr(\UVFs $req): object
+    {
+        return \uv_ffi()->uv_fs_get_ptr($req());
+    }
+
+    /**
+     * @param UVFs $req
+     * @return string
+     * @link http://docs.libuv.org/en/v1.x/fs.html#c.uv_fs_req_cleanup
+     */
+    function uv_fs_get_path(\UVFs $req): string
+    {
+        return \uv_ffi()->uv_fs_get_path($req());
+    }
+
+    /**
+     * @param UVFs $req
+     * @return void
+     * @link http://docs.libuv.org/en/v1.x/fs.html#c.uv_fs_get_statbuf
+     */
+    function uv_fs_get_statbuf(\UVFs $req): void
+    {
+        \uv_ffi()->uv_fs_get_statbuf($req());
     }
 
     /**
@@ -924,9 +973,12 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVLoop $loop
      * @param resource $fd PHP `stream`, or `socket`
      * @param callable $callback expect (bool $success)
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/fs.html?highlight=uv_fs_close#c.uv_fs_close
      */
-    function uv_fs_close(\UVLoop $loop, $fd, callable $callback)
+    function uv_fs_close(\UVLoop $loop, $fd, callable $callback = null)
     {
+        return UVFs::init($loop, \UV::FS_CLOSE, $fd, $callback);
     }
 
     /**
@@ -938,16 +990,19 @@ if (!\function_exists('uv_loop_init')) {
      * @param resource $fd PHP `stream`, or `socket`
      * @param int $offset
      * @param int $length
-     * @param callable $callback - `$callable` expect (resource $fd, $data).
+     * @param callable|uv_fs_cb $callback - `$callable` expect (resource $fd, $data).
      *
      * `$data` is > 0 if there is data available, 0 if libuv is done reading for
      * now, or < 0 on error.
      *
      * The callee is responsible for closing the `$stream` when an error happens.
      * Trying to read from the `$stream` again is undefined.
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/fs.html?highlight=uv_fs_close#c.uv_fs_read
      */
-    function uv_fs_read(\UVLoop $loop, $fd, int $offset, int $length, callable $callback)
+    function uv_fs_read(\UVLoop $loop, $fd, int $offset, int $length, callable $callback = null)
     {
+        return UVFs::init($loop, \UV::FS_READ, $fd, $offset, $length, $callback);
     }
 
     /**
@@ -1199,7 +1254,7 @@ if (!\function_exists('uv_loop_init')) {
         return \uv_ffi()->uv_timer_start(
             $timer(),
             \is_null($callback) ? function () {
-            } :  function (object $handle) use ($callback, $timer) {
+            } :  function (CData $handle) use ($callback, $timer) {
                 $callback($timer);
             },
             $timeout,
@@ -1460,7 +1515,7 @@ if (!\function_exists('uv_loop_init')) {
         }
 
         \zval_add_ref($idle);
-        return \uv_ffi()->uv_idle_start($idle(), function (object $handle) use ($callback, $idle) {
+        return \uv_ffi()->uv_idle_start($idle(), function (CData $handle) use ($callback, $idle) {
             $callback($idle);
         });
     }
@@ -1520,7 +1575,7 @@ if (!\function_exists('uv_loop_init')) {
         }
 
         \zval_add_ref($handle);
-        return \uv_ffi()->uv_prepare_start($handle(), function (object $prepare) use ($callback, $handle) {
+        return \uv_ffi()->uv_prepare_start($handle(), function (CData $prepare) use ($callback, $handle) {
             $callback($handle);
         });
     }
@@ -1580,7 +1635,7 @@ if (!\function_exists('uv_loop_init')) {
         }
 
         \zval_add_ref($handle);
-        return \uv_ffi()->uv_check_start($handle(), function (object $check) use ($callback, $handle) {
+        return \uv_ffi()->uv_check_start($handle(), function (CData $check) use ($callback, $handle) {
             $callback($handle);
         });
     }

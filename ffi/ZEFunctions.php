@@ -169,11 +169,11 @@ if (!\function_exists('zval_stack')) {
      * Check for `IS_OBJ_DESTRUCTOR_CALLED`, with `GC_ADD_FLAGS` macro.
      *
      * @param object $instance
-     * @return void
+     * @return int
      */
-    function zval_skip_dtor(object $instance): void
+    function zval_skip_dtor(object $instance): int
     {
-        \zval_stack(0)->gc_add_flags(ZE::IS_OBJ_DESTRUCTOR_CALLED);
+        return \zval_stack(0)->gc_add_flags(ZE::IS_OBJ_DESTRUCTOR_CALLED);
     }
 
     /**
@@ -331,9 +331,56 @@ if (!\function_exists('zval_stack')) {
         return \zval_native($fd_zval);
     }
 
+    /**
+     * @param CData $fd_ptr
+     * @param integer $fd
+     * @param \UVFs $req
+     * @return resource
+     */
+    function create_uv_fs_resource(CData $fd_ptr, int $fd, \UVFs $req)
+    {
+        $fd_res = \zend_register_resource(
+            $fd_ptr,
+            \zend_register_list_destructors_ex(
+                function (CData $rsrc) {
+                    \uv_ffi()->uv_fs_req_cleanup(\uv_cast('uv_fs_t*', $rsrc->ptr));
+                },
+                null,
+                'stream',
+                20220101
+            )
+        );
+
+        $fd_zval = \zval_resource($fd_res);
+        $resource = \zval_native($fd_zval);
+        $file = \fd_type();
+        $file->update($fd_ptr, true);
+        $file->add_object($req);
+        $file->add_pair($fd_zval, $fd, (int)$resource);
+
+        return $resource;
+    }
+
     function zend_reference(&$argument): ZendReference
     {
         return ZendReference::init($argument);
+    }
+
+    /**
+     * Represents `ext-uv` _function_ `php_uv_zval_to_fd()`.
+     *
+     * @param resource $fd
+     * @return int|uv_file `fd`
+     */
+    function get_fd_resource($fd): int
+    {
+        if (!\is_resource($fd))
+            return \ze_ffi()->zend_error(\E_WARNING, "only resource types allowed");
+
+        $fd_int = Resource::get_fd((int)$fd, false, true);
+        $fd_int = \is_cdata($fd_int) ? $fd_int[0] : $fd_int;
+
+        return \is_null($fd_int) ? PhpStream::zval_to_fd(\zval_stack(0)) : $fd_int;
     }
 
     /**
@@ -341,22 +388,12 @@ if (!\function_exists('zval_stack')) {
      *
      * @param int $fd
      * @param string $mode
-     * @return resource
+     * @param bool $getZval
+     * @return resource|Zval
      */
-    function resource_from($fd, string $mode = 'wb+')
+    function get_resource_fd($fd, string $mode = 'wb+', bool $getZval = false)
     {
-        return PhpStream::fd_to_zval($fd, $mode);
-    }
-
-    /**
-     * Represents `ext-uv` _function_ `php_uv_zval_to_fd()`.
-     *
-     * @param Zval $handle
-     * @return int `fd`
-     */
-    function fd_from(Zval $handle)
-    {
-        return PhpStream::zval_to_fd($handle);
+        return PhpStream::fd_to_zval($fd, $mode, $getZval);
     }
 
     /**

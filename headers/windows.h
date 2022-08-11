@@ -28,6 +28,7 @@ typedef unsigned short      USHORT;
 typedef unsigned char       UCHAR;
 typedef WCHAR               *PWSTR;
 typedef USHORT              ADDRESS_FAMILY;
+//typedef intptr_t            ssize_t;
 
 typedef struct sockaddr {
     ADDRESS_FAMILY sa_family;           // Address family.
@@ -338,7 +339,6 @@ struct _IO_FILE
   char _unused2[15 * sizeof (int) - 4 * sizeof (void *) - sizeof (size_t)];
 };
 typedef __off_t off_t;
-typedef __ssize_t ssize_t;
 typedef __fpos_t fpos_t;
 
 typedef __int8_t int8_t;
@@ -365,7 +365,6 @@ typedef unsigned char uint_fast8_t;
 typedef unsigned long int uint_fast16_t;
 typedef unsigned long int uint_fast32_t;
 typedef unsigned long int uint_fast64_t;
-typedef long int intptr_t;
 typedef unsigned long int uintptr_t;
 typedef __intmax_t intmax_t;
 typedef __uintmax_t uintmax_t;
@@ -3215,7 +3214,4 @@ typedef struct _php_uv_s {
 		uv_poll_t poll;
 		uv_signal_t signal;
 	} uv;
-	char *buffer;
-	uv_file fs_fd;
-	uv_file fs_fd_alt;
 } php_uv_t;
