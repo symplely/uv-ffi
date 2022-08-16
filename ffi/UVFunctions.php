@@ -2553,36 +2553,88 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVLoop $loop uv_loop handle
      * @param string $path
-     * @param callable $callback callback expect (\UVFsEvent $handle, ?string $filename, int $events, int $status).
+     * @param callable|uv_fs_event_cb $callback callback expect (\UVFsEvent $handle, ?string $filename, int $events, int $status).
      *
-     * @param int $flags - `uv_fs_event_flags` that can be passed to control its behavior.
+     * @param int $flags `uv_fs_event_flags` that can be passed to control its behavior.
+     * - `UV::FS_EVENT_WATCH_ENTRY`
+     * - `UV::FS_EVENT_STAT`
+     * - `UV::FS_EVENT_RECURSIVE`
      *
-     * By default, if the fs event watcher is given a directory name, we will
-     * watch for all events in that directory. This flags overrides this behavior
-     * and makes fs_event report only changes to the directory entry itself. This
-     * flag does not affect individual files watched.
-     * This flag is currently not implemented yet on any backend.
-     *
-     * `UV_FS_EVENT_WATCH_ENTRY = 1`
-     *
-     * By default uv_fs_event will try to use a kernel interface such as inotify
-     * or kqueue to detect events. This may not work on remote file systems such
-     * as NFS mounts. This flag makes fs_event fall back to calling stat() on a
-     * regular interval.
-     * This flag is currently not implemented yet on any backend.
-     *
-     * `UV_FS_EVENT_STAT = 2`
-     *
-     * By default, event watcher, when watching directory, is not registering
-     * (is ignoring) changes in its subdirectories.
-     * This flag will override this behaviour on platforms that support it.
-     *
-     *  `UV_FS_EVENT_RECURSIVE = 4`
-     *
-     * @return UVFsEvent
+     * @return UVFsEvent|int
+     * @link http://docs.libuv.org/en/v1.x/fs_event.html?highlight=uv_fs_event_init#c.uv_fs_event_init
      */
     function uv_fs_event_init(\UVLoop $loop, string $path, callable $callback, int $flags = 0)
     {
+        return \UVFsEvent::init($loop, $path, $callback, $flags);
+    }
+
+    /**
+     * Start the handle with the given callback, which will watch the specified path for changes. flags can be an ORed mask of `uv_fs_event_flags`.
+     *
+     * - Note: Currently the only supported flag is UV_FS_EVENT_RECURSIVE and only on OSX and Windows.
+     *
+     * @param \UVFsEvent $fs_event
+     * @param string $path
+     * @param callable|uv_fs_event_cb $callback callback expect (\UVFsEvent $handle, ?string $filename, int $events, int $status).
+     * @param int $flags `uv_fs_event_flags` that can be passed to control its behavior.
+     * - `UV::FS_EVENT_WATCH_ENTRY`
+     * - `UV::FS_EVENT_STAT`
+     * - `UV::FS_EVENT_RECURSIVE`
+     * @return UVFsEvent|int
+     * @link http://docs.libuv.org/en/v1.x/fs_event.html?highlight=uv_fs_event_init#c.uv_fs_event_start
+     */
+    function uv_fs_event_start(\UVFsEvent $fs_event, string $path, callable $callback, int $flags = 0)
+    {
+        \zval_add_ref($fs_event);
+        $error = \UVFsEvent::start($fs_event, $callback, $path, $flags);
+        if ($error < 0) {
+            \zval_del_ref($fs_event);
+            \ze_ffi()->zend_error(\E_ERROR, "uv_fs_event_start failed");
+            return $error;
+        }
+
+        return $fs_event;
+    }
+
+    /**
+     * Stop the handle, the callback will no longer be called.
+     *
+     * @param \UVFsEvent $fs_event
+     * @return integer
+     * @link http://docs.libuv.org/en/v1.x/fs_event.html?highlight=uv_fs_event_init#c.uv_fs_event_stop
+     */
+    function uv_fs_event_stop(\UVFsEvent $fs_event): int
+    {
+        $status = \uv_ffi()->uv_fs_event_stop($fs_event());
+        \zval_del_ref($fs_event);
+
+        return $status;
+    }
+
+    /**
+     * Get the path being monitored by the handle. The buffer must be preallocated by the user.
+     * - Returns 0 on success or an error code < 0 in case of failure.
+     * - On success, buffer will contain the path and size its length.
+     *
+     * If the buffer is not big enough `UV::ENOBUFS` will be returned and size will be set to the required size, including the null terminator.
+     *
+     * @param uv_fs_event_t $handle
+     * @param char $buffer
+     * @param size_t $size
+     * @return string|int
+     * @link http://docs.libuv.org/en/v1.x/fs_event.html?highlight=uv_fs_event_init#c.uv_fs_event_getpath
+     */
+    function uv_fs_event_getpath(\UVFsEvent $handle)
+    {
+        $buffer = \ffi_characters(\UV::INET6_ADDRSTRLEN);
+        $size = \UV::INET6_ADDRSTRLEN;
+        $status = \uv_ffi()->uv_fs_event_getpath($handle(), $buffer, $size);
+        if ($status === \UV::ENOBUFS) {
+            $buffer = \ffi_characters($size);
+            $status = \uv_ffi()->uv_fs_event_getpath($handle(), $buffer, $size);
+        }
+
+        return $status === 0 ? \ffi_string($buffer) : $status;
     }
 
     /**

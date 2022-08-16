@@ -959,8 +959,27 @@ if (!\class_exists('UVFsEvent')) {
      * `unsupported` on Cygwin
      * @return uv_fs_event_t **pointer** by invoking `$UVFsEvent()`
      */
-    final class UVFsEvent extends \UVRequest
+    final class UVFsEvent extends \UV
     {
+        public static function init(?UVLoop $loop, ...$arguments)
+        {
+            $path = \array_shift($arguments);
+            $callback = \array_shift($arguments);
+            $flags = \array_shift($arguments);
+            $fs_event = new static('struct _php_uv_s', 'fs_event');
+            $status  = \uv_ffi()->uv_fs_event_init($loop(), $fs_event());
+
+            return $status === 0 ? \uv_fs_event_start($fs_event, $path, $callback, $flags) : $status;
+        }
+
+        public static function start(\UVFsEvent $fs_event, callable $callback, string $path, int $flags): int
+        {
+            $uv_fs_event_cb = function (CData $handle, ?string $filename, int $events, int $status) use ($callback, $fs_event) {
+                $callback($fs_event, $filename, $events, $status);
+            };
+
+            return \uv_ffi()->uv_fs_event_start($fs_event(), $uv_fs_event_cb, $path, $flags);
+        }
     }
 }
 

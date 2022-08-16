@@ -180,7 +180,7 @@ abstract class uv_udp_t extends uv_stream_t
 {
 }
 /** FS Event request */
-abstract class uv_fs_event_t extends uv_req_t
+abstract class uv_fs_event_t extends uv_handle_t
 {
 }
 /** FS Poll request */
@@ -813,7 +813,19 @@ interface FFI
     public function uv_hrtime();
 
     /** @return int */
-    public function uv_fs_event_init(uv_loop_t $loop, string $path, callable $callback, int $flags = 0);
+    //  public function uv_fs_event_init(uv_loop_t $loop, string $path, callable $callback, int $flags = 0);
+
+    /** @return int */
+    public function uv_fs_event_init(uv_loop_t &$loop, uv_fs_event_t &$handle);
+
+    /** @return int */
+    public function uv_fs_event_start(uv_fs_event_t &$handle, uv_fs_event_cb $cb, const_char $path, int $flags);
+
+    /** @return int */
+    public function uv_fs_event_stop(uv_fs_event_t &$handle);
+
+    /** @return int */
+    public function uv_fs_event_getpath(uv_fs_event_t &$handle, char &$buffer, size_t $size);
 
     public function uv_tty_get_winsize(UVTty $tty, int &$width, int &$height);
 

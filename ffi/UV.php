@@ -566,6 +566,31 @@ class UV extends UVHandler
 
     const SIGBABY = 31;
 
+    /*
+    * By default, if the fs event watcher is given a directory name, we will
+    * watch for all events in that directory. This flags overrides this behavior
+    * and makes fs_event report only changes to the directory entry itself. This
+    * flag does not affect individual files watched.
+    * This flag is currently not implemented yet on any backend.
+    */
+    const FS_EVENT_WATCH_ENTRY = 1;
+
+    /*
+    * By default uv_fs_event will try to use a kernel interface such as inotify
+    * or kqueue to detect events. This may not work on remote file systems such
+    * as NFS mounts. This flag makes fs_event fall back to calling stat() on a
+    * regular interval.
+    * This flag is currently not implemented yet on any backend.
+    */
+    const FS_EVENT_STAT = 2;
+
+    /*
+    * By default, event watcher, when watching directory, is not registering
+    * (is ignoring) changes in its subdirectories.
+    * This flag will override this behavior on platforms that support it.
+    */
+    const FS_EVENT_RECURSIVE = 4;
+
     // Base handle
     const UNKNOWN_HANDLE = 0;
     const ASYNC = 1;
