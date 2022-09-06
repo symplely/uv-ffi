@@ -217,7 +217,7 @@ abstract class uv_lib_t extends UVTypes
 {
 }
 /** Cross platform representation of a file handle. */
-abstract class uv_file extends Resource
+abstract class uv_file extends int
 {
 }
 abstract class uv_buf_t extends FFI\CData
@@ -620,12 +620,17 @@ interface FFI
     /** @return int */
     public function uv_fs_statfs(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, uv_fs_cb $cb);
 
-    public function uv_fs_poll_start(uv_poll_t $poll, $callback, string $path, int $interval);
-
-    public function uv_fs_poll_stop(uv_poll_t $poll);
+    /** @return int */
+    public function uv_fs_poll_init(uv_loop_t $loop, uv_fs_poll_t &$handle);
 
     /** @return int */
-    public function uv_fs_poll_init(uv_loop_t $loop);
+    public function uv_fs_poll_start(uv_fs_poll_t &$handle, uv_fs_poll_cb $poll_cb, const_char $path, int $interval);
+
+    /** @return int */
+    public function uv_fs_poll_stop(uv_fs_poll_t &$handle);
+
+    /** @return int */
+    public function uv_fs_poll_getpath(uv_fs_poll_t &$handle, char &$buffer, size_t &$size);
 
     /** @return int */
     public function uv_is_active(uv_handle_t $handle);
@@ -675,8 +680,10 @@ interface FFI
     /** @return int */
     public function uv_prepare_init(uv_loop_t $loop = null);
 
+    /** @return int */
     public function uv_prepare_start(UVPrepare $handle, callable $callback);
 
+    /** @return int */
     public function uv_prepare_stop(UVPrepare $handle);
 
     /** @return int */

@@ -5,68 +5,77 @@ declare(strict_types=1);
 if (!\defined('DS'))
   \define('DS', \DIRECTORY_SEPARATOR);
 
-if (\file_exists('..' . \DS . '.gitignore')) {
-  $ignore = \file_get_contents('..' . \DS . '.gitignore');
+$directory = '..' . \DS . '..' . \DS;
+$ffi_list = \json_decode(\file_get_contents('.' . \DS . 'ffi_extension.json'), true);
+$ext = $ffi_list['name'];
+if (\file_exists($directory . '.gitignore')) {
+  $ignore = \file_get_contents($directory . '.gitignore');
   if (\strpos($ignore, '.cdef/') === false) {
     $ignore .= '.cdef/' . \PHP_EOL;
-    \file_put_contents('..' . \DS . '.gitignore', $ignore);
+    \file_put_contents($directory . '.gitignore', $ignore);
   }
 } else {
-  \file_put_contents('..' . \DS . '.gitignore', '.cdef' . \DS . \PHP_EOL);
+  \file_put_contents($directory . '.gitignore', '.cdef' . \DS . \PHP_EOL);
 }
-echo "- Initialized .gitignore" . PHP_EOL;
 
-if (\file_exists('..' . \DS . '.gitattributes')) {
-  $export = \file_get_contents('..' . \DS . '.gitattributes');
+print "- Initialized .gitignore" . PHP_EOL;
+
+if (\file_exists($directory . '.gitattributes')) {
+  $export = \file_get_contents($directory . '.gitattributes');
   if (\strpos($export, '/.cdef') === false) {
     $export .= '/.cdef       export-ignore' . \PHP_EOL;
-    \file_put_contents('..' . \DS . '.gitattributes', $export);
+    \file_put_contents($directory . '.gitattributes', $export);
   }
 } else {
-  \file_put_contents('..' . \DS . '.gitattributes', '/.cdef       export-ignore' . \PHP_EOL);
+  \file_put_contents($directory . '.gitattributes', '/.cdef       export-ignore' . \PHP_EOL);
 }
 
-echo "- Initialized .gitattributes" . \PHP_EOL;
+print "- Initialized .gitattributes" . \PHP_EOL;
 
-if (\file_exists('..' . \DS . 'composer.json'))
-  $composerJson = \json_decode(\file_get_contents('..' . \DS . 'composer.json'), true);
-else
-  $composerJson = [];
+$composerJson = [];
+$package = '';
+if (\file_exists($directory . 'composer.json')) {
+  $composerJson = \json_decode(\file_get_contents($directory . 'composer.json'), true);
+  $package = $composerJson['name'];
+}
 
 if (isset($composerJson['autoload'])) {
-  if (isset($composerJson['autoload']['files']) && !\in_array('.cdef/preload.php', $composerJson['autoload']['files']))
-    \array_push($composerJson['autoload']['files'], ".cdef/preload.php", ".cdef/ffi/UVConstants.php", ".cdef/ffi/UVFunctions.php", ".cdef/ffi/ZEFunctions.php");
+  if (isset($composerJson['autoload']['files']) && !\in_array(".cdef/$ext/preload.php", $composerJson['autoload']['files']))
+    \array_push($composerJson['autoload']['files'], ".cdef/$ext/preload.php", ".cdef/$ext/src/UVConstants.php", ".cdef/$ext/src/UVFunctions.php");
   elseif (!isset($composerJson['autoload']['files']))
-    $composerJson = \array_merge($composerJson, ["autoload" => ["files" => [".cdef/preload.php", ".cdef/ffi/UVConstants.php", ".cdef/ffi/UVFunctions.php", ".cdef/ffi/ZEFunctions.php"]]]);
+    $composerJson = \array_merge($composerJson, ["autoload" => ["files" => [".cdef/$ext/preload.php", ".cdef/$ext/src/UVConstants.php", ".cdef/$ext/src/UVFunctions.php"]]]);
 
-  if (isset($composerJson['autoload']['classmap']) && !\in_array('.cdef/ffi/', $composerJson['autoload']['classmap']))
-    \array_push($composerJson['autoload']['classmap'], ".cdef/ffi/");
+  if (isset($composerJson['autoload']['classmap']) && !\in_array(".cdef/$ext/src/", $composerJson['autoload']['classmap']))
+    \array_push($composerJson['autoload']['classmap'], ".cdef/$ext/src/");
   elseif (!isset($composerJson['autoload']['classmap']))
-    $composerJson = \array_merge($composerJson, ["autoload" => ["classmap" => [".cdef/ffi/"]]]);
+    $composerJson = \array_merge($composerJson, ["autoload" => ["classmap" => [".cdef/$ext/src/"]]]);
 } else {
   $composerJson = \array_merge($composerJson, [
     "autoload" => [
       "files" => [
-        ".cdef/preload.php",
-        ".cdef/ffi/UVConstants.php",
-        ".cdef/ffi/UVFunctions.php",
-        ".cdef/ffi/ZEFunctions.php"
+        ".cdef/$ext/preload.php",
+        ".cdef/$ext/src/UVConstants.php",
+        ".cdef/$ext/src/UVFunctions.php"
       ],
       "classmap" => [
-        ".cdef/ffi/"
+        ".cdef/$ext/src/"
       ]
     ]
   ]);
 }
 
+if (!isset($composerJson['require']['symplely/zend-ffi']))
+  \array_push($composerJson['require'], ["symplely/zend-ffi" => ">0.9.0"]);
+
 if (isset($composerJson['require']['symplely/uv-ffi']))
   unset($composerJson['require']['symplely/uv-ffi']);
 
 \file_put_contents(
-  '..' . \DS . 'composer.json',
+  $directory . 'composer.json',
   \json_encode($composerJson, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES)
 );
-echo "- Initialized `autoload` & `require` composer.json" . \PHP_EOL;
+
+print "- Initialized `autoload` & `require` composer.json" . \PHP_EOL;
 
 function recursiveDelete($directory, $options = [])
 {
@@ -94,24 +103,24 @@ $delete = '';
 if (!$isWindows) {
   $files = ['zeWin8.h', 'zeWin8ts.h', 'zeWin7.h', 'zeWin7ts.h', 'windows.h', 'msvcrt.h'];
   foreach ($files as $file)
-    \unlink('..' . \DS . 'cdef' . \DS . 'headers' . \DS . $file);
+    \unlink($directory . '.cdef' . \DS . 'headers' . \DS . $file);
 
-  \unlink('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Windows' . \DS . 'uv.dll');
-  \rmdir('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Windows');
+  \unlink($directory . '.cdef' . \DS . 'lib' . \DS . 'Windows' . \DS . 'uv.dll');
+  \rmdir($directory . '.cdef' . \DS . 'lib' . \DS . 'Windows');
   $delete .= 'Windows ';
 }
 
 if (\PHP_OS !== 'Darwin') {
-  \unlink('..' . \DS . 'cdef' . \DS . 'headers' . \DS . 'macos.h');
-  \unlink('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'macOS' . \DS . 'libuv.1.0.0.dylib');
-  \rmdir('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'macOS');
+  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'macos.h');
+  \unlink($directory . '.cdef' . \DS . 'lib' . \DS . 'macOS' . \DS . 'libuv.1.0.0.dylib');
+  \rmdir($directory . '.cdef' . \DS . 'lib' . \DS . 'macOS');
   $delete .= 'Apple macOS ';
 }
 
 if (\php_uname('m') !== 'aarch64') {
-  \unlink('..' . \DS . 'cdef' . \DS . 'headers' . \DS . 'pi.h');
-  \unlink('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'raspberry' . \DS . 'libuv.so.1.0.0');
-  \rmdir('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'raspberry');
+  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'pi.h');
+  \unlink($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'raspberry' . \DS . 'libuv.so.1.0.0');
+  \rmdir($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'raspberry');
   $delete .= 'Raspberry Pi ';
 }
 
@@ -143,39 +152,93 @@ else {
 }
 
 if ((float)$version !== 20.04 || $isWindows) {
-  \unlink('..' . \DS . 'cdef' . \DS . 'headers' . \DS . 'ubuntu20.04.h');
-  \unlink('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'ubuntu20.04' . \DS . 'libuv.so.1.0.0');
-  \rmdir('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'ubuntu20.04');
+  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'ubuntu20.04.h');
+  \unlink($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'ubuntu20.04' . \DS . 'libuv.so.1.0.0');
+  \rmdir($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'ubuntu20.04');
   $delete .= 'Ubuntu 20.04 ';
 }
 
 if ((float)$version !== 18.04 || $isWindows) {
-  \unlink('..' . \DS . 'cdef' . \DS . 'headers' . \DS . 'ubuntu18.04.h');
-  \unlink('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'ubuntu18.04' . \DS . 'libuv.so.1.0.0');
-  \rmdir('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'ubuntu18.04');
+  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'ubuntu18.04.h');
+  \unlink($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'ubuntu18.04' . \DS . 'libuv.so.1.0.0');
+  \rmdir($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'ubuntu18.04');
   $delete .= 'Ubuntu 18.04 ';
 }
 
 if (!(float)$version >= 8 || $isWindows) {
-  \unlink('..' . \DS . 'cdef' . \DS . 'headers' . \DS . 'centos8+.h');
-  \unlink('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'centos8+' . \DS . 'libuv.so.1.0.0');
-  \rmdir('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'centos8+');
+  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'centos8+.h');
+  \unlink($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'centos8+' . \DS . 'libuv.so.1.0.0');
+  \rmdir($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'centos8+');
   $delete .= 'Centos 8+ ';
 }
 
 if (!(float)$version < 8 || $isWindows) {
-  \unlink('..' . \DS . 'cdef' . \DS . 'headers' . \DS . 'centos7.h');
-  \unlink('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'centos7' . \DS . 'libuv.so.1.0.0');
-  \rmdir('..' . \DS . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'centos7');
+  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'centos7.h');
+  \unlink($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'centos7' . \DS . 'libuv.so.1.0.0');
+  \rmdir($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'centos7');
   $delete .= 'Centos 7 ';
 }
 
-\unlink('..' . \DS . 'cdef' . \DS . 'headers' . \DS . 'original' . \DS . 'uv.h');
-\recursiveDelete('..' . \DS . '.cdef' . \DS . 'headers' . \DS . 'original' . \DS . 'uv');
+\unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'original' . \DS . 'uv.h');
+\recursiveDelete($directory . '.cdef' . \DS . 'headers' . \DS . 'original' . \DS . 'uv');
 echo "- Removed unneeded `libuv` binary libraries and .h headers" . $delete . \PHP_EOL;
 
-\chmod('..' . \DS . 'cdef', 0644);
-if (\file_exists('..' . \DS . 'vendor' . \DS . 'symplely' . \DS . 'uv-ffi' . \DS . 'composer.json'))
-  \recursiveDelete('..' . \DS . 'vendor' . \DS . 'symplely' . \DS . 'uv-ffi');
+/**
+ * Do not remove anything below.
+ */
+if (!\file_exists('..' . \DS . 'ffi_preloader.php'))
+  \rename('ffi_preloader.php', '..' . \DS . 'ffi_preloader.php');
+else
+  \unlink('ffi_preloader.php');
+
+\chmod($directory . '.cdef' . \DS . $ext, 0644);
+
+// Cleanup/remove vendor directory, if previously installed as a regular composer package.
+$package = \str_replace('/', \DS, $package);
+if (\file_exists($directory . 'vendor' . \DS . $package . \DS . 'composer.json'))
+  \recursiveDelete($directory . 'vendor' . \DS . $package);
+
+if (!\file_exists('..' . \DS . 'ffi_preloader.php'))
+  \rename('ffi_preloader.php', '..' . \DS . 'ffi_preloader.php');
+else
+  \unlink('ffi_preloader.php');
+
+if (!\file_exists('..' . \DS . 'ffi_generated.json')) {
+  $directories = \glob('../*', \GLOB_ONLYDIR);
+  $directory = $files = [];
+  foreach ($directories as $ffi_dir) {
+    if (\file_exists($ffi_dir . \DS . 'ffi_extension.json')) {
+      $ffi_list = \json_decode(\file_get_contents($ffi_dir . \DS . 'ffi_extension.json'), true);
+      if (isset($ffi_list['preload']['directory'])) {
+        \array_push($directory, $ffi_list['preload']['directory']);
+      } elseif (isset($ffi_list['preload']['files'])) {
+        \array_push($files, $ffi_list['preload']['files']);
+      }
+    }
+  }
+
+  $preload_list = [
+    "preload" => [
+      "files" => $files,
+      "directory" => $directory
+    ]
+  ];
+} else {
+  $preload_list = \json_decode(\file_get_contents('..' . \DS . 'ffi_generated.json'), true);
+  $ext_list = \json_decode(\file_get_contents('.' . \DS . 'ffi_extension.json'), true);
+  if (isset($ext_list['preload']['directory'])) {
+    \array_push($preload_list['preload']['directory'], $ext_list['preload']['directory']);
+  } elseif (isset($ext_list['preload']['files'])) {
+    \array_push($preload_list['preload']['files'], $ext_list['preload']['files']);
+  }
+}
+
+\file_put_contents(
+  '..' . \DS . 'ffi_generated.json',
+  \json_encode($preload_list, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES)
+);
+\chmod($directory . '.cdef' . \DS . $ext, 0644);
 
 \unlink(__FILE__);
+
+print "- `.cdef/ffi_generated.json` has been updated!" . \PHP_EOL;

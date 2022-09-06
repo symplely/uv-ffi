@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 use FFI\CData;
-use LDAP\Result;
+use ZE\Zval;
+use ZE\Resource;
+use ZE\HashTable;
+use ZE\PhpStream;
 
 if (!\class_exists('UVLoop')) {
     /**
@@ -28,7 +31,7 @@ if (!\class_exists('UVLoop')) {
             \uv_ffi()->uv_loop_close(self::$uv_loop_ptr);
             $this->free();
             Core::clear_stdio();
-            Core::clear_ffi();
+            Core::clear('uv');
         }
 
         protected function free()
@@ -45,8 +48,7 @@ if (!\class_exists('UVLoop')) {
         protected function __construct(bool $compile = true, ?string $library = null, ?string $include = null, $default = false)
         {
             \uv_init($compile, $library, $include);
-            \zend_init();
-
+            Core::setup_stdio();
             if (!$default) {
                 $this->uv_loop = \uv_struct("struct uv_loop_s");
                 self::$uv_loop_ptr = \ffi_ptr($this->uv_loop);
@@ -386,6 +388,38 @@ if (!\class_exists('UVPoll')) {
      */
     final class UVPoll extends \UV
     {
+    }
+}
+
+if (!\class_exists('UVFsPoll')) {
+    /**
+     * FS Poll handles allow the user to monitor a given path for changes.
+     * Unlike `uv_fs_event_t`, fs poll handles use stat to detect when a file has changed so they can work on
+     * file systems where fs event handles can’t.
+     *
+     * @return uv_fs_poll_t **pointer** by invoking `$UVFsPoll()`
+     */
+    final class UVFsPoll extends \UV
+    {
+        public static function init(?UVLoop $loop, ...$arguments)
+        {
+            if (\is_null($loop))
+                $loop = \uv_default_loop();
+
+            $fs_poll = new static('struct _php_uv_s', 'fs_poll');
+            $status  = \uv_ffi()->uv_fs_poll_init($loop(), $fs_poll());
+
+            return $status === 0 ? $fs_poll : $status;
+        }
+
+        public function start(callable $callback, string $path, int $interval): int
+        {
+            $uv_fs_poll_cb = function (CData $handle, int $status, object $prev, object $curr) use ($callback) {
+                $callback($this, $status, $prev, $curr);
+            };
+
+            return \uv_ffi()->uv_fs_poll_start($this->__invoke(), $uv_fs_poll_cb, $path, $interval);
+        }
     }
 }
 
@@ -969,16 +1003,16 @@ if (!\class_exists('UVFsEvent')) {
             $fs_event = new static('struct _php_uv_s', 'fs_event');
             $status  = \uv_ffi()->uv_fs_event_init($loop(), $fs_event());
 
-            return $status === 0 ? \uv_fs_event_start($fs_event, $path, $callback, $flags) : $status;
+            return $status === 0 ? $fs_event->start($callback, $path, $flags) : $status;
         }
 
-        public static function start(\UVFsEvent $fs_event, callable $callback, string $path, int $flags): int
+        public function start(callable $callback, string $path, int $flags): int
         {
-            $uv_fs_event_cb = function (CData $handle, ?string $filename, int $events, int $status) use ($callback, $fs_event) {
-                $callback($fs_event, $filename, $events, $status);
+            $uv_fs_event_cb = function (CData $handle, ?string $filename, int $events, int $status) use ($callback) {
+                $callback($this, $filename, $events, $status);
             };
 
-            return \uv_ffi()->uv_fs_event_start($fs_event(), $uv_fs_event_cb, $path, $flags);
+            return \uv_ffi()->uv_fs_event_start($this->__invoke(), $uv_fs_event_cb, $path, $flags);
         }
     }
 }

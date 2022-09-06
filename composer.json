@@ -27,17 +27,17 @@
     ],
     "require": {
         "php": ">7.4",
-        "ext-ffi": "*"
+        "ext-ffi": "*",
+        "symplely/zend-ffi": "dev-main"
     },
     "autoload": {
         "files": [
             "preload.php",
-            "ffi/UVConstants.php",
-            "ffi/UVFunctions.php",
-            "ffi/ZEFunctions.php"
+            "src/UVConstants.php",
+            "src/UVFunctions.php"
         ],
         "classmap": [
-            "ffi/"
+            "src/"
         ]
     },
     "autoload-dev": {
@@ -49,10 +49,10 @@
         "ext-uv": "*"
     },
     "scripts": {
-        "test": "vendor/bin/phpunit --bootstrap vendor/autoload.php tests",
+        "test": "phpunit --bootstrap vendor/autoload.php tests",
         "post-create-project-cmd": [
             "php .ignore_autoload.php",
-            "composer update -d .."
+            "composer update -d ../.."
         ]
     }
 }

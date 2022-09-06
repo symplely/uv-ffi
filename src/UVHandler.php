@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use FFI\CData;
+use ZE\Resource;
+use ZE\PhpStream;
 
 abstract class UVHandler implements UVInterface
 {
@@ -59,7 +61,7 @@ abstract class UVHandler implements UVInterface
             return \ze_ffi()->zend_error(
                 \E_WARNING,
                 "passed UV handle (%s) is not closeable",
-                \ffi_str_typeof(\ffi_object($handle))
+                \ffi_str_typeof(\uv_object($handle))
             );
         }
 

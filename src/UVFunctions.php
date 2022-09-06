@@ -541,8 +541,8 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_accept(object $server, object $client): int
     {
-        $uv_server = \ffi_object($server);
-        $uv_client = \ffi_object($client);
+        $uv_server = \uv_object($server);
+        $uv_client = \uv_object($client);
         $client_type = \ffi_str_typeof($uv_client);
         if (\is_typeof($uv_server, $client_type)) {
             $r = \uv_ffi()->uv_accept(\uv_stream($uv_server), \uv_stream($uv_client));
@@ -695,7 +695,7 @@ if (!\function_exists('uv_loop_init')) {
         $r = \uv_ffi()->uv_shutdown($req(), \uv_stream($handle), !\is_null($callback)
             ? function (CData $shutdown, int $status) use ($callback, $handle) {
                 $callback($handle, $status);
-                \ffi_free($shutdown);
+                \uv_ffi_free($shutdown);
             } : null);
 
         if ($r) {
@@ -1117,21 +1117,42 @@ if (!\function_exists('uv_loop_init')) {
      * For maximum portability, use multi-second intervals. Sub-second intervals
      * will not detect all changes on many file systems.
      *
-     * @param UVPoll $poll
-     * @param callable $callback expect (\UVPoll $poll, $status, $old, $new)
+     * @param UVFsPoll $fs_poll
+     * @param callable|uv_fs_poll_cb $callback expect (UVFsPoll $handle, int $status, array $prev_stat, array $cur_stat)
      * @param string $path
+     * @param int $interval
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/fs_poll.html?highlight=uv_fs_poll_t#c.uv_fs_poll_start
      */
-    function uv_fs_poll_start(\UVPoll $poll, $callback, string $path, int $interval)
+    function uv_fs_poll_start(\UVFsPoll $fs_poll, $callback, string $path, int $interval)
     {
+        \zval_add_ref($fs_poll);
+        $error = $fs_poll->start($callback, $path, $interval);
+        if ($error) {
+            \zval_del_ref($fs_poll);
+            \ze_ffi()->zend_error(\E_ERROR, "uv_fs_poll_start failed");
+        }
+
+        return $error;
     }
 
     /**
-     * Stop file system polling for changes.
+     * Stop the handle, the callback will no longer be called.
      *
-     * @param UVPoll $poll
+     * @param UVFsPoll $fs_poll
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/fs_poll.html?highlight=uv_fs_poll_t#c.uv_fs_poll_stop
      */
-    function uv_fs_poll_stop(\UVPoll $poll)
+    function uv_fs_poll_stop(\UVFsPoll $fs_poll)
     {
+        if (!\uv_is_active($fs_poll)) {
+            return;
+        }
+
+        $status = \uv_ffi()->uv_fs_poll_stop($fs_poll());
+        \zval_del_ref($fs_poll);
+
+        return $status;
     }
 
     /**
@@ -1139,10 +1160,25 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVLoop $loop
      *
-     * @return UVPoll
+     * @return UVFsPoll|int uv_fs_poll_t
+     * @link http://docs.libuv.org/en/v1.x/fs_poll.html?highlight=uv_fs_poll_t#c.uv_fs_poll_init
      */
-    function uv_fs_poll_init(\UVLoop $loop)
+    function uv_fs_poll_init(\UVLoop $loop = null)
     {
+        return \UVFsPoll::init($loop);
+    }
+
+    function uv_fs_poll_getpath(\UVFsPoll $handle, char &$buffer, size_t &$size)
+    {
+        $buffer = \ffi_characters(\UV::INET6_ADDRSTRLEN);
+        $size = \UV::INET6_ADDRSTRLEN;
+        $status = \uv_ffi()->uv_fs_poll_getpath($handle(), $buffer, $size);
+        if ($status === \UV::ENOBUFS) {
+            $buffer = \ffi_characters($size);
+            $status = \uv_ffi()->uv_fs_poll_getpath($handle(), $buffer, $size);
+        }
+
+        return $status === 0 ? \ffi_string($buffer) : $status;
     }
 
     /**
@@ -2586,7 +2622,7 @@ if (!\function_exists('uv_loop_init')) {
     function uv_fs_event_start(\UVFsEvent $fs_event, string $path, callable $callback, int $flags = 0)
     {
         \zval_add_ref($fs_event);
-        $error = \UVFsEvent::start($fs_event, $callback, $path, $flags);
+        $error = $fs_event->start($callback, $path, $flags);
         if ($error < 0) {
             \zval_del_ref($fs_event);
             \ze_ffi()->zend_error(\E_ERROR, "uv_fs_event_start failed");

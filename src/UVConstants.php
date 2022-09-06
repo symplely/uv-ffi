@@ -2,41 +2,6 @@
 
 declare(strict_types=1);
 
-if (!\defined('None'))
-    \define('None', null);
-
-if (!\defined('DS'))
-    \define('DS', \DIRECTORY_SEPARATOR);
-
-if (!\defined('IS_WINDOWS'))
-    \define('IS_WINDOWS', ('\\' === \DS));
-
-if (!\defined('IS_LINUX'))
-    \define('IS_LINUX', ('/' === \DS));
-
-if (!\defined('IS_MACOS'))
-    \define('IS_MACOS', (\PHP_OS === 'Darwin'));
-
-if (!\defined('EOL'))
-    \define('EOL', \PHP_EOL);
-
-if (!\defined('CRLF'))
-    \define('CRLF', "\r\n");
-
-if (!\defined('IS_ZTS'))
-    \define('IS_ZTS', \ZEND_THREAD_SAFE);
-
-if (!\defined('IS_CLI')) {
-    /**
-     * Check if php is running from cli (command line).
-     */
-    \define(
-        'IS_CLI',
-        \defined('STDIN') ||
-            (empty($_SERVER['REMOTE_ADDR']) && !isset($_SERVER['HTTP_USER_AGENT']) && \count($_SERVER['argv']) > 0)
-    );
-}
-
 if (!\defined('O_TEMPORARY')) {
     /**
      * temporary file bit (file is deleted when last handle is closed).
@@ -181,32 +146,7 @@ if (!\defined('S_IXUSR')) {
     \define('S_IXUSR', UV::S_IXUSR);
 }
 
-/**
- * The OS physical _input/output_ console `DEVICE`.
- */
-\define('SYS_CONSOLE', \IS_WINDOWS ? '\\\\?\\CON' : '/dev/tty');
-
-/**
- * The OS physical _null_ `DEVICE`.
- */
-\define('SYS_NULL', \IS_WINDOWS ? '\\\\?\\NUL' : '/dev/null');
-
-if (\IS_WINDOWS) {
-    /**
-     * The standard input device. Initially, this is the console input buffer.
-     */
-    \define('STD_INPUT_HANDLE', -10);
-
-    /**
-     * The standard output device. Initially, this is the active console screen buffer.
-     */
-    \define('STD_OUTPUT_HANDLE', -11);
-
-    /**
-     * The standard error device. Initially, this is the active console screen buffer.
-     */
-    \define('STD_ERROR_HANDLE', -12);
-
+if (\IS_WINDOWS && !\defined('SIGBABY')) {
     /**
      * The SIGUSR1 signal is sent to a process to indicate user-defined conditions.
      */

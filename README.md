@@ -6,14 +6,14 @@ This **libuv ffi** implementation is based on extension [ext-uv](https://github.
 
 The _ext-uv_ extension is on version _1.6_ of **libuv**, 1.6 is actually _1.06_, or about _39_ releases behind current 1.44.2.
 
-Getting _ext-uv_ tests implemented will indicate overall progress and follow the tests number ordering for each libuv feature being implemented. Currently **24** out of **53** _tests_ has been actually implemented. **PR** are welcome, see [Documentation] and [Contributing], to get compatibility around unreleased **ext-uv 0.3.0** version, current release version is _0.2.4beta_.
+Getting _ext-uv_ tests implemented will indicate overall progress and follow the tests number ordering for each libuv feature being implemented. Currently **25** out of **53** _tests_ has been actually implemented. **PR** are welcome, see [Documentation] and [Contributing], to get compatibility around unreleased **ext-uv 0.3.0** version, current release version is _0.2.4beta_.
 
 Future versions of `uv-ffi` beyond **ext-uv 0.3.0** will include all current `libuv` features.
 
 ## Installation
 
 There will be two ways:
-    composer create-project symplely/uv-ffi .cdef "0.0.0"
+    composer create-project symplely/uv-ffi .cdef/libuv
 and:
     composer require symplely/uv-ffi
 
@@ -21,7 +21,7 @@ This package/repo is self-contained, meaning it has **GitHub Actions** building 
 The `require` installation will include all _binaries_, whereas `create-project` will delete the ones not detected for installers hardware. `create-project` is the **recommended** installation choice.
 
 `FFI` is enabled by default in `php.ini` since `PHP 7.4`, as to `OpCache`, they should not be changed unless already manually disabled.
-Only the `preload` section might need setting up.
+Only the `preload` section might need setting up if better performance is desired.
 
 ```ini
 [ffi]
@@ -29,20 +29,19 @@ Only the `preload` section might need setting up.
 ; "preload" - enabled in CLI scripts and preloaded files (default)
 ; "false"   - always disabled
 ; "true"    - always enabled
-ffi.enable="true"
+ffi.enable="preload"
 
 ; List of headers files to preload, wildcard patterns allowed.
-ffi.preload=path/to/.cdef/preload.php
+ffi.preload=path/to/.cdef/ffi_preloader.php ; For simple integration with other FFI extensions when used as project
 ; Or
 ffi.preload=path/to/vendor/symplely/uv-ffi/preload.php
 
-zend_extension=php_opcache.*so/dll*
+zend_extension=opcache
 ```
 
 ## How to use
 
 - The functions in file [UVFunctions.php](https://github.com/symplely/uv-ffi/blob/main/UVFunctions.php) is the **only** _means of accessing_ **libuv** features.
-- The functions in file [preload.php](https://github.com/symplely/uv-ffi/blob/main/preload.php) and [ZEFunctions.php](https://github.com/symplely/uv-ffi/blob/main/ZEFunctions.php) are for general direct `FFI` library/extension like development.
 
 The following is a PHP `tcp echo server` converted from `C` [uv book](https://nikhilm.github.io/uvbook/networking.html#tcp) that's follows also. Most of the required `C` setup and cleanup code is done automatically.
 
@@ -252,29 +251,6 @@ The option `-I  <directory>` might be needed to search/find additional include s
 ## Contributing
 
 Contributions are encouraged and welcome; I am always happy to get feedback or pull requests on Github :) Create [Github Issues](https://github.com/symplely/uv-ffi/issues) for bugs and new features and comment on the ones you are interested in.
-
-The functions in [preload.php](https://github.com/symplely/uv-ffi/blob/main/preload.php) and [ZEFunctions.php](https://github.com/symplely/uv-ffi/blob/main/ZEFunctions.php) should be used or expanded upon.
-
-## Reference/Credits
-
-- [Introduction to PHP FFI](https://dev.to/verkkokauppacom/introduction-to-php-ffi-po3)
-- [How to Use PHP FFI in Programming](https://spiralscout.com/blog/how-to-use-php-ffi-in-programming)
-- [PHP FFI and what it can do for you](https://phpconference.com/blog/php-ffi-and-what-it-can-do-for-you/)
-- [Zend API - Hacking the Core of PHP](https://www.cs.helsinki.fi/u/laine/php/zend.html)
-- [PHP Internals Book](https://www.phpinternalsbook.com/index.html)
-- [Upgrading PHP extensions from PHP5 to NG](https://wiki.php.net/phpng-upgrading)
-- [Extending and Embedding PHP](https://flylib.com/books/en/2.565.1/)
-- [Getting Started with PHP-FFI](https://www.youtube.com/watch?v=7pfjvRupoqg) **Youtube**
-- [Awesome PHP FFI](https://github.com/gabrielrcouto/awesome-php-ffi)
-- [Z-Engine library](https://github.com/lisachenko/z-engine)
-
-### Possible Security Risks
-
-- [Down the FFI Rabbit Hole](https://pwnfirstsear.ch/2020/07/20/0ctf2020-noeasyphp.html)
-
-### The Beginning
-
-- [About Zeev’s proposal of PHP superset](https://william-pinaud.medium.com/about-zeevs-proposal-of-php-superset-9e291f0de630)
 
 ## License
 
