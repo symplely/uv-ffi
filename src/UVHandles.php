@@ -414,8 +414,8 @@ if (!\class_exists('UVFsPoll')) {
 
         public function start(callable $callback, string $path, int $interval): int
         {
-            $uv_fs_poll_cb = function (CData $handle, int $status, object $prev, object $curr) use ($callback) {
-                $callback($this, $status, $prev, $curr);
+            $uv_fs_poll_cb = function (CData $handle, int $status, CData $prev, CData $curr) use ($callback) {
+                $callback($this, $status, \uv_stat_to_zval($prev), \uv_stat_to_zval($curr));
             };
 
             return \uv_ffi()->uv_fs_poll_start($this->__invoke(), $uv_fs_poll_cb, $path, $interval);
@@ -1022,6 +1022,15 @@ if (!\class_exists('UVDirent')) {
      * @return uv_dirent_t **pointer** by invoking `$UVDirent()`
      */
     final class UVDirent extends \UVTypes
+    {
+    }
+}
+
+if (!\class_exists('UVStat')) {
+    /**
+     * @return uv_stat_t **pointer** by invoking `$UVStat()`
+     */
+    final class UVStat extends \UVTypes
     {
     }
 }

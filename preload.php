@@ -132,6 +132,36 @@ if (!\function_exists('uv_init')) {
     }
 
     /**
+     * Represents _ext-uv_ `php_uv_stat_to_zval` function.
+     *
+     * @param CData $stat
+     * @return array
+     */
+    function uv_stat_to_zval(CData $stat): array
+    {
+        $result = \zval_array(\ze_ffi()->_zend_new_array(0));
+        \ze_ffi()->add_assoc_long_ex($result(), "dev", \strlen("dev"), $stat->st_dev);
+        \ze_ffi()->add_assoc_long_ex($result(), "ino", \strlen("ino"), $stat->st_ino);
+        \ze_ffi()->add_assoc_long_ex($result(), "mode", \strlen("mode"), $stat->st_mode);
+        \ze_ffi()->add_assoc_long_ex($result(), "nlink", \strlen("nlink"), $stat->st_nlink);
+        \ze_ffi()->add_assoc_long_ex($result(), "uid", \strlen("uid"), $stat->st_uid);
+        \ze_ffi()->add_assoc_long_ex($result(), "gid", \strlen("gid"), $stat->st_gid);
+        \ze_ffi()->add_assoc_long_ex($result(), "rdev", \strlen("rdev"), $stat->st_rdev);
+        \ze_ffi()->add_assoc_long_ex($result(), "size", \strlen("size"), $stat->st_size);
+
+        if (\IS_LINUX) {
+            \ze_ffi()->add_assoc_long_ex($result(), "blksize", \strlen("blksize"), $stat->st_blksize);
+            \ze_ffi()->add_assoc_long_ex($result(), "blocks", \strlen("blocks"), $stat->st_blocks);
+        }
+
+        \ze_ffi()->add_assoc_long_ex($result(), "atime", \strlen("atime"), $stat->st_atim->tv_sec);
+        \ze_ffi()->add_assoc_long_ex($result(), "mtime", \strlen("mtime"), $stat->st_mtim->tv_sec);
+        \ze_ffi()->add_assoc_long_ex($result(), "ctime", \strlen("ctime"), $stat->st_ctim->tv_sec);
+
+        return \zval_native($result);
+    }
+
+    /**
      * Creates a _uv structure_, can be of 40 types.
      * @param string $typedef
      * - typedef: `struct uv__io_s` for - **uv__io_t**
