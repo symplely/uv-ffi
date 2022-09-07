@@ -109,6 +109,7 @@ if (!\class_exists('UVRequest')) {
     abstract class UVRequest extends \UVTypes
     {
         protected ?Zval $fd = null;
+        protected ?Zval $fd_alt = null;
         protected ?\UVBuffer $buffer = null;
 
         public function __invoke(bool $by_req = false): ?\FFI\CData
@@ -125,6 +126,7 @@ if (!\class_exists('UVRequest')) {
                 \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
 
             $this->fd = null;
+            $this->fd_alt = null;
             $this->buffer = null;
             parent::free();
         }
@@ -736,6 +738,14 @@ if (!\class_exists('UVFs')) {
             $this->fd = $resource instanceof Zval ? $resource : null;
         }
 
+        public function fd_alt($resource = null)
+        {
+            if (\is_null($resource))
+                return $this->fd_alt;
+
+            $this->fd_alt = $resource instanceof Zval ? $resource : null;
+        }
+
         /**
          * @param UVBuffer $read
          * @return UVBuffer|null|void
@@ -887,17 +897,30 @@ if (!\class_exists('UVFs')) {
                     case \UV::FS_SCANDIR:
                         $result = \uv_ffi()->uv_fs_scandir($loop(), $uv_fSystem(), $fdStringObject, \array_shift($arguments), $uv_fs_cb);
                         break;
+                    case \UV::FS_READLINK:
+                        $result = \uv_ffi()->uv_fs_readlink($loop(), $uv_fSystem(), $fdStringObject, $uv_fs_cb);
+                        break;
                 }
             } elseif (\is_resource($fdStringObject)) {
-                $zval = Resource::get_fd((int)$fdStringObject, true);
-                $fd = $zval instanceof Zval ? Resource::get_fd((int)$fdStringObject, false, false, true) : null;
-                if (!\is_integer($fd)) {
-                    $zval = Zval::constructor($fdStringObject);
-                    $fd = PhpStream::zval_to_fd($zval, true);
-                }
-
+                [$zval, $fd] = \zval_to_fd_pair($fdStringObject);
                 $uv_fSystem->fd($zval);
                 switch ($fs_type) {
+                    case \UV::FS_SENDFILE:
+                        $in = \array_shift($arguments);
+                        [$zval_alt, $in_fd] = \zval_to_fd_pair($in);
+                        $uv_fSystem->fd_alt($zval_alt);
+                        $offset = \array_shift($arguments);
+                        $length = \array_shift($arguments);
+                        $result = \uv_ffi()->uv_fs_sendfile(
+                            $loop(),
+                            $uv_fSystem(),
+                            $fd,
+                            $in_fd,
+                            $offset,
+                            $length,
+                            $uv_fs_cb
+                        );
+                        break;
                     case \UV::FS_CLOSE:
                         $result = \uv_ffi()->uv_fs_close($loop(), $uv_fSystem(), $fd, $uv_fs_cb);
                         if ($callback === null) {

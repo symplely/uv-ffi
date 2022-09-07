@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use FFI\CData;
 use FFI\CType;
+use ZE\Zval;
+use ZE\Resource;
+use ZE\PhpStream;
 
 if (!\function_exists('uv_init')) {
     /**
@@ -129,6 +132,22 @@ if (!\function_exists('uv_init')) {
         $file->add_pair($fd_zval, $fd, (int)$resource);
 
         return $resource;
+    }
+
+    /**
+     * @param resource $stream
+     * @return array<Zval|uv_file|int>
+     */
+    function zval_to_fd_pair($stream): array
+    {
+        $zval = Resource::get_fd((int)$stream, true);
+        $fd = $zval instanceof Zval ? Resource::get_fd((int)$stream, false, false, true) : null;
+        if (!\is_integer($fd)) {
+            $zval = Zval::constructor($stream);
+            $fd = PhpStream::zval_to_fd($zval, true);
+        }
+
+        return [$zval, $fd];
     }
 
     /**

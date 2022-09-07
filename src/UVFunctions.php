@@ -1097,9 +1097,12 @@ if (!\function_exists('uv_loop_init')) {
      * @param int $offset
      * @param int $length
      * @param callable $callback expect (resource $out_fd, int $result)
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/fs.html?highlight=uv_fs_sendfile#c.uv_fs_sendfile
      */
-    function uv_fs_sendfile(\UVLoop $loop, $out_fd, $in_fd, int $offset, int $length, callable $callback)
+    function uv_fs_sendfile(\UVLoop $loop, $out_fd, $in_fd, int $offset, int $length, callable $callback = null)
     {
+        return UVFs::init($loop, \UV::FS_SENDFILE, $out_fd, $in_fd, $offset, $length, $callback);
     }
 
     /**
@@ -2554,9 +2557,11 @@ if (!\function_exists('uv_loop_init')) {
      * @param callable $callback callback expect ($result_or_link_contents).
      *
      * @return int
+     * @link http://docs.libuv.org/en/v1.x/fs.html?highlight=uv_fs_readlink#c.uv_fs_readlink
      */
-    function uv_fs_readlink(\UVLoop $loop, string $path, callable $callback)
+    function uv_fs_readlink(\UVLoop $loop, string $path, callable $callback = null)
     {
+        return \UVFs::init($loop, \UV::FS_READLINK, $path, $callback);
     }
 
     /**
@@ -2570,9 +2575,12 @@ if (!\function_exists('uv_loop_init')) {
      * @param callable $callback callback expect ($result_or_dir_contents).
      *
      * @return int
+     * @deprecated 1.0
      */
-    function uv_fs_readdir(\UVLoop $loop, string $path, int $flags, callable $callback)
+    function uv_fs_readdir(\UVLoop $loop, string $path, int $flags, callable $callback = null)
     {
+        \ze_ffi()->zend_error(\E_DEPRECATED, "Use uv_fs_scandir() instead of uv_fs_readdir()");
+        return \uv_fs_scandir($loop, $path, $flags, $callback);
     }
 
     /**
