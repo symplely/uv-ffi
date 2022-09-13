@@ -14,8 +14,6 @@ $result = uv_fs_readlink($uv, __FILE__, function ($result) {
 
 var_dump($result);
 uv_run($uv);
-
-?>
 --EXPECT--
 int(0)
 bool(true)

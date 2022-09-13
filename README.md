@@ -6,7 +6,7 @@ This **libuv ffi** implementation is based on extension [ext-uv](https://github.
 
 The _ext-uv_ extension is on version _1.6_ of **libuv**, 1.6 is actually _1.06_, or about _39_ releases behind current 1.44.2.
 
-Getting _ext-uv_ tests implemented will indicate overall progress and follow the tests number ordering for each libuv feature being implemented. Currently **28** out of **53** _tests_ has been actually implemented. **PR** are welcome, see [Documentation] and [Contributing], to get compatibility around unreleased **ext-uv 0.3.0** version, current release version is _0.2.4beta_.
+Getting _ext-uv_ tests implemented will indicate overall progress and follow the tests number ordering for each libuv feature being implemented. Currently **29** out of **53** _tests_ has been actually implemented. **PR** are welcome, see [Documentation] and [Contributing], to get compatibility around unreleased **ext-uv 0.3.0** version, current release version is _0.2.4beta_.
 
 Future versions of `uv-ffi` beyond **ext-uv 0.3.0** will include all current `libuv` features.
 
@@ -41,7 +41,7 @@ zend_extension=opcache
 
 ## How to use
 
-- The functions in file [UVFunctions.php](https://github.com/symplely/uv-ffi/blob/main/UVFunctions.php) is the **only** _means of accessing_ **libuv** features.
+- The functions in file [UVFunctions.php](https://github.com/symplely/uv-ffi/blob/main/src/UVFunctions.php) is the **only** _means of accessing_ **libuv** features.
 
 The following is a PHP `tcp echo server` converted from `C` [uv book](https://nikhilm.github.io/uvbook/networking.html#tcp) that's follows also. Most of the required `C` setup and cleanup code is done automatically.
 

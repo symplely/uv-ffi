@@ -8,6 +8,69 @@ use ZE\Zval;
 use ZE\Resource;
 use ZE\PhpStream;
 
+if (!\defined('O_RDONLY')) {
+    /**
+     * Open the file for read-only access.
+     */
+    \define('O_RDONLY', \IS_WINDOWS ? 0x0000 : UV::O_RDONLY);
+}
+
+if (!\defined('O_WRONLY')) {
+    /**
+     * Open the file for write-only access.
+     */
+    \define('O_WRONLY', \IS_WINDOWS ? 0x0001 : UV::O_WRONLY);
+}
+
+if (!\defined('O_RDWR')) {
+    /**
+     * Open the file for read-write access.
+     */
+    \define('O_RDWR', \IS_WINDOWS ? 0x0002 : UV::O_RDWR);
+}
+
+if (!\defined('O_CREAT')) {
+    /**
+     * The file is created if it does not already exist.
+     */
+    \define('O_CREAT', \IS_WINDOWS ? 0x0100 : UV::O_CREAT);
+}
+
+if (!\defined('O_EXCL')) {
+    /**
+     * If the O_CREAT flag is set and the file already exists,
+     * fail the open.
+     */
+    \define('O_EXCL', \IS_WINDOWS ? 0x0400 : UV::O_EXCL);
+}
+
+if (!\defined('O_TRUNC')) {
+    /**
+     * If the file exists and is a regular file, and the file is
+     * opened successfully for write access, its length shall be truncated to zero.
+     */
+    \define('O_TRUNC', \IS_WINDOWS ? 0x0200 : UV::O_TRUNC);
+}
+
+if (!\defined('O_APPEND')) {
+    /**
+     * The file is opened in append mode. Before each write,
+     * the file offset is positioned at the end of the file.
+     */
+    \define('O_APPEND', \IS_WINDOWS ? 0x0008 : UV::O_APPEND);
+}
+
+if (!\defined('O_NOCTTY') && !\IS_WINDOWS) {
+    /**
+     * If the path identifies a terminal device, opening the path will not cause that
+     * terminal to become the controlling terminal for the process (if the process does
+     * not already have one).
+     *
+     * - Note O_NOCTTY is not supported on Windows.
+     */
+    \define('O_NOCTTY', UV::O_NOCTTY);
+}
+
 if (!\function_exists('uv_init')) {
     /**
      * Returns **cast** a `uv_req_t` _base request_ pointer.
@@ -24,7 +87,7 @@ if (!\function_exists('uv_init')) {
      * Returns **cast** a `uv` pointer as `typedef`.
      *
      * @param string $typedef
-     * @param object $ptr
+     * @param object|CData $ptr
      * @return CData
      */
     function uv_cast(string $typedef, object $ptr): CData
@@ -73,7 +136,7 @@ if (!\function_exists('uv_init')) {
     /**
      * Checks `instance` and returns the `CData` object within.
      *
-     * @param UVInterface|object $handle
+     * @param UVInterface|object|CData $handle
      * @return CData
      */
     function uv_object($handle): CData
@@ -135,49 +198,33 @@ if (!\function_exists('uv_init')) {
     }
 
     /**
-     * @param resource $stream
-     * @return array<Zval|uv_file|int>
-     */
-    function zval_to_fd_pair($stream): array
-    {
-        $zval = Resource::get_fd((int)$stream, true);
-        $fd = $zval instanceof Zval ? Resource::get_fd((int)$stream, false, false, true) : null;
-        if (!\is_integer($fd)) {
-            $zval = Zval::constructor($stream);
-            $fd = PhpStream::zval_to_fd($zval, true);
-        }
-
-        return [$zval, $fd];
-    }
-
-    /**
-     * Represents _ext-uv_ `php_uv_stat_to_zval` function.
+     * Represents _ext-uv_ `php_uv_stat_to_zval` and `php_uv_make_stat` functions.
      *
-     * @param CData $stat
+     * @param CData|uv_stat_t $stat
      * @return array
      */
     function uv_stat_to_zval(CData $stat): array
     {
-        $result = \zval_array(\ze_ffi()->_zend_new_array(0));
-        \ze_ffi()->add_assoc_long_ex($result(), "dev", \strlen("dev"), $stat->st_dev);
-        \ze_ffi()->add_assoc_long_ex($result(), "ino", \strlen("ino"), $stat->st_ino);
-        \ze_ffi()->add_assoc_long_ex($result(), "mode", \strlen("mode"), $stat->st_mode);
-        \ze_ffi()->add_assoc_long_ex($result(), "nlink", \strlen("nlink"), $stat->st_nlink);
-        \ze_ffi()->add_assoc_long_ex($result(), "uid", \strlen("uid"), $stat->st_uid);
-        \ze_ffi()->add_assoc_long_ex($result(), "gid", \strlen("gid"), $stat->st_gid);
-        \ze_ffi()->add_assoc_long_ex($result(), "rdev", \strlen("rdev"), $stat->st_rdev);
-        \ze_ffi()->add_assoc_long_ex($result(), "size", \strlen("size"), $stat->st_size);
+        $array = \zval_array(\ze_ffi()->_zend_new_array(0));
+        \ze_ffi()->add_assoc_long_ex($array(), "dev", \strlen("dev"), $stat->st_dev);
+        \ze_ffi()->add_assoc_long_ex($array(), "ino", \strlen("ino"), $stat->st_ino);
+        \ze_ffi()->add_assoc_long_ex($array(), "mode", \strlen("mode"), $stat->st_mode);
+        \ze_ffi()->add_assoc_long_ex($array(), "nlink", \strlen("nlink"), $stat->st_nlink);
+        \ze_ffi()->add_assoc_long_ex($array(), "uid", \strlen("uid"), $stat->st_uid);
+        \ze_ffi()->add_assoc_long_ex($array(), "gid", \strlen("gid"), $stat->st_gid);
+        \ze_ffi()->add_assoc_long_ex($array(), "rdev", \strlen("rdev"), $stat->st_rdev);
+        \ze_ffi()->add_assoc_long_ex($array(), "size", \strlen("size"), $stat->st_size);
 
         if (\IS_LINUX) {
-            \ze_ffi()->add_assoc_long_ex($result(), "blksize", \strlen("blksize"), $stat->st_blksize);
-            \ze_ffi()->add_assoc_long_ex($result(), "blocks", \strlen("blocks"), $stat->st_blocks);
+            \ze_ffi()->add_assoc_long_ex($array(), "blksize", \strlen("blksize"), $stat->st_blksize);
+            \ze_ffi()->add_assoc_long_ex($array(), "blocks", \strlen("blocks"), $stat->st_blocks);
         }
 
-        \ze_ffi()->add_assoc_long_ex($result(), "atime", \strlen("atime"), $stat->st_atim->tv_sec);
-        \ze_ffi()->add_assoc_long_ex($result(), "mtime", \strlen("mtime"), $stat->st_mtim->tv_sec);
-        \ze_ffi()->add_assoc_long_ex($result(), "ctime", \strlen("ctime"), $stat->st_ctim->tv_sec);
+        \ze_ffi()->add_assoc_long_ex($array(), "atime", \strlen("atime"), $stat->st_atim->tv_sec);
+        \ze_ffi()->add_assoc_long_ex($array(), "mtime", \strlen("mtime"), $stat->st_mtim->tv_sec);
+        \ze_ffi()->add_assoc_long_ex($array(), "ctime", \strlen("ctime"), $stat->st_ctim->tv_sec);
 
-        return \zval_native($result);
+        return \zval_native($array);
     }
 
     /**

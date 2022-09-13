@@ -1,7 +1,7 @@
 --TEST--
 Check poll of a pipe works
 --SKIPIF--
-<?php if (extension_loaded("ffi")) print "skip"; ?>
+<?php if (!extension_loaded("ffi") || '\\' === DIRECTORY_SEPARATOR) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';

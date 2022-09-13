@@ -220,6 +220,9 @@ abstract class uv_lib_t extends UVTypes
 abstract class uv_file extends int
 {
 }
+abstract class uv_os_sock_t extends php_socket_t
+{
+}
 abstract class uv_buf_t extends FFI\CData
 {
 }
@@ -242,6 +245,9 @@ abstract class uv_gid_t extends string
 {
 }
 abstract class uv_dir_t extends FFI\CData
+{
+}
+abstract class uv_stat_t  extends FFI\CData
 {
 }
 abstract class uv_dirent_t extends FFI\CData
@@ -310,6 +316,9 @@ abstract class UVWriter extends uv_write_t
 {
 }
 abstract class UVLib extends uv_lib_t
+{
+}
+abstract class UVStat extends uv_stat_t
 {
 }
 abstract class UVRequest extends uv_req_t
@@ -401,8 +410,6 @@ interface FFI
     /** @return int */
     public function uv_shutdown(uv_shutdown_t &$req, uv_stream_t &$handle, uv_shutdown_cb $cb);
 
-    public function uv_poll_start(uv_poll_t &$poll, $events, ?uv_poll_cb $callback = null);
-
     /** @return int */
     public function uv_tty_init(uv_loop_t &$loop, uv_tty_t &$tty, uv_file $fd, int $readable);
 
@@ -445,12 +452,16 @@ interface FFI
     public function uv_library_shutdown();
 
     /** @return int */
-    public function uv_poll_init_socket(uv_loop_t &$loop, $socket);
+    public function uv_poll_init_socket(uv_loop_t &$loop,  uv_poll_t &$handle, uv_os_sock_t $socket);
 
     /** @return int */
-    public function uv_poll_init(uv_loop_t &$loop, $fd);
+    public function uv_poll_start(uv_poll_t &$handle, int $events, uv_poll_cb $callback);
 
-    public function uv_poll_stop(uv_poll_t &$poll);
+    /** @return int */
+    public function uv_poll_init(uv_loop_t &$loop, uv_poll_t &$handle, int $fd);
+
+    /** @return int */
+    public function uv_poll_stop(uv_poll_t &$handle);
 
     /** @return int */
     public function uv_timer_init(uv_loop_t &$loop = null, uv_timer_t &$handle);
@@ -503,7 +514,7 @@ interface FFI
     /** @return const_char|string */
     public function uv_fs_get_path(uv_fs_t &$ptr);
 
-    /** @return uv_stat_t* */
+    /** @return uv_stat_t */
     public function uv_fs_get_statbuf(uv_fs_t &$ptr);
 
     /** @return void */

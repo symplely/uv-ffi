@@ -3,7 +3,6 @@
     "preload": {
         "files": [
             "src/UV.php",
-            "src/UVConstants.php",
             "src/UVFunctions.php",
             "src/UVHandler.php",
             "src/UVHandles.php",

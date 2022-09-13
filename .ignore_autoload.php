@@ -41,9 +41,9 @@ if (\file_exists($directory . 'composer.json')) {
 
 if (isset($composerJson['autoload'])) {
   if (isset($composerJson['autoload']['files']) && !\in_array(".cdef/$ext/preload.php", $composerJson['autoload']['files']))
-    \array_push($composerJson['autoload']['files'], ".cdef/$ext/preload.php", ".cdef/$ext/src/UVConstants.php", ".cdef/$ext/src/UVFunctions.php");
+    \array_push($composerJson['autoload']['files'], ".cdef/$ext/preload.php", ".cdef/$ext/src/UVFunctions.php");
   elseif (!isset($composerJson['autoload']['files']))
-    $composerJson = \array_merge($composerJson, ["autoload" => ["files" => [".cdef/$ext/preload.php", ".cdef/$ext/src/UVConstants.php", ".cdef/$ext/src/UVFunctions.php"]]]);
+    $composerJson = \array_merge($composerJson, ["autoload" => ["files" => [".cdef/$ext/preload.php", ".cdef/$ext/src/UVFunctions.php"]]]);
 
   if (isset($composerJson['autoload']['classmap']) && !\in_array(".cdef/$ext/src/", $composerJson['autoload']['classmap']))
     \array_push($composerJson['autoload']['classmap'], ".cdef/$ext/src/");
@@ -54,7 +54,6 @@ if (isset($composerJson['autoload'])) {
     "autoload" => [
       "files" => [
         ".cdef/$ext/preload.php",
-        ".cdef/$ext/src/UVConstants.php",
         ".cdef/$ext/src/UVFunctions.php"
       ],
       "classmap" => [

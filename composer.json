@@ -33,7 +33,6 @@
     "autoload": {
         "files": [
             "preload.php",
-            "src/UVConstants.php",
             "src/UVFunctions.php"
         ],
         "classmap": [

@@ -299,16 +299,13 @@ if (!\function_exists('uv_loop_init')) {
         $buffer = \uv_buf_init($data);
         $req = \UVWriter::init('struct uv_write_s');
         $writer = $req();
-        $writer->data = \ffi_void($handle());
         $r = \uv_ffi()->uv_write($writer, \uv_stream($handle), $buffer(), 1, \is_null($callback)
             ? function () {
             }
-            :  function (CData $writer, int $status) use ($callback, $handle) {
+            :  function (CData $writer, int $status) use ($callback, $handle, $req) {
                 $callback($handle, $status);
-                $handle = $writer->data;
-                \FFI::free($writer->data);
                 \FFI::free($writer);
-                \FFI::free($handle);
+                $req->free();
                 \zval_del_ref($callback);
             });
 
@@ -886,7 +883,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param int $mode mode flag
      * - `UV::S_IRWXU` | `UV::S_IRUSR`
      * @param callable|uv_fs_cb $callback expect (resource $stream)
-     * @return int|resource
+     * @return resource|int
      * @link http://docs.libuv.org/en/v1.x/fs.html?highlight=uv_fs_open#c.uv_fs_open
      */
     function uv_fs_open(\UVLoop $loop, string $path, int $flag, int $mode = \UV::S_IRWXU, callable $callback = null)
@@ -919,7 +916,7 @@ if (!\function_exists('uv_loop_init')) {
 
     /**
      * @param UVFs $req
-     * @return ssize_t
+     * @return ssize_t|int
      * @link http://docs.libuv.org/en/v1.x/fs.html#c.uv_fs_get_result
      */
     function uv_fs_get_result(\UVFs $req)
@@ -959,12 +956,12 @@ if (!\function_exists('uv_loop_init')) {
 
     /**
      * @param UVFs $req
-     * @return void
+     * @return CData|uv_stat_t
      * @link http://docs.libuv.org/en/v1.x/fs.html#c.uv_fs_get_statbuf
      */
-    function uv_fs_get_statbuf(\UVFs $req): void
+    function uv_fs_get_statbuf(\UVFs $req): CData
     {
-        \uv_ffi()->uv_fs_get_statbuf($req());
+        return \uv_ffi()->uv_fs_get_statbuf($req());
     }
 
     /**
@@ -990,7 +987,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param resource $fd PHP `stream`, or `socket`
      * @param int $offset
      * @param int $length
-     * @param callable|uv_fs_cb $callback - `$callable` expect (resource $fd, $data).
+     * @param callable|uv_fs_cb $callback - expect (resource $fd, $data).
      *
      * `$data` is > 0 if there is data available, 0 if libuv is done reading for
      * now, or < 0 on error.
@@ -1013,11 +1010,14 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVLoop $loop
      * @param resource $fd PHP `stream`, or `socket`
      * @param string $buffer data
-     * @param int $offset
-     * @param callable $callback expect (resource $fd, int $result)
+     * @param int $offset If the offset argument is `-1`, then the current file offset is used and updated.
+     * @param callable|uv_fs_cb $callback expect (resource $fd, int $result)
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/fs.html?highlight=uv_fs_write#c.uv_fs_write
      */
-    function uv_fs_write(\UVLoop $loop, $fd, string $buffer, int $offset = -1, callable $callback)
+    function uv_fs_write(\UVLoop $loop, $fd, string $buffer, int $offset = -1, callable $callback = null)
     {
+        return UVFs::init($loop, \UV::FS_WRITE, $fd, $buffer, $offset, $callback);
     }
 
     /**
@@ -1081,9 +1081,12 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVLoop $loop
      * @param resource $fd
      * @param callable $callback expect (resource $stream, int $stat)
+     * @return array|int
+     * @link http://docs.libuv.org/en/v1.x/fs.html?highlight=uv_fs_fstat#c.uv_fs_fstat
      */
-    function uv_fs_fstat(\UVLoop $loop, $fd, callable $callback)
+    function uv_fs_fstat(\UVLoop $loop, $fd, callable $callback = null)
     {
+        return UVFs::init($loop, \UV::FS_FSTAT, $fd, $callback);
     }
 
     /**
@@ -1203,52 +1206,103 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
-     * start polling.
+     * Starts polling the file descriptor.
      *
-     * If you want to use a socket. please use `uv_poll_init_socket` instead of this.
-     * Windows can't handle socket with this function.
+     * **Events** is a bitmask made up of `UV::READABLE`, `UV::WRITABLE`, `UV::PRIORITIZED` and `UV::DISCONNECT`.
+     * As soon as an event is detected the callback will be called with status set to 0, and the detected events
+     * set on the events field.
+     *
+     * The `UV::PRIORITIZED` event is used to watch for sysfs interrupts or TCP out-of-band messages.
+     *
+     * The `UV::DISCONNECT` event is optional in the sense that it may not be reported and the user is free to ignore it,
+     * but it can help optimize the shutdown path because an extra read or write call might be avoided.
+     *
+     * If an error happens while polling, status will be < 0 and corresponds with one of the `UV::E*` error codes (see Error handling). The user should not close the socket while the handle is active. If the user does that anyway, the callback
+     * may be called reporting an error status, but this is not guaranteed.
+     *
+     * `Note:` Calling this function on a handle that is already active is fine. Doing so will update the events mask that
+     * is being watched for.
+     *
+     * `Note:` Though `UV::DISCONNECT` can be set, it is unsupported on AIX and as such will not be set on the events
+     * field in the callback.
+     *
+     * `Note:` If one of the events UV::READABLE or `UV::WRITABLE` are set, the callback will be called again, as long as
+     * the given fd/socket remains readable or writable accordingly. Particularly in each of the following scenarios:
+     *
+     * -   The callback has been called because the socket became readable/writable and the callback did not conduct a read/write on this socket at all.
+
+     * -   The callback committed a read on the socket, and has not read all the available data (when `UV::READABLE` is set).
+
+     * -   The callback committed a write on the socket, but it remained writable afterwards (when `UV::WRITABLE` is set).
+
+     * -   The socket has already became readable/writable before calling `uv_poll_start()` on a poll handle associated with this socket, and since then the state of the socket did not changed.
+     *
+     * In all of the above listed scenarios, the socket remains readable or writable and hence the callback will be called again (depending on the events set in the bit-mask). This behavior is known as level triggering.
      *
      * @param UVPoll $poll
-     * @param int $events UV::READABLE and UV::WRITABLE flags.
-     * @param uv_poll_cb $callback expect (\UVPoll $poll, int $status, int $events, resource $fd)
+     * @param int $events `UV::READABLE` and `UV::WRITABLE` flags.
+     * @param callable|uv_poll_cb $callback expect (\UVPoll $poll, int $status, int $events, resource $fd)
      * - the callback `$fd` parameter is the same from `uv_poll_init`.
+     *
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/poll.html?highlight=uv_poll_stop#c.uv_poll_start
      */
-    function uv_poll_start(\UVPoll $poll, $events, ?callable $callback = null)
+    function uv_poll_start(\UVPoll $poll, $events, callable $callback): int
     {
+        if (!\uv_is_active($poll)) {
+            \zval_add_ref($poll);
+        }
+
+        $error = $poll->start($events, $callback);
+        if ($error) {
+            \ze_ffi()->zend_error(\E_ERROR, "uv_poll_start failed");
+        }
+
+        return $error;
     }
 
     /**
-     * Initialize the poll watcher using a socket descriptor. On unix this is
+     * Initialize the `poll` watcher using a socket descriptor. On unix this is
      * identical to `uv_poll_init`. On windows it takes a `SOCKET` handle.
      *
      * @param UVLoop $loop
-     * @param resource $socket
+     * @param SOCKET $socket
      *
-     * @return UVPoll
+     * @return UVPoll|int
      */
     function uv_poll_init_socket(\UVLoop $loop, $socket)
     {
+        return \UVPoll::init($loop, $socket);
     }
 
     /**
-     * Initialize poll
+     * Initialize `poll` using a file descriptor.
      *
      * @param UVLoop $loop
-     * @param resource $fd PHP `stream`, or `socket`
+     * @param resource $fd `stream`, or `socket`
+     * - `$fd` is set to non-blocking mode.
      *
-     * @return UVPoll
+     * @return UVPoll|int
+     * @link http://docs.libuv.org/en/v1.x/poll.html?highlight=uv_poll_init#c.uv_poll_init
      */
     function uv_poll_init(\UVLoop $loop, $fd)
     {
+        return \UVPoll::init($loop, $fd);
     }
 
     /**
-     * Stops polling the file descriptor.
+     * Stops polling the file descriptor, the callback will no longer be called.
+     *
+     * - Calling this function is effective immediately: any pending callback is also canceled,
+     * even if the socket state change notification was already pending.
      *
      * @param UVPoll $poll
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/poll.html?highlight=uv_poll_stop#c.uv_poll_stop
      */
     function uv_poll_stop(\UVPoll $poll)
     {
+        return \uv_ffi()->uv_poll_stop($poll());
     }
 
     /**
