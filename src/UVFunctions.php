@@ -1055,9 +1055,12 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVLoop $loop
      * @param string $path
      * @param callable $callback expect ($result_or_stat)
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/fs.html?highlight=uv_fs_stat#c.uv_fs_stat
      */
-    function uv_fs_stat(\UVLoop $loop, string $path, callable $callback)
+    function uv_fs_stat(\UVLoop $loop, string $path, callable $callback = null)
     {
+        return \UVFs::init($loop, \UV::FS_STAT, $path, $callback);
     }
 
     /**

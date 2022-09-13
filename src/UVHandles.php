@@ -928,6 +928,11 @@ if (!\class_exists('UVFs')) {
                     case \UV::FS_RMDIR:
                         $result = \uv_ffi()->uv_fs_rmdir($loop(), $uv_fSystem(), $fdOrString, $uv_fs_cb);
                         break;
+                    case \UV::FS_STAT:
+                        $result = \uv_ffi()->uv_fs_stat($loop(), $uv_fSystem(), $fdOrString, $uv_fs_cb);
+                        if (\is_null($callback))
+                            $result = \uv_stat_to_zval(\uv_fs_get_statbuf($uv_fSystem));
+                        break;
                     case \UV::FS_SCANDIR:
                         $result = \uv_ffi()->uv_fs_scandir($loop(), $uv_fSystem(), $fdOrString, \array_shift($arguments), $uv_fs_cb);
                         if (\is_null($callback)) {
