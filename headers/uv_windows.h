@@ -28,12 +28,21 @@ typedef unsigned short      USHORT;
 typedef unsigned char       UCHAR;
 typedef WCHAR               *PWSTR;
 typedef USHORT              ADDRESS_FAMILY;
-//typedef intptr_t            ssize_t;
+typedef unsigned int size_t;
+typedef int ptrdiff_t;
+typedef int intptr_t;
+typedef intptr_t            ssize_t;
 
 typedef struct sockaddr {
     ADDRESS_FAMILY sa_family;           // Address family.
     CHAR sa_data[14];                   // Up to 14 bytes of direct address.
 } SOCKADDR, *PSOCKADDR, *LPSOCKADDR;
+
+typedef int INT;
+typedef struct _SOCKET_ADDRESS {
+    LPSOCKADDR lpSockaddr;
+    INT iSockaddrLength;
+} SOCKET_ADDRESS, *PSOCKET_ADDRESS, *LPSOCKET_ADDRESS;
 
 typedef struct _COORD {
     SHORT X;
@@ -209,8 +218,6 @@ typedef int (*LPFN_WSARECVFROM)(SOCKET socket,
              LPWSAOVERLAPPED overlapped,
              LPWSAOVERLAPPED_COMPLETION_ROUTINE completion_routine);
 
-typedef long int ptrdiff_t;
-typedef long unsigned int size_t;
 typedef struct {
   long long __max_align_ll ;
   long double __max_align_ld ;
@@ -417,10 +424,10 @@ struct timespec
 };
 typedef __suseconds_t suseconds_t;
 typedef long int __fd_mask;
-typedef struct
-  {
-    __fd_mask __fds_bits[1024 / (8 * (int) sizeof (__fd_mask))];
-  } fd_set;
+typedef struct fd_set {
+        u_int fd_count;
+        SOCKET fd_array[ 64 ];
+} fd_set;
 typedef __fd_mask fd_mask;
 
 typedef __blksize_t blksize_t;
@@ -609,18 +616,11 @@ enum __socket_type
 typedef unsigned short int sa_family_t;
 
 typedef struct sockaddr_storage {
-    ADDRESS_FAMILY ss_family;      // address family
-
-    CHAR __ss_pad1[((sizeof(__int64))- sizeof(USHORT))];  // 6 byte pad, this is to make
-                                   //   implementation specific pad up to
-                                   //   alignment field that follows explicit
-                                   //   in the data structure
-    __int64 __ss_align;            // Field to force desired structure
-    CHAR __ss_pad2[(128 - (sizeof(USHORT) + ((sizeof(__int64))- sizeof(USHORT)) +  (sizeof(__int64))))];  // 112 byte pad to achieve desired size;
-                                   //   _SS_MAXSIZE value minus size of
-                                   //   ss_family, __ss_pad1, and
-                                   //   __ss_align fields is 112
-} SOCKADDR_STORAGE_LH, *PSOCKADDR_STORAGE_LH, *LPSOCKADDR_STORAGE_LH;
+    ADDRESS_FAMILY ss_family;
+    CHAR __ss_pad1[ ( (sizeof(__int64)) - sizeof(USHORT)) ];
+    __int64 __ss_align;
+    CHAR __ss_pad2[ ( 128 - (sizeof(USHORT) + ( (sizeof(__int64)) - sizeof(USHORT)) + (sizeof(__int64)) )) ];
+};
 
 enum
   {
@@ -2025,6 +2025,27 @@ struct uv_write_s {
  int uv_stream_set_blocking(uv_stream_t* handle, int blocking);
  int uv_is_closing(const uv_handle_t* handle);
 
+typedef BOOL (* LPFN_ACCEPTEX)(
+     SOCKET sListenSocket,
+     SOCKET sAcceptSocket,
+     PVOID lpOutputBuffer,
+     DWORD dwReceiveDataLength,
+     DWORD dwLocalAddressLength,
+     DWORD dwRemoteAddressLength,
+     LPDWORD lpdwBytesReceived,
+     LPOVERLAPPED lpOverlapped
+    );
+
+typedef BOOL (* LPFN_CONNECTEX) (
+     SOCKET s,
+     const struct sockaddr   *name,
+     int namelen,
+     PVOID lpSendBuffer,
+     DWORD dwSendDataLength,
+     LPDWORD lpdwBytesSent,
+     LPOVERLAPPED lpOverlapped
+    );
+
 struct uv_tcp_s {
   void* data; uv_loop_t* loop; uv_handle_type type; uv_close_cb close_cb; void* handle_queue[2]; union { int fd; void* reserved[4]; } u;
   uv_handle_t* endgame_next;
@@ -2038,6 +2059,21 @@ struct uv_tcp_s {
     struct { unsigned int write_reqs_pending; uv_shutdown_t* shutdown_req; } conn;
     struct { uv_connection_cb connection_cb; } serv;
   } stream;
+
+  SOCKET socket;
+  int delayed_error;
+  union {
+    struct {
+      uv_tcp_accept_t* accept_reqs;
+      unsigned int processed_accepts;
+      uv_tcp_accept_t* pending_accepts;
+      LPFN_ACCEPTEX func_acceptex;
+    } serv;
+    struct {
+      uv_buf_t read_buffer;
+      LPFN_CONNECTEX func_connectex;
+    } conn;
+  } tcp;
 };
 
  int uv_tcp_init(uv_loop_t*, uv_tcp_t* handle);

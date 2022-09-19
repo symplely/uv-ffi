@@ -39,4 +39,4 @@ $memory = memory_get_usage() - $memory;
 echo "$t->counter\n$memory\n";
 --EXPECTF--
 1000
-%-d
+%d

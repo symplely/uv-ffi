@@ -347,6 +347,29 @@ if (!\class_exists('UVTcp')) {
             $status = \uv_ffi()->uv_tcp_init($loop(), $tcp());
             return ($status === 0) ? $tcp : $status;
         }
+
+        public function get_name(int $type)
+        {
+            $tcp = $this->__invoke();
+            $addr = \UVSockaddr::init('struct sockaddr');
+            $addr_len = \c_int_type('int', \FFI::sizeof($addr()[0]));
+            switch ($type) {
+                case 1:
+                    \uv_ffi()->uv_tcp_getsockname($tcp, $addr(), $addr_len());
+                    break;
+                case 2:
+                    \uv_ffi()->uv_tcp_getpeername($tcp, $addr(), $addr_len());
+                    break;
+                case 3:
+                    // \uv_ffi()->uv_udp_getsockname($udp, \uv_sockaddr($addr), $addr_len_ptr);
+                    break;
+                default:
+                    \ze_ffi()->zend_error(\E_ERROR, "unexpected type");
+                    break;
+            };
+
+            return \uv_address_to_array($addr);
+        }
     }
 }
 
@@ -614,9 +637,9 @@ if (!\class_exists('UVStdio')) {
 if (!\class_exists('UVSockAddr')) {
     /**
      * Address and port base structure
-     * @return sockaddr_in by invoking `$UVSockAddr()`
+     * @return sockaddr by invoking `$UVSockAddr()`
      */
-    abstract class UVSockAddr extends \UVTypes
+    class UVSockAddr extends \UVTypes
     {
     }
 }
@@ -641,6 +664,12 @@ if (!\class_exists('UVSockAddrIPv6')) {
     }
 }
 
+if (!\class_exists('UVSockaddrStorage')) {
+    final class UVSockaddrStorage extends \UVSockAddr
+    {
+    }
+}
+
 if (!\class_exists('UVLock')) {
     /**
      * Lock handle (Lock, Mutex, Semaphore)
@@ -652,6 +681,38 @@ if (!\class_exists('UVLock')) {
      */
     final class UVLock
     {
+    }
+}
+
+if (!\class_exists('UVGetNameinfo')) {
+    final class UVGetNameinfo extends \UVRequest
+    {
+        /**
+         * @param \UVLoop $loop
+         * @param \UVSockAddr $addr
+         * @param integer $flags
+         * @param callable|uv_getnameinfo_cb $callback callable expect (int $status|string $hostname, string $service)
+         * @return int|array['address'=>'x.x.x.x','port'=>'xx']
+         */
+        public static function getnameinfo(\UVLoop $loop, callable $callback = null, \UVSockAddr $addr, int $flags)
+        {
+            $nameInfo_req = new static('struct uv_getnameinfo_s');
+            $getnameinfo_cb = \is_null($callback) ? null : function (CData $req, int $status, string $hostname, string $service) use ($callback, $nameInfo_req) {
+                $callback(($status < 0 ? $status : $hostname), $service);
+                unset($hostname);
+                unset($service);
+                \zval_del_ref($callback);
+                $nameInfo_req->free();
+            };
+
+            $status = \uv_ffi()->uv_getnameinfo($loop(), $nameInfo_req(), $getnameinfo_cb, $addr(), $flags);
+            if (\is_null($callback)) {
+                $status = ['address' => \FFI::string($nameInfo_req()->host), 'port' => \FFI::string($nameInfo_req()->service)];
+                \zval_del_ref($nameInfo_req);
+            }
+
+            return $status;
+        }
     }
 }
 

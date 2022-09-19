@@ -130,7 +130,7 @@ if (!\function_exists('uv_init')) {
      */
     function uv_sockaddr(object $ptr): CData
     {
-        return Core::cast('uv', 'const struct sockaddr*', \uv_object($ptr));
+        return \Core::cast('uv', 'struct sockaddr*', \uv_object($ptr));
     }
 
     /**
@@ -205,26 +205,59 @@ if (!\function_exists('uv_init')) {
      */
     function uv_stat_to_zval(CData $stat): array
     {
-        $array = \zval_array(\ze_ffi()->_zend_new_array(0));
-        \ze_ffi()->add_assoc_long_ex($array(), "dev", \strlen("dev"), $stat->st_dev);
-        \ze_ffi()->add_assoc_long_ex($array(), "ino", \strlen("ino"), $stat->st_ino);
-        \ze_ffi()->add_assoc_long_ex($array(), "mode", \strlen("mode"), $stat->st_mode);
-        \ze_ffi()->add_assoc_long_ex($array(), "nlink", \strlen("nlink"), $stat->st_nlink);
-        \ze_ffi()->add_assoc_long_ex($array(), "uid", \strlen("uid"), $stat->st_uid);
-        \ze_ffi()->add_assoc_long_ex($array(), "gid", \strlen("gid"), $stat->st_gid);
-        \ze_ffi()->add_assoc_long_ex($array(), "rdev", \strlen("rdev"), $stat->st_rdev);
-        \ze_ffi()->add_assoc_long_ex($array(), "size", \strlen("size"), $stat->st_size);
+        $arrays = \zval_array(\ze_ffi()->_zend_new_array(0));
+        $array = $arrays();
+        \ze_ffi()->add_assoc_long_ex($array, "dev", \strlen("dev"), $stat->st_dev);
+        \ze_ffi()->add_assoc_long_ex($array, "ino", \strlen("ino"), $stat->st_ino);
+        \ze_ffi()->add_assoc_long_ex($array, "mode", \strlen("mode"), $stat->st_mode);
+        \ze_ffi()->add_assoc_long_ex($array, "nlink", \strlen("nlink"), $stat->st_nlink);
+        \ze_ffi()->add_assoc_long_ex($array, "uid", \strlen("uid"), $stat->st_uid);
+        \ze_ffi()->add_assoc_long_ex($array, "gid", \strlen("gid"), $stat->st_gid);
+        \ze_ffi()->add_assoc_long_ex($array, "rdev", \strlen("rdev"), $stat->st_rdev);
+        \ze_ffi()->add_assoc_long_ex($array, "size", \strlen("size"), $stat->st_size);
 
         if (\IS_LINUX) {
-            \ze_ffi()->add_assoc_long_ex($array(), "blksize", \strlen("blksize"), $stat->st_blksize);
-            \ze_ffi()->add_assoc_long_ex($array(), "blocks", \strlen("blocks"), $stat->st_blocks);
+            \ze_ffi()->add_assoc_long_ex($array, "blksize", \strlen("blksize"), $stat->st_blksize);
+            \ze_ffi()->add_assoc_long_ex($array, "blocks", \strlen("blocks"), $stat->st_blocks);
         }
 
-        \ze_ffi()->add_assoc_long_ex($array(), "atime", \strlen("atime"), $stat->st_atim->tv_sec);
-        \ze_ffi()->add_assoc_long_ex($array(), "mtime", \strlen("mtime"), $stat->st_mtim->tv_sec);
-        \ze_ffi()->add_assoc_long_ex($array(), "ctime", \strlen("ctime"), $stat->st_ctim->tv_sec);
+        \ze_ffi()->add_assoc_long_ex($array, "atime", \strlen("atime"), $stat->st_atim->tv_sec);
+        \ze_ffi()->add_assoc_long_ex($array, "mtime", \strlen("mtime"), $stat->st_mtim->tv_sec);
+        \ze_ffi()->add_assoc_long_ex($array, "ctime", \strlen("ctime"), $stat->st_ctim->tv_sec);
 
-        return \zval_native($array);
+        return \zval_native($arrays);
+    }
+
+    /**
+     * Represents _ext-uv_ `php_uv_address_to_zval` function.
+     *
+     * @param \UVSockaddr|sockaddr $addr
+     * @return array
+     */
+    function uv_address_to_array(\UVSockaddr $addr): array
+    {
+        $ip = \ffi_characters(\INET6_ADDRSTRLEN);
+        switch ($addr()->sa_family) {
+            case \AF_INET6:
+                $a6 = \uv_cast('struct sockaddr_in6 *', $addr());
+                // $ip = \uv_inet_ntop(\AF_INET6, $a6);
+                \uv_ffi()->uv_ip6_name($a6, $ip, \INET6_ADDRSTRLEN);
+                $port = \ntohs($a6->sin6_port);
+                $family = 'IPv6';
+                break;
+            case \AF_INET:
+                $a4 = \uv_cast('struct sockaddr_in *', $addr());
+                // $ip = \uv_inet_ntop(\AF_INET, $a4);
+                \uv_ffi()->uv_ip4_name($a4, $ip, \INET6_ADDRSTRLEN);
+                $port = \ntohs($a4->sin_port);
+                $family = 'IPv4';
+                break;
+            default:
+                break;
+        }
+
+        \zval_del_ref($addr);
+        return ['address' => \ffi_string($ip), 'port' => $port, 'family' => $family];
     }
 
     /**
@@ -355,13 +388,13 @@ if (!\function_exists('uv_init')) {
 
         $directory = __DIR__ . \DS;
         if (\IS_WINDOWS) {
-            $code = $directory . 'headers\\windows.h';
+            $code = $directory . 'headers\\uv_windows.h';
             $lib = $directory . 'Windows\\uv.dll';
         } elseif (\PHP_OS === 'Darwin') {
-            $code = $directory . 'headers/macos.h';
+            $code = $directory . 'headers/uv_macos.h';
             $lib = $directory . 'macOS/libuv.1.0.0.dylib';
         } elseif (\php_uname('m') === 'aarch64') {
-            $code = $directory . 'headers/pi.h';
+            $code = $directory . 'headers/uv_pi.h';
             $lib = $directory . 'Linux/raspberry/libuv.so.1.0.0';
         } else {
             /*
@@ -400,10 +433,10 @@ if (!\function_exists('uv_init')) {
             $version = \trim((string) $os['VERSION_ID']);
             if ($id === 'debian') {
                 $lib = $directory . 'Linux/ubuntu' . ((float)$version < 20.04 ? '18.04' : '20.04') . '/libuv.so.1.0.0';
-                $code = $directory . 'headers/ubuntu' . ((float)$version < 20.04 ? '18.04' : '20.04') . '.h';
+                $code = $directory . 'headers/uv_ubuntu' . ((float)$version < 20.04 ? '18.04' : '20.04') . '.h';
             } elseif ($id === 'redhat') {
                 $lib = $directory . 'Linux/centos' . ((float)$version < 8 ? '7' : '8+') . '/libuv.so.1.0.0';
-                $code = $directory . 'headers/centos' . ((float)$version < 8 ? '7' : '8+') . '.h';
+                $code = $directory . 'headers/uv_centos' . ((float)$version < 8 ? '7' : '8+') . '.h';
             }
         }
 

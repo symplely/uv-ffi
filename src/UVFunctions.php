@@ -477,10 +477,10 @@ if (!\function_exists('uv_loop_init')) {
      * @return string|int
      * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_ip4_name#c.uv_ip4_name
      */
-    function uv_ip4_name(\UVSockAddr $address)
+    function uv_ip4_name(\UVSockAddrIPv4 $address)
     {
-        $ptr = \ffi_characters(\UV::INET6_ADDRSTRLEN);
-        $status = \uv_ffi()->uv_ip4_name($address(), $ptr, \UV::INET6_ADDRSTRLEN);
+        $ptr = \ffi_characters(\INET6_ADDRSTRLEN);
+        $status = \uv_ffi()->uv_ip4_name($address(), $ptr, \INET6_ADDRSTRLEN);
 
         return ($status === 0) ? \ffi_string($ptr) : $status;
     }
@@ -510,10 +510,10 @@ if (!\function_exists('uv_loop_init')) {
      * @return string
      * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_ip4_addr#c.uv_ip6_name
      */
-    function uv_ip6_name(\UVSockAddr $address)
+    function uv_ip6_name(\UVSockAddrIPv6 $address)
     {
-        $ptr = \ffi_characters(\UV::INET6_ADDRSTRLEN);
-        $status = \uv_ffi()->uv_ip6_name($address(), $ptr, \UV::INET6_ADDRSTRLEN);
+        $ptr = \ffi_characters(\INET6_ADDRSTRLEN);
+        $status = \uv_ffi()->uv_ip6_name($address(), $ptr, \INET6_ADDRSTRLEN);
 
         return ($status === 0) ? \ffi_string($ptr) : $status;
     }
@@ -1179,8 +1179,8 @@ if (!\function_exists('uv_loop_init')) {
 
     function uv_fs_poll_getpath(\UVFsPoll $handle, char &$buffer, size_t &$size)
     {
-        $buffer = \ffi_characters(\UV::INET6_ADDRSTRLEN);
-        $size = \UV::INET6_ADDRSTRLEN;
+        $buffer = \ffi_characters(\INET6_ADDRSTRLEN);
+        $size = \INET6_ADDRSTRLEN;
         $status = \uv_ffi()->uv_fs_poll_getpath($handle(), $buffer, $size);
         if ($status === \UV::ENOBUFS) {
             $buffer = \ffi_characters($size);
@@ -1922,6 +1922,24 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
+     * Asynchronous getnameinfo(3).
+     *
+     * Returns `0` on success or an `error code < 0` on failure.
+     * If successful, the callback will get called sometime in the future with the lookup result;
+     *
+     * @param \UVLoop $loop
+     * @param \UVSockAddr $addr
+     * @param integer $flags
+     * @param callable|uv_getnameinfo_cb $callback callable expect (int $status|string $hostname, string $service)
+     * @return int|array
+     * @link http://docs.libuv.org/en/v1.x/dns.html#c.uv_getnameinfo
+     */
+    function uv_getnameinfo(\UVLoop $loop, \UVSockAddr $addr, int $flags, callable $callback = null)
+    {
+        return \UVGetNameinfo::getnameinfo($loop, $callback, $addr, $flags);
+    }
+
+    /**
      * Asynchronous `getaddrinfo(3)`
      *
      * That returns one or more addrinfo structures, each of which contains an Internet address that
@@ -1974,8 +1992,8 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_inet_ntop(int $af, object $src)
     {
-        $dst = \ffi_characters(\UV::INET6_ADDRSTRLEN);
-        $status = \uv_ffi()->uv_inet_ntop($af, \ffi_void($src), $dst, \UV::INET6_ADDRSTRLEN);
+        $dst = \ffi_characters(\INET6_ADDRSTRLEN);
+        $status = \uv_ffi()->uv_inet_ntop($af, \ffi_void($src), $dst, \INET6_ADDRSTRLEN);
         return $status === 0 ? \ffi_string($dst) : $status;
     }
 
@@ -2727,8 +2745,8 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_fs_event_getpath(\UVFsEvent $handle)
     {
-        $buffer = \ffi_characters(\UV::INET6_ADDRSTRLEN);
-        $size = \UV::INET6_ADDRSTRLEN;
+        $buffer = \ffi_characters(\INET6_ADDRSTRLEN);
+        $size = \INET6_ADDRSTRLEN;
         $status = \uv_ffi()->uv_fs_event_getpath($handle(), $buffer, $size);
         if ($status === \UV::ENOBUFS) {
             $buffer = \ffi_characters($size);
@@ -2806,9 +2824,11 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVTcp $uv_sock
      *
      * @return array ['address'], ['port'], ['family']
+     * @link http://docs.libuv.org/en/v1.x/tcp.html?highlight=uv_tcp_getsockname#c.uv_tcp_getsockname
      */
-    function uv_tcp_getsockname(\UVTcp $uv_sock)
+    function uv_tcp_getsockname(\UVTcp $uv_sock): array
     {
+        return $uv_sock->get_name(1);
     }
 
     /**

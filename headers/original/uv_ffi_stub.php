@@ -191,6 +191,10 @@ abstract class uv_fs_poll_t extends uv_req_t
 abstract class uv_getaddrinfo_t extends uv_getaddrinfo_s
 {
 }
+/** getnameinfo request type. */
+abstract class uv_getnameinfo_t extends uv_getnameinfo_s
+{
+}
 /** The kind of the libuv handle */
 abstract class uv_handle_type extends int
 {
@@ -226,13 +230,13 @@ abstract class uv_os_sock_t extends php_socket_t
 abstract class uv_buf_t extends FFI\CData
 {
 }
-abstract class UVSockAddr extends sockaddr_in
+abstract class UVSockAddr extends sockaddr
 {
 }
-abstract class sockaddr_in extends FFI\CData
+abstract class sockaddr_in extends sockaddr
 {
 }
-abstract class sockaddr_in6 extends FFI\CData
+abstract class sockaddr_in6 extends sockaddr
 {
 }
 abstract class addrinfo extends FFI\CData
@@ -259,7 +263,13 @@ abstract class UVDirent extends uv_dirent_t
 abstract class uv_getaddrinfo_s extends uv_req_t
 {
 }
+abstract class uv_getnameinfo_s extends uv_req_t
+{
+}
 abstract class UVGetAddrinfo extends uv_getaddrinfo_t
+{
+}
+abstract class UVGetNameinfo extends uv_getnameinfo_t
 {
 }
 abstract class DWORD extends int
@@ -328,6 +338,9 @@ abstract class UV extends uv_handle_t
 {
 }
 abstract class uv_shutdown_t extends uv_req_t
+{
+}
+abstract class int_ptr extends FFI\CData
 {
 }
 abstract class void_t extends FFI\CData
@@ -731,7 +744,7 @@ interface FFI
     public function uv_tcp_init(uv_loop_t &$loop, uv_tcp_t &$handle);
 
     /** @return int */
-    public function  uv_accept(uv_stream_t &$server, uv_stream_t &$client);
+    public function uv_accept(uv_stream_t &$server, uv_stream_t &$client);
 
     /** @return int */
     public function uv_tcp_bind(uv_tcp_t &$handle, sockaddr &$addr, int $flags);
@@ -740,13 +753,13 @@ interface FFI
     public function uv_listen(uv_stream_t &$stream, int $backlog, uv_connection_cb $cb);
 
     /** @return int */
-    public function  uv_ip4_addr(const_char $ip, int $port, sockaddr_in &$addr);
+    public function uv_ip4_addr(const_char $ip, int $port, sockaddr_in &$addr);
 
     /** @return int */
     public function uv_ip4_name(sockaddr_in &$src, char &$dst, size_t $size);
 
     /** @return int */
-    public function  uv_ip6_addr(const_char $ip, int $port, sockaddr_in6 &$addr);
+    public function uv_ip6_addr(const_char $ip, int $port, sockaddr_in6 &$addr);
 
     /** @return int */
     public function uv_ip6_name(sockaddr_in6 &$src, char &$dst, size_t $size);
@@ -758,6 +771,9 @@ interface FFI
 
     /** @return int */
     public function uv_getaddrinfo(uv_loop_t &$loop, uv_getaddrinfo_t &$req, uv_getaddrinfo_cb $getaddrinfo_cb, const_char $node, const_char $service, addrinfo &$hints);
+
+    /** @return int */
+    public function uv_getnameinfo(uv_loop_t &$loop, uv_getnameinfo_t &$req, uv_getnameinfo_cb $getnameinfo_cb, sockaddr &$addr, int $flags);
 
     /** @return void */
     public function uv_freeaddrinfo(?addrinfo &$ai);
@@ -795,6 +811,9 @@ interface FFI
 
     /** @return int */
     public function uv_is_writable(uv_stream_t &$handle);
+
+    /** @return uv_loop_t */
+    public function uv_handle_get_loop(uv_handle_t &$handle);
 
     public function uv_walk(uv_loop_t $loop, callable $closure, array $opaque = null);
 
@@ -859,9 +878,11 @@ interface FFI
 
     public function uv_chdir(string $directory);
 
-    public function uv_tcp_getsockname(uv_tcp_t $uv_sock);
+    /** @return int */
+    public function uv_tcp_getsockname(uv_tcp_t &$handle, sockaddr &$name, int_ptr &$namelen);
 
-    public function uv_tcp_getpeername(uv_tcp_t $uv_sock);
+    /** @return int */
+    public function uv_tcp_getpeername(uv_tcp_t &$handle, sockaddr &$name, int_ptr &$namelen);
 
     public function uv_udp_getsockname(UVUdp $uv_sock);
 

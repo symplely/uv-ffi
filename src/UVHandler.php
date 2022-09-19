@@ -88,7 +88,7 @@ abstract class UVHandler implements UVInterface
             \uv_ffi()->uv_close(
                 $handler,
                 (!\is_null($callback) ?
-                    function (object $stream, int $status) use ($callback, $handle) {
+                    function (object $stream = null, int $status = null) use ($callback, $handle) {
                         $callback($handle, $status);
                     } : null)
             );

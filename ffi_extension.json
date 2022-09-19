@@ -2,13 +2,13 @@
     "name": "libuv",
     "preload": {
         "files": [
+            "preload.php",
             "src/UV.php",
             "src/UVFunctions.php",
             "src/UVHandler.php",
             "src/UVHandles.php",
             "src/UVInterface.php",
-            "src/UVTypes.php",
-            "preload.php"
+            "src/UVTypes.php"
         ]
     }
 }

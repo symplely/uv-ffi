@@ -100,24 +100,21 @@ function recursiveDelete($directory, $options = [])
 $isWindows = '\\' === \DS;
 $delete = '';
 if (!$isWindows) {
-  $files = ['zeWin8.h', 'zeWin8ts.h', 'zeWin7.h', 'zeWin7ts.h', 'windows.h', 'msvcrt.h'];
-  foreach ($files as $file)
-    \unlink($directory . '.cdef' . \DS . 'headers' . \DS . $file);
-
+  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'uv_windows.h');
   \unlink($directory . '.cdef' . \DS . 'lib' . \DS . 'Windows' . \DS . 'uv.dll');
   \rmdir($directory . '.cdef' . \DS . 'lib' . \DS . 'Windows');
   $delete .= 'Windows ';
 }
 
 if (\PHP_OS !== 'Darwin') {
-  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'macos.h');
+  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'uv_macos.h');
   \unlink($directory . '.cdef' . \DS . 'lib' . \DS . 'macOS' . \DS . 'libuv.1.0.0.dylib');
   \rmdir($directory . '.cdef' . \DS . 'lib' . \DS . 'macOS');
   $delete .= 'Apple macOS ';
 }
 
 if (\php_uname('m') !== 'aarch64') {
-  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'pi.h');
+  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'uv_pi.h');
   \unlink($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'raspberry' . \DS . 'libuv.so.1.0.0');
   \rmdir($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'raspberry');
   $delete .= 'Raspberry Pi ';
@@ -151,28 +148,28 @@ else {
 }
 
 if ((float)$version !== 20.04 || $isWindows) {
-  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'ubuntu20.04.h');
+  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'uv_ubuntu20.04.h');
   \unlink($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'ubuntu20.04' . \DS . 'libuv.so.1.0.0');
   \rmdir($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'ubuntu20.04');
   $delete .= 'Ubuntu 20.04 ';
 }
 
 if ((float)$version !== 18.04 || $isWindows) {
-  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'ubuntu18.04.h');
+  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'uv_ubuntu18.04.h');
   \unlink($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'ubuntu18.04' . \DS . 'libuv.so.1.0.0');
   \rmdir($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'ubuntu18.04');
   $delete .= 'Ubuntu 18.04 ';
 }
 
 if (!(float)$version >= 8 || $isWindows) {
-  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'centos8+.h');
+  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'uv_centos8+.h');
   \unlink($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'centos8+' . \DS . 'libuv.so.1.0.0');
   \rmdir($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'centos8+');
   $delete .= 'Centos 8+ ';
 }
 
 if (!(float)$version < 8 || $isWindows) {
-  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'centos7.h');
+  \unlink($directory . '.cdef' . \DS . 'headers' . \DS . 'uv_centos7.h');
   \unlink($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'centos7' . \DS . 'libuv.so.1.0.0');
   \rmdir($directory . '.cdef' . \DS . 'lib' . \DS . 'Linux' . \DS . 'centos7');
   $delete .= 'Centos 7 ';

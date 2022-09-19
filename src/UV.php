@@ -33,9 +33,6 @@ declare(strict_types=1);
  */
 class UV extends UVHandler
 {
-    const INET_ADDRSTRLEN = 22;
-    const INET6_ADDRSTRLEN = 65;
-
     /**
      * This flag indicates an event that becomes active when the provided file
      * descriptor(usually a stream resource, or socket) is ready for reading.
@@ -590,6 +587,31 @@ class UV extends UVHandler
     * This flag will override this behavior on platforms that support it.
     */
     const FS_EVENT_RECURSIVE = 4;
+
+    //
+    // Flags for getnameinfo()
+    //
+    /** Only return nodename portion for local hosts */
+    const NI_NOFQDN         = 0x01;
+
+    /** Return numeric form of the host's address */
+    const NI_NUMERICHOST    = 0x02;
+
+    /** Error if the host's name not in DNS */
+    const NI_NAMEREQD       = 0x04;
+
+    /** Return numeric form of the service (port #) */
+    const NI_NUMERICSERV    = 0x08;
+
+    /** Service is a datagram service */
+    const NI_DGRAM          = 0x10;
+
+    /** Max size of a fully-qualified domain name */
+    const NI_MAXHOST        = 1025;
+
+    /** Max size of a service name */
+    const NI_MAXSERV        = 32;
+
 
     // Base handle
     const UNKNOWN_HANDLE = 0;
