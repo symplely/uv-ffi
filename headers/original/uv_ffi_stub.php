@@ -230,6 +230,9 @@ abstract class uv_os_sock_t extends php_socket_t
 abstract class uv_buf_t extends FFI\CData
 {
 }
+abstract class sockaddr_storage extends FFI\CData
+{
+}
 abstract class UVSockAddr extends sockaddr
 {
 }
@@ -766,8 +769,6 @@ interface FFI
 
     /** @return int */
     public function uv_tcp_connect(uv_connect_t &$req, uv_tcp_t &$handle, sockaddr &$addr, uv_connect_cb $cb);
-
-    public function uv_tcp_connect6(uv_tcp_t $handle, UVSockAddrIPv6 $ipv6_addr, callable $callback);
 
     /** @return int */
     public function uv_getaddrinfo(uv_loop_t &$loop, uv_getaddrinfo_t &$req, uv_getaddrinfo_cb $getaddrinfo_cb, const_char $node, const_char $service, addrinfo &$hints);

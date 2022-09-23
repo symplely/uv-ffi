@@ -441,7 +441,7 @@ if (!\function_exists('uv_loop_init')) {
      * Bind the handle to an address and port.
      *
      * @param UVTcp $handle uv_tcp handle
-     * @param UVSockAddr $addr uv sockaddr4 handle
+     * @param UVSockAddr $addr uv sockaddr handle
      * @param int $flags
      *
      * @return int
@@ -449,7 +449,21 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_tcp_bind(\UVTcp $handle, \UVSockAddr $addr, int $flags = 0): int
     {
-        return \uv_ffi()->uv_tcp_bind($handle(), \uv_sockaddr($addr), $flags);
+        return $handle->bind($addr, $flags);
+    }
+
+    /**
+     * Bind the handle to an address and port.
+     *
+     * @param UVTcp $uv_tcp uv_tcp handle
+     * @param UVSockAddr|resource|int $uv_sockaddr uv sockaddr6 handle.
+     *
+     * @return void
+     * @deprecated 1.0
+     */
+    function uv_tcp_bind6(\UVTcp $uv_tcp, \UVSockAddr $uv_sockaddr, int $flags = 0)
+    {
+        return \uv_tcp_bind($uv_tcp, $uv_sockaddr, $flags);
     }
 
     /**
@@ -463,7 +477,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_ip4_addr(string $ipv4_addr, int $port = 0)
     {
-        $ip4 = \UVSockAddrIPv4::init('struct sockaddr_in');
+        $ip4 = \UVSockAddrIPv4::init();
         $status = \uv_ffi()->uv_ip4_addr($ipv4_addr, $port, $ip4());
 
         return $status === 0 ? $ip4 : $status;
@@ -496,7 +510,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_ip6_addr(string $ipv6_addr, int $port)
     {
-        $ip6 = \UVSockAddrIPv6::init('struct sockaddr_in6');
+        $ip6 = \UVSockAddrIPv6::init();
         $status = \uv_ffi()->uv_ip6_addr($ipv6_addr, $port, $ip6());
 
         return $status === 0 ? $ip6 : $status;
@@ -609,17 +623,31 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_tcp_connect(\UVTcp $handle, \UVSockAddr $addr, callable $callback): int
     {
-        $req = \UVConnect::init('struct uv_connect_s');
-        \zval_add_ref($req);
-        return \uv_ffi()->uv_tcp_connect(
-            $req(),
-            $handle(),
-            \uv_sockaddr($addr),
-            function (CData $connect, int $status) use ($callback, $handle, $req) {
-                $callback($handle, $status);
-                \zval_del_ref($req);
-            }
-        );
+        return $handle->connect($addr, $callback);
+    }
+
+    /**
+     * Establish an IPv6 TCP connection.
+     *
+     * Provide an initialized TCP handle and an uninitialized uv_connect. addr
+     * should point to an initialized struct sockaddr_in6.
+     *
+     * On Windows if the addr is initialized to point to an unspecified address (0.0.0.0 or ::)
+     * it will be changed to point to localhost. This is done to match the behavior of Linux systems.
+     *
+     * The callback is made when the connection has been established
+     * or when a connection error happened.
+     *
+     * @param UVTcp $handle requires uv_tcp_init() handle.
+     * @param UVSockAddrIPv6 $ipv6_addr requires uv_sockaddr handle.
+     * @param callable $callback callable expect (\UVTcp $tcp_handle, int $status).
+     *
+     * @return int
+     * @deprecated 1.0
+     */
+    function uv_tcp_connect6(\UVTcp $handle, UVSockAddrIPv6 $ipv6_addr, callable $callback): int
+    {
+        return \uv_tcp_connect($handle, $ipv6_addr, $callback);
     }
 
     /**
@@ -1810,19 +1838,6 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
-     * Bind the handle to an address and port.
-     *
-     * @param UVTcp $uv_tcp uv_tcp handle
-     * @param UVSockAddr|resource|int $uv_sockaddr uv sockaddr6 handle.
-     *
-     * @return void
-     * @deprecated 1.0
-     */
-    function uv_tcp_bind6(\UVTcp $uv_tcp, UVSockAddr $uv_sockaddr)
-    {
-    }
-
-    /**
      * Extended write function for sending handles over a pipe.
      *
      * The pipe must be initialized with ipc == 1.
@@ -1848,28 +1863,6 @@ if (!\function_exists('uv_loop_init')) {
      * @param bool $enable true means enabled. false means disabled.
      */
     function uv_tcp_nodelay(\UVTcp $handle, bool $enable)
-    {
-    }
-
-    /**
-     * Establish an IPv6 TCP connection.
-     *
-     * Provide an initialized TCP handle and an uninitialized uv_connect. addr
-     * should point to an initialized struct sockaddr_in6.
-     *
-     * On Windows if the addr is initialized to point to an unspecified address (0.0.0.0 or ::)
-     * it will be changed to point to localhost. This is done to match the behavior of Linux systems.
-     *
-     * The callback is made when the connection has been established
-     * or when a connection error happened.
-     *
-     * @param UVTcp $handle requires uv_tcp_init() handle.
-     * @param UVSockAddrIPv6 $ipv6_addr requires uv_sockaddr handle.
-     * @param callable $callback callable expect (\UVTcp $tcp_handle, int $status).
-     *
-     * @return void
-     */
-    function uv_tcp_connect6(\UVTcp $handle, UVSockAddrIPv6 $ipv6_addr, callable $callback)
     {
     }
 

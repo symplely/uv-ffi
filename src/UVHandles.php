@@ -146,6 +146,14 @@ if (!\class_exists('UVStream')) {
      */
     class UVStream extends \UV
     {
+        protected ?\UVSockAddr $uv_sock = null;
+
+        public function __destruct()
+        {
+            $this->uv_sock = null;
+            $this->free();
+        }
+
         /**
          * @param UV|object $handle
          * @param callable|uv_read_cb $callback
@@ -348,17 +356,43 @@ if (!\class_exists('UVTcp')) {
             return ($status === 0) ? $tcp : $status;
         }
 
+        public function bind(\UVSockAddr $addr, int $flags = 0)
+        {
+            $this->uv_sock = $addr;
+            return \uv_ffi()->uv_tcp_bind($this->uv_struct_type, \uv_sockaddr($addr), $flags);
+        }
+
+        public function connect(\UVSockAddr $addr, callable $callback)
+        {
+            $this->uv_sock = $addr;
+            $req = \UVConnect::init('struct uv_connect_s');
+            \zval_add_ref($req);
+            return \uv_ffi()->uv_tcp_connect(
+                $req(),
+                $this->uv_struct_type,
+                \uv_sockaddr($addr),
+                function (CData $connect, int $status) use ($callback, $req) {
+                    $callback($this, $status);
+                    \zval_del_ref($req);
+                }
+            );
+        }
+
         public function get_name(int $type)
         {
-            $tcp = $this->__invoke();
-            $addr = \UVSockaddr::init('struct sockaddr');
-            $addr_len = \c_int_type('int', \FFI::sizeof($addr()[0]));
+            $addr = \UVSockaddr::init();
+            $addr_len = \c_int_type(
+                'int',
+                'uv',
+                \FFi::sizeof($addr()[0]) * ($this->uv_sock instanceof \UVSockAddrIPv6 ? 3 : 1)
+            );
+
             switch ($type) {
                 case 1:
-                    \uv_ffi()->uv_tcp_getsockname($tcp, $addr(), $addr_len());
+                    \uv_ffi()->uv_tcp_getsockname($this->uv_struct_type, $addr(), $addr_len());
                     break;
                 case 2:
-                    \uv_ffi()->uv_tcp_getpeername($tcp, $addr(), $addr_len());
+                    \uv_ffi()->uv_tcp_getpeername($this->uv_struct_type, $addr(), $addr_len());
                     break;
                 case 3:
                     // \uv_ffi()->uv_udp_getsockname($udp, \uv_sockaddr($addr), $addr_len_ptr);
@@ -367,7 +401,7 @@ if (!\class_exists('UVTcp')) {
                     \ze_ffi()->zend_error(\E_ERROR, "unexpected type");
                     break;
             };
-
+            //   var_dump($addr);
             return \uv_address_to_array($addr);
         }
     }
@@ -641,6 +675,15 @@ if (!\class_exists('UVSockAddr')) {
      */
     class UVSockAddr extends \UVTypes
     {
+        public function family(): int
+        {
+            return $this->__invoke()->sa_family;
+        }
+
+        public static function init(...$arguments)
+        {
+            return new static('struct sockaddr');
+        }
     }
 }
 
@@ -651,6 +694,15 @@ if (!\class_exists('UVSockAddrIPv4')) {
      */
     final class UVSockAddrIPv4 extends \UVSockAddr
     {
+        public function family(): int
+        {
+            return $this->__invoke()->sin_family;
+        }
+
+        public static function init(...$arguments)
+        {
+            return new static('struct sockaddr_in');
+        }
     }
 }
 
@@ -661,12 +713,30 @@ if (!\class_exists('UVSockAddrIPv6')) {
      */
     final class UVSockAddrIPv6 extends \UVSockAddr
     {
+        public function family(): int
+        {
+            return $this->__invoke()->sin6_family;
+        }
+
+        public static function init(...$arguments)
+        {
+            return new static('struct sockaddr_in6');
+        }
     }
 }
 
 if (!\class_exists('UVSockaddrStorage')) {
     final class UVSockaddrStorage extends \UVSockAddr
     {
+        public function family(): int
+        {
+            return $this->__invoke()->ss_family;
+        }
+
+        public static function init(...$arguments)
+        {
+            return new static('struct sockaddr_storage');
+        }
     }
 }
 

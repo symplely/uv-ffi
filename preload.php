@@ -134,7 +134,7 @@ if (!\function_exists('uv_init')) {
     }
 
     /**
-     * Checks `instance` and returns the `CData` object within.
+     * Checks `handle` and returns the `CData` object within.
      *
      * @param UVInterface|object|CData $handle
      * @return CData
@@ -143,10 +143,11 @@ if (!\function_exists('uv_init')) {
     {
         $handler = $handle;
         if (
-            $handle instanceof UVInterface
-            || $handle instanceof UVLoop
-            || $handle instanceof UVStream
-            || $handle instanceof UVTypes
+            $handle instanceof \UVInterface
+            || $handle instanceof \UVLoop
+            || $handle instanceof \UVStream
+            || $handle instanceof \UVTypes
+            || $handle instanceof \CStruct
         )
             $handler = $handle();
 
@@ -161,7 +162,7 @@ if (!\function_exists('uv_init')) {
      */
     function uv_ffi_free(object $ptr): void
     {
-        if ($ptr instanceof \UVInterface || $ptr instanceof \UVLoop || $ptr instanceof \UVTypes)
+        if ($ptr instanceof \UVInterface || $ptr instanceof \UVLoop || $ptr instanceof \UVTypes || $ptr instanceof \CStruct)
             $ptr->free();
         elseif (\is_cdata($ptr))
             \FFI::free($ptr);
@@ -231,22 +232,22 @@ if (!\function_exists('uv_init')) {
     /**
      * Represents _ext-uv_ `php_uv_address_to_zval` function.
      *
-     * @param \UVSockaddr|sockaddr $addr
+     * @param UVSockAddr|sockaddr $addr
      * @return array
      */
-    function uv_address_to_array(\UVSockaddr $addr): array
+    function uv_address_to_array(\UVSockAddr $addr): array
     {
         $ip = \ffi_characters(\INET6_ADDRSTRLEN);
-        switch ($addr()->sa_family) {
+        switch ($addr->family()) {
             case \AF_INET6:
-                $a6 = \uv_cast('struct sockaddr_in6 *', $addr());
+                $a6 = \uv_cast('struct sockaddr_in6 *', $addr);
                 // $ip = \uv_inet_ntop(\AF_INET6, $a6);
                 \uv_ffi()->uv_ip6_name($a6, $ip, \INET6_ADDRSTRLEN);
                 $port = \ntohs($a6->sin6_port);
                 $family = 'IPv6';
                 break;
             case \AF_INET:
-                $a4 = \uv_cast('struct sockaddr_in *', $addr());
+                $a4 = \uv_cast('struct sockaddr_in *', $addr);
                 // $ip = \uv_inet_ntop(\AF_INET, $a4);
                 \uv_ffi()->uv_ip4_name($a4, $ip, \INET6_ADDRSTRLEN);
                 $port = \ntohs($a4->sin_port);
@@ -311,11 +312,6 @@ if (!\function_exists('uv_init')) {
     function uv_struct($typedef, bool $owned = true, bool $persistent = false): ?CData
     {
         return Core::struct('uv', $typedef, $owned, $persistent);
-    }
-
-    function uv_typedef(string $typedef): ?CType
-    {
-        return Core::typedef('uv', $typedef);
     }
 
     function uv_ffi(): \FFI

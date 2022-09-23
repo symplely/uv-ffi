@@ -1,7 +1,7 @@
 --TEST--
 Check for tcp bind
 --SKIPIF--
-<?php if (extension_loaded("ffi")) print "skip"; ?>
+<?php if (!extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';
@@ -11,7 +11,7 @@ uv_tcp_bind6($tcp, uv_ip6_addr('::1', 0));
 uv_listen($tcp,100, function($server) {
     $client = uv_tcp_init();
     uv_accept($server, $client);
-    uv_read_start($client, function($socket, $buffer) use ($server) {
+    uv_read_start($client, function($socket, $status, $buffer) use ($server) {
         echo $buffer . PHP_EOL;
         uv_close($socket);
         uv_close($server);
