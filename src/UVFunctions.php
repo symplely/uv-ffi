@@ -298,8 +298,7 @@ if (!\function_exists('uv_loop_init')) {
     {
         $buffer = \uv_buf_init($data);
         $req = \UVWriter::init('struct uv_write_s');
-        $writer = $req();
-        $r = \uv_ffi()->uv_write($writer, \uv_stream($handle), $buffer(), 1, \is_null($callback)
+        $r = \uv_ffi()->uv_write($req(), \uv_stream($handle), $buffer(), 1, \is_null($callback)
             ? function () {
             }
             :  function (CData $writer, int $status) use ($callback, $handle, $req) {
@@ -434,7 +433,7 @@ if (!\function_exists('uv_loop_init')) {
         if (\is_null($loop))
             $loop = \uv_default_loop();
 
-        return UVTcp::init($loop);
+        return \UVTcp::init($loop);
     }
 
     /**
@@ -2012,10 +2011,15 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVLoop|null $loop loop handle or null.
      * - if not specified loop handle then use uv_default_loop handle.
      *
-     * @return UVUdp UV which initialized for udp.
+     * @return int|UVUdp UV which initialized for udp.
+     * @link http://docs.libuv.org/en/v1.x/udp.html?highlight=uv_udp_init#c.uv_udp_init
      */
     function uv_udp_init(\UVLoop $loop = null)
     {
+        if (\is_null($loop))
+            $loop = \uv_default_loop();
+
+        return \UVUdp::init($loop);
     }
 
     /**
@@ -2026,13 +2030,15 @@ if (!\function_exists('uv_loop_init')) {
      * - flags – Indicate how the socket will be bound, UV_UDP_IPV6ONLY and UV_UDP_REUSEADDR are supported.
      *
      * @param UVUdp $handle UV handle (udp).
-     * @param UVSockAddr $address uv sockaddr(ipv4) handle.
+     * @param UVSockAddr $addr uv sockaddr(ipv4|ipv6) handle.
      * @param int $flags unused.
      *
-     * @return void
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/udp.html?highlight=uv_udp_init#c.uv_udp_bind
      */
-    function uv_udp_bind(\UVUdp $handle, UVSockAddr $address, int $flags = 0)
+    function uv_udp_bind(\UVUdp $handle, UVSockAddr $addr, int $flags = \UV::UDP_LINUX_RECVERR)
     {
+        return $handle->bind($addr, $flags);
     }
 
     /**
@@ -2050,6 +2056,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_udp_bind6(\UVUdp $handle, UVSockAddr $address, int $flags = 0)
     {
+        return \uv_udp_bind($handle, $address, $flags);
     }
 
     /**
@@ -2062,12 +2069,14 @@ if (!\function_exists('uv_loop_init')) {
      * - callback – Callback to invoke with received data.
      *
      * @param UVUdp $handle UV handle (udp).
-     * @param callable $callback callback expect (\UVUdp $handle, $data, int $flags).
+     * @param callable|uv_udp_recv_cb $callback callback expect (\UVUdp $handle, $data, int $flags).
      *
-     * @return void
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/udp.html?highlight=uv_udp_recv_start#c.uv_udp_recv_start
      */
     function uv_udp_recv_start(\UVUdp $handle, callable $callback)
     {
+        return $handle->recv($callback);
     }
 
     /**
@@ -2166,12 +2175,14 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVUdp $handle UV handle (udp).
      * @param string $data data.
      * @param UVSockAddr $uv_addr uv_ip4_addr.
-     * @param callable $callback callback expect (\UVUdp $handle, int $status).
+     * @param callable|uv_udp_send_cb $callback callback expect (\UVUdp $handle, int $status).
      *
-     * @return void
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/udp.html?highlight=uv_udp_send#c.uv_udp_send
      */
     function uv_udp_send(\UVUdp $handle, string $data, UVSockAddr $uv_addr, callable $callback)
     {
+        return $handle->send($data, $uv_addr, $callback);
     }
 
     /**
@@ -2197,6 +2208,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_udp_send6(\UVUdp $handle, string $data, UVSockAddrIPv6 $uv_addr6, callable $callback)
     {
+        return \uv_udp_send($handle, $data, $uv_addr6, $callback);
     }
 
     /**

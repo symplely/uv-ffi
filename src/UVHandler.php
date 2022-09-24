@@ -11,6 +11,7 @@ abstract class UVHandler implements UVInterface
     protected ?CData $uv_struct = null;
     protected ?CData $uv_struct_ptr = null;
     protected ?CData $uv_struct_type = null;
+    protected ?\UVSockAddr $uv_sock = null;
 
     public function __destruct()
     {
@@ -53,6 +54,7 @@ abstract class UVHandler implements UVInterface
         $this->uv_struct_type = null;
         $this->uv_struct_ptr = null;
         $this->uv_struct = null;
+        $this->uv_sock = null;
     }
 
     public static function close(object $handle, ?callable $callback = null)

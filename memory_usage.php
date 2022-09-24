@@ -34,6 +34,8 @@ $memory = memory_get_usage();
 
 $t->run();
 
+Core::clear_ffi();
+
 $memory = memory_get_usage() - $memory;
 
 echo "Memory Leak/Usage:\n$t->counter\n" . $memory . "\n";

@@ -308,6 +308,35 @@ class UV extends UVHandler
      */
     const UDP_PARTIAL = 2;
 
+    const UDP_REUSEADDR = 4;
+
+    /**
+     * Indicates that the message was received by recvmmsg, so the buffer provided
+     * must not be freed by the recv_cb callback.
+     */
+    const UDP_MMSG_CHUNK = 8;
+
+    /**
+     * Indicates that the buffer provided has been fully utilized by recvmmsg and
+     * that it should now be freed by the recv_cb callback. When this flag is set
+     * in uv_udp_recv_cb, nread will always be 0 and addr will always be NULL.
+     */
+    const UDP_MMSG_FREE = 16;
+
+    /**
+     * Indicates if IP_RECVERR/IPV6_RECVERR will be set when binding the handle.
+     * This sets IP_RECVERR for IPv4 and IPV6_RECVERR for IPv6 UDP sockets on
+     * Linux. This stops the Linux kernel from supressing some ICMP error messages
+     * and enables full ICMP error reporting for faster failover.
+     * This flag is no-op on platforms other than Linux.
+     */
+    const UDP_LINUX_RECVERR = 32;
+
+    /**
+     * Indicates that recvmmsg should be used, if available.
+     */
+    const UDP_RECVMMSG = 256;
+
     /**
      * Set the child process' user id.
      */

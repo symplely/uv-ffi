@@ -146,14 +146,6 @@ if (!\class_exists('UVStream')) {
      */
     class UVStream extends \UV
     {
-        protected ?\UVSockAddr $uv_sock = null;
-
-        public function __destruct()
-        {
-            $this->uv_sock = null;
-            $this->free();
-        }
-
         /**
          * @param UV|object $handle
          * @param callable|uv_read_cb $callback
@@ -414,6 +406,90 @@ if (!\class_exists('UVUdp')) {
      */
     final class UVUdp extends \UV
     {
+        public static function init(?\UVLoop $loop, ...$arguments)
+        {
+            $udp = new static('struct _php_uv_s', 'udp');
+            $status = \uv_ffi()->uv_udp_init($loop(), $udp());
+            return ($status === 0) ? $udp : $status;
+        }
+
+        public function bind(\UVSockAddr $addr, int $flags = 0): int
+        {
+            $this->uv_sock = $addr;
+            $r = \uv_ffi()->uv_udp_bind($this->uv_struct_type, \uv_sockaddr($addr), $flags);
+            if ($r) {
+                return \ze_ffi()->zend_error(\E_WARNING, "bind failed");
+            }
+
+            return $r;
+        }
+
+        /**
+         * @param callable|uv_udp_recv_cb $callback
+         * @return integer
+         */
+        public function recv(callable $callback): int
+        {
+            if (\uv_is_active($this)) {
+                return \ze_ffi()->zend_error(\E_WARNING, "passed uv_object has already activated.");
+            }
+
+            $r = \uv_ffi()->uv_udp_recv_start(
+                $this->uv_struct_type,
+                function (CData $handle, int $suggested_size, CData $buf) {
+                    $buf->base = \FFI::new('char[' . ($suggested_size + 1) . ']', false);
+                    $buf->len = $suggested_size;
+                },
+                function (CData $udp, int $nRead, CData $data = null, CData $addr = null, int $flag) use ($callback) {
+                    $callback($this, ($nRead > 0) ? \FFI::string($data->base) : $nRead, $flag);
+                    if ($nRead > 0)
+                        \FFI::free($data->base);
+
+                    \zval_del_ref($callback);
+                }
+            );
+
+            if ($r) {
+                return \ze_ffi()->zend_error(\E_NOTICE, "read failed");
+            }
+
+            return $r;
+        }
+
+        /**
+         * @param callable|uv_udp_send_cb $callback
+         * @return integer
+         */
+        public function send(string $data, \UVSockAddr $addr, callable $callback): int
+        {
+            $address = \uv_address_to_array($addr);
+            $ip = $address['address'];
+            if ($addr instanceof \UVSockAddrIPv4)
+                $this->uv_sock = $ip === '0.0.0.0' ? \uv_ip4_addr('127.0.0.1', $address['port']) : $addr;
+            else
+                $this->uv_sock = $ip === '::' ? \uv_ip6_addr('::1', $address['port']) : $addr;
+
+            $send_req = \UVUdpSend::init('uv_udp_send_t');
+            $buf = \uv_buf_init($data);
+            \zval_add_ref($send_req);
+            return \uv_ffi()->uv_udp_send(
+                $send_req(),
+                $this->uv_struct_type,
+                $buf(),
+                1,
+                \uv_sockaddr($this->uv_sock),
+                function (CData $req, int $status) use ($callback, $send_req, $buf) {
+                    $callback($this, $status);
+                    if (!\uv_is_closing($this)) { /* send_cb is invoked *before* the handle is marked as inactive - uv_close() will thus *not* increment the refcount and we must then not delete the refcount here */
+                        \zval_del_ref($this);
+                    }
+
+                    $buf->free();
+                    \zval_del_ref($send_req);
+                    \zval_del_ref($callback);
+                }
+            );
+        }
     }
 }
 
@@ -1267,6 +1343,7 @@ if (!\class_exists('UVBuffer')) {
         }
     }
 }
+
 if (!\class_exists('Addrinfo')) {
     final class Addrinfo extends \UVTypes
     {
@@ -1304,6 +1381,15 @@ if (!\class_exists('UVConnect')) {
      * @return uv_connect_t **pointer** by invoking `$UVConnect()`
      */
     final class UVConnect extends \UVRequest
+    {
+    }
+}
+
+if (!\class_exists('UVUdpSend')) {
+    /**
+     * @return uv_udp_send_t **pointer** by invoking `$UVUdpSend()`
+     */
+    final class UVUdpSend extends \UVRequest
     {
     }
 }

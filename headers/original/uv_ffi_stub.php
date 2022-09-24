@@ -8,6 +8,14 @@ interface uv__io_cb extends closure
 interface uv_alloc_cb extends closure
 {
 }
+/** @var callable (uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf, const struct sockaddr *addr, unsigned flags) */
+interface uv_udp_recv_cb extends closure
+{
+}
+/** @var callable (uv_udp_send_t *req, int status) */
+interface uv_udp_send_cb extends closure
+{
+}
 /** @var callable (uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) */
 interface uv_read_cb extends closure
 {
@@ -113,6 +121,9 @@ abstract class uv_handle_t extends FFI\CData
 }
 /** Base request */
 abstract class uv_req_t extends FFI\CData
+{
+}
+abstract class uv_udp_send_t extends uv_req_t
 {
 }
 /**Write request type. */
@@ -785,13 +796,14 @@ interface FFI
     /** @return int */
     public function uv_inet_pton(int $af, const_char $src, void_ptr &$dst);
 
-    public function uv_udp_init(uv_loop_t $loop = null);
+    /** @return int */
+    public function uv_udp_init(uv_loop_t &$loop, uv_udp_t &$handle);
 
-    public function uv_udp_bind(UVUdp $handle, UVSockAddr $address, int $flags = 0);
+    /** @return int */
+    public function uv_udp_bind(uv_udp_t &$handle, sockaddr &$addr, int $flags);
 
-    public function uv_udp_bind6(UVUdp $handle, UVSockAddr $address, int $flags = 0);
-
-    public function uv_udp_recv_start(UVUdp $handle, callable $callback);
+    /** @return int */
+    public function uv_udp_recv_start(uv_udp_t &$handle, uv_alloc_cb $alloc_cb, uv_udp_recv_cb $recv_cb);
 
     public function uv_udp_recv_stop(UVUdp $handle);
 
@@ -803,7 +815,8 @@ interface FFI
 
     public function uv_udp_set_broadcast(UVUdp $handle, bool $enabled);
 
-    public function uv_udp_send(UVUdp $handle, string $data, UVSockAddr $uv_addr, callable $callback);
+    /** @return int */
+    public function uv_udp_send(uv_udp_send_t &$req, uv_udp_t &$handle, uv_buf_t &$bufs, int $nbufs, sockaddr &$addr, uv_udp_send_cb $send_cb);
 
     public function uv_udp_send6(UVUdp $handle, string $data, UVSockAddrIPv6 $uv_addr6, callable $callback);
 
