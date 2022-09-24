@@ -1552,25 +1552,37 @@ if (!\function_exists('uv_loop_init')) {
 
     /**
      * Bind the pipe to a file path (Unix) or a name (Windows).
+     * - Note: Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes, typically between 92 and 108 bytes.
      *
      * @param UVPipe $handle uv pipe handle.
-     * @param string $name dunnno. maybe file descriptor.
+     * @param string $named filepath.
      *
      * @return int
+     * @link http://docs.libuv.org/en/v1.x/pipe.html?highlight=uv_pipe_bind#c.uv_pipe_bind
      */
-    function uv_pipe_bind(\UVPipe $handle, string $name)
+    function uv_pipe_bind(\UVPipe $handle, string $named)
     {
+        $error = \uv_ffi()->uv_pipe_bind($handle(), $named);
+        if ($error) {
+            \ze_ffi()->zend_error(\E_WARNING, "%s", \uv_strerror($error));
+        }
+
+        return $error;
     }
 
     /**
      * Connect to the Unix domain socket or the named pipe.
+     * - Note: Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes, typically between 92 and 108 bytes.
      *
      * @param UVPipe $handle uv pipe handle.
      * @param string $path named pipe path.
-     * @param callable $callback this callback parameter expect (\UVPipe $pipe, int $status).
+     * @param callable|uv_connect_cb $callback callback expect (\UVPipe $pipe, int $status).
+     * @return void
+     * @link http://docs.libuv.org/en/v1.x/pipe.html?highlight=uv_pipe_bind#c.uv_pipe_connect
      */
-    function uv_pipe_connect(\UVPipe $handle, string $path, callable $callback)
+    function uv_pipe_connect(\UVPipe $handle, string $path, callable $callback): void
     {
+        $handle->connect($path, $callback);
     }
 
     /**

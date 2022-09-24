@@ -704,9 +704,11 @@ interface FFI
 
     public function uv_kill(int $pid, int $signal);
 
-    public function uv_pipe_bind(UVPipe $handle, string $name);
+    /** @return int */
+    public function uv_pipe_bind(uv_pipe_t &$handle, const_char &$name);
 
-    public function uv_pipe_connect(UVPipe $handle, string $path, callable $callback);
+    /** @return void */
+    public function uv_pipe_connect(uv_connect_t &$req, uv_pipe_t &$handle, const_char &$name, uv_connect_cb $cb);
 
     public function uv_pipe_pending_instances(UVPipe $handle, $count);
 

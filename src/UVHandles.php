@@ -257,11 +257,26 @@ if (!\class_exists('UVPipe')) {
                 }
             }
 
-            $status = \uv_ffi()->uv_pipe_open($this->__invoke(), $io);
+            $status = \uv_ffi()->uv_pipe_open($this->uv_struct_type, $io);
             if ($isPipeEmulated && $which === 1)
                 $this->emulated($pipe[0]);
 
             return $status;
+        }
+
+        public function connect(string $path, callable $callback): void
+        {
+            $req = \UVConnect::init('struct uv_connect_s');
+            \zval_add_ref($req);
+            \uv_ffi()->uv_pipe_connect(
+                $req(),
+                $this->uv_struct_type,
+                $path,
+                function (CData $connect, int $status) use ($callback, $req) {
+                    $callback($this, $status);
+                    \zval_del_ref($req);
+                }
+            );
         }
 
         /**
@@ -558,7 +573,7 @@ if (!\class_exists('UVPoll')) {
                 $callback($this, $status, $events, $this->fd);
             };
 
-            return \uv_ffi()->uv_poll_start($this->__invoke(), $events, $uv_poll_cb);
+            return \uv_ffi()->uv_poll_start($this->uv_struct_type, $events, $uv_poll_cb);
         }
     }
 }
@@ -590,7 +605,7 @@ if (!\class_exists('UVFsPoll')) {
                 $callback($this, $status, \uv_stat_to_zval($prev), \uv_stat_to_zval($curr));
             };
 
-            return \uv_ffi()->uv_fs_poll_start($this->__invoke(), $uv_fs_poll_cb, $path, $interval);
+            return \uv_ffi()->uv_fs_poll_start($this->uv_struct_type, $uv_fs_poll_cb, $path, $interval);
         }
     }
 }
@@ -1273,7 +1288,7 @@ if (!\class_exists('UVFsEvent')) {
                 $callback($this, $filename, $events, $status);
             };
 
-            return \uv_ffi()->uv_fs_event_start($this->__invoke(), $uv_fs_event_cb, $path, $flags);
+            return \uv_ffi()->uv_fs_event_start($this->uv_struct_type, $uv_fs_event_cb, $path, $flags);
         }
     }
 }
