@@ -3,7 +3,7 @@ Check for uv_rwlock
 --INI--
 track_errors=0
 --SKIPIF--
-<?php if (extension_loaded("ffi")) print "skip"; ?>
+<?php if (!extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';
@@ -24,8 +24,8 @@ if (uv_rwlock_tryrdlock($lock)) {
 }
 
 uv_rwlock_rdunlock($lock);
---EXPECT--
+--EXPECTF--
 OK
 OK
 
-Notice: Unknown: uv_rwlock: still locked resource detected; forcing rdunlock in Unknown on line 0
+PHP Notice:  uv_rwlock: still locked resource detected; forcing rdunlock in %s

@@ -3121,3 +3121,26 @@ typedef struct _php_uv_s
     uv_signal_t signal;
   } uv;
 } php_uv_t;
+
+enum php_uv_lock_type
+{
+  IS_UV_RWLOCK = 1,
+  IS_UV_RWLOCK_RD = 2,
+  IS_UV_RWLOCK_WR = 3,
+  IS_UV_MUTEX = 4,
+  IS_UV_SEMAPHORE = 5,
+};
+
+typedef struct _php_uv_lock_s
+{
+  void_t std;
+
+  int locked;
+  enum php_uv_lock_type type;
+  union
+  {
+    uv_rwlock_t rwlock;
+    uv_mutex_t mutex;
+    uv_sem_t semaphore;
+  } lock;
+} php_uv_lock_t;

@@ -2250,28 +2250,38 @@ if (!\function_exists('uv_loop_init')) {
     /**
      * Initialize rwlock handle.
      *
-     * @return UVLock returns uv rwlock handle.
+     * @return int|UVLock returns uv rwlock handle.
+     * @link http://docs.libuv.org/en/v1.x/guide/threads.html?highlight=uv_rwlock_init#locks
      */
     function uv_rwlock_init()
     {
+        $lock = \UVLock::init('_php_uv_lock_s', 'rwlock');
+        $status = \uv_ffi()->uv_rwlock_init($lock());
+
+        return $status === 0 ? $lock : $status;
     }
 
     /**
      * Set read lock.
      *
      * @param UVLock $handle UV handle (\UV rwlock).
+     * @return void
      */
     function uv_rwlock_rdlock(\UVLock $handle)
     {
+        $handle->rdlock();
     }
 
     /**
+     * Try to set read lock.
+     *
      * @param UVLock $handle
      *
      * @return bool
      */
     function uv_rwlock_tryrdlock(\UVLock $handle)
     {
+        return $handle->tryrdlock();
     }
 
     /**
@@ -2283,6 +2293,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_rwlock_rdunlock(\UVLock $handle)
     {
+        $handle->rdunlock();
     }
 
     /**
@@ -2297,59 +2308,75 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
+     * Try to set write lock.
+     *
      * @param UVLock $handle
+     *
+     * @return bool
      */
     function uv_rwlock_trywrlock(\UVLock $handle)
     {
+        return $handle->trywrlock();
     }
 
     /**
      * Unlock write lock.
      *
      * @param UVLock $handle UV handle (\UV rwlock).
+     *
+     * @return void
      */
     function uv_rwlock_wrunlock(\UVLock $handle)
     {
+        $handle->wrunlock();
     }
 
     /**
      * Initialize mutex handle.
      *
-     * @return UVLock uv mutex handle
+     * @return int|UVMutex mutex handle
      */
     function uv_mutex_init()
     {
+        $mutex = \UVMutex::init('_php_uv_lock_s', 'mutex');
+        $status = \uv_ffi()->uv_mutex_init($mutex());
+
+        return $status === 0 ? $mutex : $status;
     }
 
     /**
      * Lock mutex.
      *
-     * @param UVLock $lock UV handle (\UV mutex).
+     * @param UVMutex $lock mutex handle
      *
      * @return void
      */
-    function uv_mutex_lock(\UVLock $lock)
+    function uv_mutex_lock(\UVMutex $lock)
     {
     }
 
     /**
      * Unlock mutex.
      *
-     * @param UVLock $lock UV handle (\UV mutex).
+     * @param UVMutex $lock mute handle
      *
      * @return void
      */
-    function uv_mutex_unlock(\UVLock $lock)
+    function uv_mutex_unlock(\UVMutex $lock)
     {
+        $lock->unlock();
     }
 
     /**
-     * @param UVLock $lock
+     * Try to unlock mutex.
+     *
+     * @param UVMutex $lock
      *
      * @return bool
      */
-    function uv_mutex_trylock(\UVLock $lock)
+    function uv_mutex_trylock(\UVMutex $lock)
     {
+        return $lock->trylock();
     }
 
     /**

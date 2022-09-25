@@ -123,10 +123,22 @@ abstract class uv_handle_t extends FFI\CData
 abstract class uv_req_t extends FFI\CData
 {
 }
+/** Read-write lock data type. */
+abstract class uv_rwlock_t extends FFI\CData
+{
+}
+/** Mutex data type. */
+abstract class uv_mutex_t extends uv_rwlock_t
+{
+}
+/** Semaphore data type. */
+abstract class uv_sem_t extends uv_rwlock_t
+{
+}
 abstract class uv_udp_send_t extends uv_req_t
 {
 }
-/**Write request type. */
+/** Write request type. */
 abstract class uv_write_t extends uv_req_t
 {
 }
@@ -835,33 +847,62 @@ interface FFI
 
     public function uv_loadavg();
 
-    public function uv_rwlock_init();
+    /** @return int */
+    public function uv_rwlock_init(uv_rwlock_t &$rwlock);
 
-    public function uv_rwlock_rdlock(UVLock $handle);
+    /** @return void */
+    public function uv_rwlock_destroy(uv_rwlock_t &$rwlock);
 
-    public function uv_rwlock_tryrdlock(UVLock $handle);
+    /** @return void */
+    public function uv_rwlock_rdlock(uv_rwlock_t &$rwlock);
 
-    public function uv_rwlock_rdunlock(UVLock $handle);
+    /** @return int */
+    public function uv_rwlock_tryrdlock(uv_rwlock_t &$rwlock);
 
-    public function uv_rwlock_wrlock(UVLock $handle);
+    /** @return void */
+    public function uv_rwlock_rdunlock(uv_rwlock_t &$rwlock);
 
-    public function uv_rwlock_trywrlock(UVLock $handle);
+    /** @return void */
+    public function uv_rwlock_wrlock(uv_rwlock_t &$rwlock);
 
-    public function uv_rwlock_wrunlock(UVLock $handle);
+    /** @return int */
+    public function uv_rwlock_trywrlock(uv_rwlock_t &$rwlock);
 
-    public function uv_mutex_init();
+    /** @return void */
+    public function uv_rwlock_wrunlock(uv_rwlock_t &$rwlock);
 
-    public function uv_mutex_lock(UVLock $lock);
+    /** @return int */
+    public function uv_mutex_init(uv_mutex_t &$handle);
 
-    public function uv_mutex_trylock(UVLock $lock);
+    /** @return void */
+    public function uv_mutex_lock(uv_mutex_t &$handle);
 
-    public function uv_sem_init(int $value);
+    /** @return int */
+    public function uv_mutex_trylock(uv_mutex_t &$handle);
 
-    public function uv_sem_post(UVLock $sem);
+    /** @return int */
+    public function uv_mutex_init_recursive(uv_mutex_t &$handle);
 
-    public function uv_sem_wait(UVLock $sem);
+    /** @return void */
+    public function uv_mutex_destroy(uv_mutex_t &$handle);
 
-    public function uv_sem_trywait(UVLock $sem);
+    /** @return void */
+    public function uv_mutex_unlock(uv_mutex_t &$handle);
+
+    /** @return int */
+    public function uv_sem_init(uv_sem_t &$sem, int $value);
+
+    /** @return void */
+    public function uv_sem_destroy(uv_sem_t &$sem);
+
+    /** @return void */
+    public function uv_sem_post(uv_sem_t &$sem);
+
+    /** @return void */
+    public function uv_sem_wait(uv_sem_t &$sem);
+
+    /** @return int */
+    public function uv_sem_trywait(uv_sem_t &$sem);
 
     public function uv_hrtime();
 

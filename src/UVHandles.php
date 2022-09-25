@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use FFI\CData;
+use FFI\CType;
 use ZE\Zval;
 use ZE\Resource;
 use ZE\HashTable;
@@ -840,7 +841,108 @@ if (!\class_exists('UVLock')) {
      * The API largely follows the pthreads API.
      * @return uv_rwlock_t **pointer** by invoking `$UVLock()`
      */
-    final class UVLock
+    class UVLock extends \UVThreader
+    {
+        public function rdlock()
+        {
+            if ($this->struct_base->locked == 0x01) {
+                \ze_ffi()->zend_error(\E_WARNING, "Cannot acquire a read lock while holding a write lock");
+                return false;
+            }
+
+            \uv_ffi()->uv_rwlock_rdlock($this->struct_ptr);
+            if (!$this->struct_base->locked++) {
+                $this->struct_base->locked = 0x02;
+            }
+        }
+
+        public function tryrdlock()
+        {
+            if ($this->struct_base->locked == 0x01) {
+                \ze_ffi()->zend_error(\E_WARNING, "Cannot acquire a read lock while holding a write lock");
+                return false;
+            }
+
+            $error = \uv_ffi()->uv_rwlock_tryrdlock($this->struct_ptr);
+            if ($error == 0) {
+                if (!$this->struct_base->locked++) {
+                    $this->struct_base->locked = 0x02;
+                }
+
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        public function rdunlock()
+        {
+            if ($this->struct_base->locked > 0x01) {
+                \uv_ffi()->uv_rwlock_rdunlock($this->struct_ptr);
+                if (--$this->struct_base->locked == 0x01) {
+                    $this->struct_base->locked = 0x00;
+                }
+            }
+        }
+
+        public function trywrlock()
+        {
+            if ($this->struct_base->locked) {
+                \ze_ffi()->zend_error(E_WARNING, "Cannot acquire a write lock when already holding a lock");
+                return false;
+            }
+
+            $error = \uv_ffi()->uv_rwlock_trywrlock($this->struct_ptr);
+            if ($error == 0) {
+                $this->struct_base->locked = 0x01;
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        public function wrunlock()
+        {
+            if ($this->struct_base->locked  == 0x01) {
+                \uv_ffi()->uv_rwlock_wrunlock($this->struct_ptr);
+                $this->struct_base->locked = 0x00;
+            }
+        }
+    }
+}
+
+if (!\class_exists('UVMutex')) {
+    /**
+     * @return uv_mutex_t **pointer** by invoking `$UVMutex()`
+     */
+    final class UVMutex extends \UVLock
+    {
+        public function trylock()
+        {
+            $error = \uv_ffi()->uv_mutex_trylock($this->struct_ptr);
+            if ($error == 0) {
+                $this->struct_base->locked = 0x01;
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        public function unlock()
+        {
+            if ($this->struct_base->locked == 0x01) {
+                \uv_ffi()->uv_mutex_unlock($this->struct_ptr);
+                $this->struct_base->locked = 0x00;
+            }
+        }
+    }
+}
+
+if (!\class_exists('UVSemaphore')) {
+    /**
+     * @return uv_sem_t **pointer** by invoking `$UVSemaphore()`
+     */
+    final class UVSemaphore extends \UVLock
     {
     }
 }

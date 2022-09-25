@@ -8,6 +8,7 @@
             "src/UVHandler.php",
             "src/UVHandles.php",
             "src/UVInterface.php",
+            "src/UVThreader.php",
             "src/UVTypes.php"
         ]
     }
