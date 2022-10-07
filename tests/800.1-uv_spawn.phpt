@@ -1,3 +1,8 @@
+--TEST--
+Test uv_spawn environment
+--SKIPIF--
+<?php if (!extension_loaded("ffi")) print "skip"; ?>
+--FILE--
 <?php
 require 'vendor/autoload.php';
 
@@ -18,6 +23,7 @@ uv_spawn(
     __DIR__,
     array("KEY" => "hello"),
     function ($process, $stat, $signal) {
+        echo 'done';
         uv_close($process, function () {
         });
     }
@@ -31,3 +37,6 @@ uv_read_start($out, function ($out, $nRead, $buffer) {
 });
 
 uv_run();
+--EXPECTF--
+HELLO string(5) "hello"
+done

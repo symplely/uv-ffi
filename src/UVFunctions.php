@@ -392,7 +392,7 @@ if (!\function_exists('uv_loop_init')) {
      * Set the TTY using the specified terminal mode.
      *
      * @param UVTty $tty
-     * @param int $mode
+     * @param int|uv_tty_mode_t $mode
      * - `UV::TTY_MODE_NORMAL` - Initial/normal terminal mode
      * - `UV::TTY_MODE_RAW` - Raw input mode (On Windows, ENABLE_WINDOW_INPUT is also enabled)
      * - `UV::TTY_MODE_IO` - Binary-safe I/O mode for IPC (Unix-only)
@@ -418,6 +418,31 @@ if (!\function_exists('uv_loop_init')) {
     function uv_tty_reset_mode()
     {
         return \uv_ffi()->uv_tty_reset_mode();
+    }
+
+    /**
+     * Gets the current Window size. On success it returns 0.
+     *
+     * @param UVTty $tty
+     * @param int $width
+     * @param int $height
+     *
+     * @return int
+     */
+    function uv_tty_get_winsize(\UVTty $tty, &$width, &$height)
+    {
+        $w = \zval_stack(1);
+        $h = \zval_stack(2);
+
+        $_width = \c_int_type('int');
+        $_height = \c_int_type('int');
+
+        $error = \uv_ffi()->uv_tty_get_winsize($tty(), $_width(), $_height());
+
+        $w->change_value($_width()[0]);
+        $h->change_value($_height()[0]);
+
+        return $error;
     }
 
     /**
@@ -1406,30 +1431,56 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
-     * returns current exepath. basically this will returns current php path.
+     * Gets the executable path, basically this will returns current php _binary_ file.
      *
      * @return string
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_chdir#c.uv_exepath
      */
-    function uv_exepath()
+    function uv_exepath(): string
     {
+        $ptr = \ffi_characters(256);
+        $size = \c_int_type('size_t', 'uv', \FFI::sizeof($ptr));
+        $status = \uv_ffi()->uv_exepath($ptr, $size());
+
+        return ($status === 0) ? \ffi_string($ptr) : $status;
     }
 
     /**
-     * returns current working directory.
+     * Change working directory.
      *
-     * @return string
+     * @param string $directory
+     * @return bool
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_chdir#c.uv_chdir
      */
-    function uv_cwd()
+    function uv_chdir(string $directory): bool
     {
+        return \uv_ffi()->uv_chdir($directory) === 0;
     }
 
     /**
-     * returns current cpu informations
+     * Gets the current working directory.
+     *
+     * @return string
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_chdir#c.uv_cwd
+     */
+    function uv_cwd(): string
+    {
+        $ptr = \ffi_characters(256);
+        $size = \c_int_type('size_t', 'uv', \FFI::sizeof($ptr));
+        $status = \uv_ffi()->uv_cwd($ptr, $size());
+
+        return ($status === 0) ? \ffi_string($ptr) : $status;
+    }
+
+    /**
+     * Gets information about the CPUs on the system.
      *
      * @return array
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_cpu_info#c.uv_cpu_info
      */
-    function uv_cpu_info()
+    function uv_cpu_info(): array
     {
+        return \UVMisc::cpu_info();
     }
 
     /**
@@ -1466,6 +1517,29 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
+     * Creates a container for each stdio handle or fd to be passed to a child process.
+     * - Flags specify how a stdio should be transmitted to the child process.
+     *
+     * @param UV|resource $fd UV Stream or File Descriptor
+     * @param integer $flags uv_stdio_flags:
+     * - `UV::IGNORE`
+     * - `UV::CREATE_PIPE`
+     * - `UV::INHERIT_FD`
+     * - `UV::INHERIT_STREAM`
+     * - `UV::READABLE_PIPE`
+     * - `UV::WRITABLE_PIPE`
+     * - `UV::NONBLOCK_PIPE`
+     * - `UV::OVERLAPPED_PIPE`
+     *
+     * @return false|UVStdio
+     * @link http://docs.libuv.org/en/v1.x/process.html#c.uv_stdio_container_t
+     */
+    function uv_stdio_new($fd, int $flags = 0)
+    {
+        return (new \UVStdio())->create($fd, $flags);
+    }
+
+    /**
      * Initializes the process handle and starts the process.
      * If the process is successfully spawned, this function will return `UVProcess`
      * handle. Otherwise, the negative error code corresponding to the reason it couldn’t
@@ -1480,61 +1554,83 @@ if (!\function_exists('uv_loop_init')) {
      * @param null|array $args Command line arguments.
      * - On Windows this uses CreateProcess which concatenates the arguments into a string this can
      * cause some strange errors. See the UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS flag on uv_process_flags.
-     * @param null|array $stdio the file descriptors that will be made available to the child process.
-     * - The convention is that stdio[0] points to stdin, fd 1 is used for stdout, and fd 2 is stderr.
+     * @param null|array[]|UVStdio $stdio Array of **UVStdio** created with `uv_stdio_new()` which:
+     * - Flags specifying how the stdio container should be passed to the child.
+     * - The file descriptors that will be made available to the child process.
+     * - The convention stdio[0] points to `fd 0` for stdin, `fd 1` is used for stdout, and `fd 2` is stderr.
      * - Note: On Windows file descriptors greater than 2 are available to the child process only if
      * the child processes uses the MSVCRT runtime.
      * @param null|string $cwd Current working directory for the subprocess.
      * @param array $env Environment for the new process. If NULL the parents environment is used.
-     * @param null|callable $callback Callback called after the process exits.
+     * @param null|callable|uv_exit_cb $callback Callback called after the process exits.
      * - Expects (\UVProcess $process, $stat, $signal)
-     * @param null|int $flags stdio flags
-     * - Flags specifying how the stdio container should be passed to the child.
-     * @param null|array $options
+     * @param null|int $flags  Various process flags that control how `uv_spawn()` behaves:
+     * - `UV::PROCESS_SETUID`
+     * - `UV::PROCESS_SETGID`
+     * - `UV::PROCESS_WINDOWS_VERBATIM_ARGUMENTS`
+     * - `UV::PROCESS_DETACHED`
+     * - `UV::PROCESS_WINDOWS_HIDE`
+     * - `UV::PROCESS_WINDOWS_HIDE_CONSOLE`
+     * - `UV::PROCESS_WINDOWS_HIDE_GUI`
+     * @param null|array $uid_gid options
+     * Can change the child process’ user/group id. This happens only when the appropriate bits are set in the flags fields.
+     * - Note:  This is not supported on Windows, uv_spawn() will fail and set the error to UV::ENOTSUP.
      *
-     * @return UVProcess
+     * @return int|UVProcess
+     * @link http://docs.libuv.org/en/v1.x/process.html?highlight=uv_spawn#c.uv_spawn
      */
     function uv_spawn(
         UVLoop $loop,
         string $command,
         array $args,
         array $stdio,
-        string $cwd,
+        string $cwd = null,
         array $env = array(),
-        callable $callback,
-        int $flags = 0,
-        array $options = []
+        callable $callback = null,
+        int $flags = \UV::PROCESS_WINDOWS_HIDE,
+        array $uid_gid = []
     ) {
+        $process = \UVProcess::init($loop, 'struct _php_uv_s', 'process');
+        return $process->spawn($loop, $command, $args, $stdio, $cwd, $env, $callback, $flags, $uid_gid);
     }
 
     /**
-     * send signal to specified uv process.
+     * Sends the specified signal to the given process handle.
+     * - Check the documentation on signal support, specially on Windows.
      *
      * @param UVProcess $process
      * @param int $signal
+     * @link http://docs.libuv.org/en/v1.x/process.html?highlight=uv_spawn#c.uv_process_kill
      */
     function uv_process_kill(\UVProcess $process, int $signal)
     {
+        return $process->kill($signal);
     }
 
     /**
      * Returns process id.
      *
      * @param UVProcess $process
-     * @return int
+     * @return int uv_pid_t
+     * @link http://docs.libuv.org/en/v1.x/process.html?highlight=uv_spawn#c.uv_process_get_pid
      */
     function uv_process_get_pid(\UVProcess $process)
     {
+        return $process->get_pid();
     }
 
     /**
-     * send signal to specified pid.
+     * Sends the specified signal to the given PID.
+     * - Check the documentation on signal support, specially on Windows.
      *
-     * @param int $pid process id
+     * @param int|uv_pid_t $pid process id
      * @param int $signal
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/process.html?highlight=uv_spawn#c.uv_kill
      */
     function uv_kill(int $pid, int $signal)
     {
+        return \uv_ffi()->uv_kill($pid, $signal);
     }
 
     /**
@@ -1593,16 +1689,6 @@ if (!\function_exists('uv_loop_init')) {
      * @param void $count
      */
     function uv_pipe_pending_instances(\UVPipe $handle, $count)
-    {
-    }
-
-    /**
-     * @param UV|resource $fd
-     * @param integer $flags
-     *
-     * @return UVStdio
-     */
-    function uv_stdio_new($fd, int $flags)
     {
     }
 
@@ -2242,9 +2328,15 @@ if (!\function_exists('uv_loop_init')) {
      * Note: returns [0,0,0] on Windows (i.e., it’s not implemented).
      *
      * @return array
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_loadavg#c.uv_loadavg
      */
     function uv_loadavg()
     {
+        $average = \c_array_type('double', 'uv', 3);
+
+        \uv_ffi()->uv_loadavg($average());
+
+        return [$average()[0], $average()[1], $average()[2]];
     }
 
     /**
@@ -2255,7 +2347,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_rwlock_init()
     {
-        $lock = \UVLock::init('_php_uv_lock_s', 'rwlock');
+        $lock = \UVLock::struct_init('_php_uv_lock_s', 'rwlock');
         $status = \uv_ffi()->uv_rwlock_init($lock());
 
         return $status === 0 ? $lock : $status;
@@ -2338,7 +2430,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_mutex_init()
     {
-        $mutex = \UVMutex::init('_php_uv_lock_s', 'mutex');
+        $mutex = \UVMutex::struct_init('_php_uv_lock_s', 'mutex');
         $status = \uv_ffi()->uv_mutex_init($mutex());
 
         return $status === 0 ? $mutex : $status;
@@ -2429,9 +2521,11 @@ if (!\function_exists('uv_loop_init')) {
      * this value will always be in nanoseconds.
      *
      * @return int
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_hrtime#c.uv_hrtime
      */
     function uv_hrtime()
     {
+        return \uv_ffi()->uv_hrtime();
     }
 
     /**
@@ -2801,43 +2895,53 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
-     * Gets the current Window size. On success it returns 0.
-     *
-     * @param UVTty $tty
-     * @param int $width
-     * @param int $height
-     *
-     * @return int
-     */
-    function uv_tty_get_winsize(\UVTty $tty, int &$width, int &$height)
-    {
-    }
-
-    /**
-     * Gets the current system uptime.
+     * Gets the current system uptime. Depending on the system full or fractional seconds are returned.
      *
      * @return float
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_resident_set_memory#c.uv_uptime
      */
     function uv_uptime()
     {
+        $size = \c_int_type('double', 'uv');
+        $status = \uv_ffi()->uv_uptime($size());
+
+        return $status === 0 ? $size()[0] : $status;
     }
 
     /**
-     * Returns current free memory size.
+     * Gets the amount of free memory available in the system, as reported by the kernel (in bytes).
      *
      * @return int
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_get_free_memory#c.uv_get_free_memory
      */
     function uv_get_free_memory()
     {
+        return \uv_ffi()->uv_get_free_memory();
     }
 
     /**
-     * Gets memory information (in bytes).
+     * Gets the total amount of physical memory in the system (in bytes).
      *
      * @return int
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_get_free_memory#c.uv_get_total_memory
      */
     function uv_get_total_memory()
     {
+        return \uv_ffi()->uv_get_total_memory();
+    }
+
+    /**
+     * Gets the resident set size (RSS) for the current process.
+     *
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_resident_set_memory#c.uv_resident_set_memory
+     */
+    function uv_resident_set_memory()
+    {
+        $size = \c_int_type('size_t', 'uv');
+        $status = \uv_ffi()->uv_resident_set_memory($size());
+
+        return $status === 0 ? $size()[0] : $status;
     }
 
     /**
@@ -2847,19 +2951,11 @@ if (!\function_exists('uv_loop_init')) {
      * It must be freed by the user, calling uv_free_interface_addresses().
      *
      * @return array
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_interface_addresses#c.uv_interface_addresses
      */
     function uv_interface_addresses()
     {
-    }
-
-    /**
-     * Change working directory.
-     *
-     * @param string $directory
-     * @return bool
-     */
-    function uv_chdir(string $directory)
-    {
+        return \UVMisc::interface_addresses();
     }
 
     /**
@@ -2894,15 +2990,6 @@ if (!\function_exists('uv_loop_init')) {
      * @return array ['address'], ['port'], ['family']
      */
     function uv_udp_getsockname(\UVUdp $uv_sock)
-    {
-    }
-
-    /**
-     * Gets the resident set size (RSS) for the current process.
-     *
-     * @return int
-     */
-    function uv_resident_set_memory()
     {
     }
 

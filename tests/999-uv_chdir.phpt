@@ -1,7 +1,7 @@
 --TEST--
 Check for uv_chdir
 --SKIPIF--
-<?php if (extension_loaded("ffi")) print "skip"; ?>
+<?php if (!extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';
@@ -12,6 +12,5 @@ if (uv_cwd() == dirname(__FILE__)) {
 } else {
   echo "FAILED: expected " . dirname(__FILE__) . ", but " . uv_cwd();
 }
-?>
 --EXPECTF--
 OK

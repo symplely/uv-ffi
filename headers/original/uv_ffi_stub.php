@@ -178,6 +178,13 @@ abstract class uv_signal_t extends uv_handle_t
 abstract class uv_process_t extends uv_handle_t
 {
 }
+abstract class uv_process_options_s extends \FFI\CData
+{
+}
+/** Options for spawning the process (passed to uv_spawn(). */
+abstract class uv_process_options_t extends uv_process_options_s
+{
+}
 /** Stdio handle */
 abstract class uv_stdio_container_t extends uv_handle_t
 {
@@ -235,12 +242,21 @@ abstract class uint64_t extends int
 abstract class int64_t extends int
 {
 }
+abstract class uv_pid_t extends int
+{
+}
 /** Abstract representation of a file descriptor. On Unix systems this is a typedef of `int`
  * and on Windows a `HANDLE` */
 abstract class uv_os_fd_t extends Resource
 {
 }
 abstract class uv_lib_t extends UVTypes
+{
+}
+abstract class uv_cpu_info_t extends \CStruct
+{
+}
+abstract class uv_interface_address_t extends \CStruct
 {
 }
 /** Cross platform representation of a file handle. */
@@ -253,21 +269,10 @@ abstract class uv_os_sock_t extends php_socket_t
 abstract class uv_buf_t extends FFI\CData
 {
 }
-abstract class sockaddr_storage extends FFI\CData
-{
-}
 abstract class UVSockAddr extends sockaddr
 {
 }
-abstract class sockaddr_in extends sockaddr
-{
-}
-abstract class sockaddr_in6 extends sockaddr
-{
-}
-abstract class addrinfo extends FFI\CData
-{
-}
+
 abstract class uv_uid_t extends string
 {
 }
@@ -298,19 +303,6 @@ abstract class UVGetAddrinfo extends uv_getaddrinfo_t
 abstract class UVGetNameinfo extends uv_getnameinfo_t
 {
 }
-abstract class DWORD extends int
-{
-}
-abstract class HANDLE extends void_ptr
-{
-}
-abstract class char extends FFI\CData
-{
-}
-abstract class const_char extends string
-{
-}
-
 
 abstract class UVTcp extends uv_tcp_t
 {
@@ -366,19 +358,13 @@ abstract class UV extends uv_handle_t
 abstract class uv_shutdown_t extends uv_req_t
 {
 }
-abstract class int_ptr extends FFI\CData
-{
-}
-abstract class void_t extends FFI\CData
-{
-}
-abstract class void_ptr extends void_t
-{
-}
-abstract class sockaddr extends FFI\CData
-{
-}
 abstract class uv_connect_t extends uv_req_t
+{
+}
+abstract class uv_tty_mode_t extends int
+{
+}
+abstract class uv_tty_vtermstate_t extends int
 {
 }
 
@@ -448,12 +434,6 @@ interface FFI
 
     /** @return int */
     public function uv_shutdown(uv_shutdown_t &$req, uv_stream_t &$handle, uv_shutdown_cb $cb);
-
-    /** @return int */
-    public function uv_tty_init(uv_loop_t &$loop, uv_tty_t &$tty, uv_file $fd, int $readable);
-
-    /** @return int */
-    public function uv_tty_set_mode(uv_tty_t &$tty, int $mode);
 
     /** @return uv_os_fd_t */
     public function uv_get_osfhandle(int $fd);
@@ -685,11 +665,17 @@ interface FFI
     /** @return int */
     public function uv_is_active(uv_handle_t $handle);
 
-    public function uv_exepath();
+    /** @return int */
+    public function uv_exepath(char &$buffer, size_t &$size);
 
-    public function uv_cwd();
+    /** @return int */
+    public function uv_cwd(char &$buffer, size_t &$size);
 
-    public function uv_cpu_info();
+    /** @return int */
+    public function uv_cpu_info(uv_cpu_info_t &$cpu_infos, int_ptr &$count);
+
+    /** @return void */
+    public function uv_free_cpu_info(uv_cpu_info_t &$cpu_infos, int $count);
 
     /** @return int */
     public function uv_signal_init(uv_loop_t $loop = null);
@@ -698,23 +684,17 @@ interface FFI
 
     public function uv_signal_stop(UVSignal $handle);
 
-    public function uv_spawn(
-        uv_loop_t $loop,
-        string $command,
-        array $args,
-        array $stdio,
-        string $cwd,
-        array $env = array(),
-        callable $callback,
-        int $flags = 0,
-        array $options = []
-    );
+    /** @return int */
+    public function uv_spawn(uv_loop_t &$loop, uv_process_t &$handle, uv_process_options_t &$options);
 
-    public function uv_process_kill(UVProcess $process, int $signal);
+    /** @return int */
+    public function uv_process_kill(uv_process_t &$process, int $signum);
 
-    public function uv_process_get_pid(UVProcess $process);
+    /** @return int */
+    public function uv_kill(int $pid, int $signum);
 
-    public function uv_kill(int $pid, int $signal);
+    /** @return uv_pid_t */
+    public function uv_process_get_pid(uv_process_t &$process);
 
     /** @return int */
     public function uv_pipe_bind(uv_pipe_t &$handle, const_char &$name);
@@ -845,7 +825,8 @@ interface FFI
 
     public function uv_walk(uv_loop_t $loop, callable $closure, array $opaque = null);
 
-    public function uv_loadavg();
+    /** @return void */
+    public function uv_loadavg(double ...$avg);
 
     /** @return int */
     public function uv_rwlock_init(uv_rwlock_t &$rwlock);
@@ -904,8 +885,6 @@ interface FFI
     /** @return int */
     public function uv_sem_trywait(uv_sem_t &$sem);
 
-    public function uv_hrtime();
-
     /** @return int */
     //  public function uv_fs_event_init(uv_loop_t $loop, string $path, callable $callback, int $flags = 0);
 
@@ -921,19 +900,59 @@ interface FFI
     /** @return int */
     public function uv_fs_event_getpath(uv_fs_event_t &$handle, char &$buffer, size_t $size);
 
-    public function uv_tty_get_winsize(UVTty $tty, int &$width, int &$height);
+    /** @return int */
+    public function uv_tty_get_winsize(uv_tty_t &$tty, int &$width, int &$height);
 
+    /** @return int */
+    public function uv_tty_init(uv_loop_t &$loop, uv_tty_t &$tty, uv_file $fd, int $readable);
+
+    /** @return int */
     public function uv_tty_reset_mode();
 
-    public function uv_uptime();
+    /** @return int */
+    public function uv_tty_set_mode(uv_tty_t &$tty, uv_tty_mode_t $mode);
 
+    /** @return void */
+    public function uv_tty_set_vterm_state(uv_tty_vtermstate_t $state);
+
+    /** @return int */
+    public function uv_tty_get_vterm_state(uv_tty_vtermstate_t &$state);
+
+    /** @return uint64_t */
+    public function uv_uptime(double &$uptime);
+
+    /** @return uint64_t */
     public function uv_get_free_memory();
 
+    /** @return uint64_t */
     public function uv_get_total_memory();
 
-    public function uv_interface_addresses();
+    /** @return uint64_t */
+    public function  uv_get_constrained_memory();
 
-    public function uv_chdir(string $directory);
+    /** @return int */
+    public function uv_resident_set_memory(size_t &$rss);
+
+    /** @return uint64_t */
+    public function uv_hrtime();
+
+    /** @return char** */
+    public function uv_setup_args(int $argc, char &$argv);
+
+    /** @return int */
+    public function uv_get_process_title(char &$buffer, size_t $size);
+
+    /** @return int */
+    public function uv_set_process_title(const_char &$title);
+
+    /** @return int */
+    public function uv_interface_addresses(uv_interface_address_t &$addresses, int_ptr &$count);
+
+    /** @return void */
+    public function uv_free_interface_addresses(uv_interface_address_t &$addresses, int $count);
+
+    /** @return int */
+    public function uv_chdir(const_char &$dir);
 
     /** @return int */
     public function uv_tcp_getsockname(uv_tcp_t &$handle, sockaddr &$name, int_ptr &$namelen);
@@ -943,7 +962,6 @@ interface FFI
 
     public function uv_udp_getsockname(UVUdp $uv_sock);
 
-    public function uv_resident_set_memory();
 
     /** @return uv_handle_type */
     public function uv_handle_get_type(uv_handle_t &$uv);

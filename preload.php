@@ -8,6 +8,12 @@ use ZE\Zval;
 use ZE\Resource;
 use ZE\PhpStream;
 
+if (!\defined('DS'))
+    \define('DS', \DIRECTORY_SEPARATOR);
+
+if (!\defined('IS_WINDOWS'))
+    \define('IS_WINDOWS', ('\\' === \DS));
+
 if (!\defined('O_RDONLY')) {
     /**
      * Open the file for read-only access.
@@ -90,7 +96,7 @@ if (!\function_exists('uv_init')) {
      * @param object|CData $ptr
      * @return CData
      */
-    function uv_cast(string $typedef, object $ptr): CData
+    function uv_cast(string $typedef, $ptr): CData
     {
         return Core::cast('uv', $typedef, \uv_object($ptr));
     }
@@ -137,9 +143,9 @@ if (!\function_exists('uv_init')) {
      * Checks `handle` and returns the `CData` object within.
      *
      * @param UVInterface|object|CData $handle
-     * @return CData
+     * @return CData|mixed
      */
-    function uv_object($handle): CData
+    function uv_object($handle)
     {
         $handler = $handle;
         if (
@@ -311,12 +317,12 @@ if (!\function_exists('uv_init')) {
      */
     function uv_struct($typedef, bool $owned = true, bool $persistent = false): ?CData
     {
-        return Core::struct('uv', $typedef, $owned, $persistent);
+        return \Core::struct('uv', $typedef, $owned, $persistent);
     }
 
     function uv_ffi(): \FFI
     {
-        return Core::get('uv');
+        return \Core::get('uv');
     }
 
     /**
@@ -471,7 +477,7 @@ if (!\function_exists('uv_init')) {
             $scope = \FFI::cdef(\str_replace($remove, '', \file_get_contents($headers)), (empty($library) ? $lib : $library));
         }
 
-        Core::set('uv', $scope);
+        \Core::set('uv', $scope);
     }
 
     \uv_ffi_loader();

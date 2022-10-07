@@ -1,7 +1,7 @@
 --TEST--
 Check for uv_resident_set_memory
 --SKIPIF--
-<?php if (extension_loaded("ffi")) print "skip"; ?>
+<?php if (!extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';

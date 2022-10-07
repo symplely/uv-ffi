@@ -403,13 +403,13 @@ if (!\class_exists('UVTcp')) {
                     \uv_ffi()->uv_tcp_getpeername($this->uv_struct_type, $addr(), $addr_len());
                     break;
                 case 3:
-                    // \uv_ffi()->uv_udp_getsockname($udp, \uv_sockaddr($addr), $addr_len_ptr);
+                    // \uv_ffi()->uv_udp_getsockname($this->uv_struct_type, $addr(), $addr_len());
                     break;
                 default:
                     \ze_ffi()->zend_error(\E_ERROR, "unexpected type");
                     break;
             };
-            //   var_dump($addr);
+
             return \uv_address_to_array($addr);
         }
     }
@@ -674,6 +674,93 @@ if (!\class_exists('UVSignal')) {
     }
 }
 
+if (!\class_exists('UVStdio')) {
+    /**
+     * Stdio is an I/O wrapper for `uv_stdio_container_t` to be passed to uv_spawn().
+     */
+    final class UVStdio
+    {
+        protected ?\UVStream $stream = null;
+        protected ?int $flags = 0;
+        protected ?int $fd = -1;
+
+        public function __destruct()
+        {
+            $this->stream = null;
+            $this->flags = null;
+            $this->fd = null;
+        }
+
+        public function stdio(string $key = null)
+        {
+            $stdio = ['stream' => $this->stream, 'flags' => $this->flags, 'fd' => $this->fd];
+
+            return isset($stdio[$key]) ? $stdio[$key] : $stdio;
+        }
+
+        public function create($fd_handle, int $flags = 0)
+        {
+            $handle = \zval_stack(0);
+            $fd = -1;
+            if (\is_null($handle) || $handle->macro(\ZE::TYPE_P) == \ZE::IS_NULL) {
+                $flags = \UV::IGNORE;
+            } elseif ($handle->macro(\ZE::TYPE_P) == \ZE::IS_LONG) {
+                $fd = $handle->macro(\ZE::LVAL_P);
+                if ($flags & (\UV::CREATE_PIPE | \UV::INHERIT_STREAM)) {
+                    \ze_ffi()->zend_error(\E_WARNING, "flags must not be UV::CREATE_PIPE or UV::INHERIT_STREAM for resources");
+                    return false;
+                }
+
+                $flags |= \UV::INHERIT_FD;
+            } elseif ($handle->macro(\ZE::TYPE_P) == \ZE::IS_RESOURCE) {
+                $fd_resource = \fd_type('php_socket_t');
+                $fd = $fd_resource();
+                $stream = \uv_cast('php_stream *', \ze_ffi()->zend_fetch_resource_ex($handle(), NULL, \ze_ffi()->php_file_le_stream()));
+                if (\is_cdata($stream)) {
+                    if (\ze_ffi()->_php_stream_cast($stream, Resource::PHP_STREAM_AS_FD | Resource::PHP_STREAM_CAST_INTERNAL, \ffi_void($fd), 1) != \ZE::SUCCESS || $fd < 0) {
+                        \ze_ffi()->zend_error(\E_WARNING, "passed resource without file descriptor");
+                        return false;
+                    }
+                } else {
+                    \ze_ffi()->zend_error(\E_WARNING, "passed unexpected resource, expected file or socket");
+                    return false;
+                }
+
+                if ($flags & (\UV::CREATE_PIPE | \UV::INHERIT_STREAM)) {
+                    \ze_ffi()->zend_error(\E_WARNING, "flags must not be UV::CREATE_PIPE or UV::INHERIT_STREAM for resources");
+                    return false;
+                }
+
+                $flags |= \UV::INHERIT_FD;
+                $fd = $fd[0];
+                $fd_resource->add_pair($handle, $fd, $handle()->value->res->handle);
+            } elseif ($handle->macro(\ZE::TYPE_P) == \ZE::IS_OBJECT && $fd_handle instanceof UV) {
+                if ($flags & \UV::INHERIT_FD) {
+                    \ze_ffi()->zend_error(\E_WARNING, "flags must not be UV::INHERIT_FD for UV handles");
+                    return false;
+                }
+
+                if (($flags & (\UV::CREATE_PIPE | \UV::INHERIT_STREAM)) == (\UV::CREATE_PIPE | \UV::INHERIT_STREAM) || !($flags & (\UV::CREATE_PIPE | \UV::INHERIT_STREAM))) {
+                    \ze_ffi()->zend_error(\E_WARNING, "flags must be exactly one of UV::INHERIT_STREAM or UV::CREATE_PIPE for UV handles");
+                    return false;
+                }
+            } else {
+                \ze_ffi()->zend_error(\E_WARNING, "passed unexpected value, expected instance of UV, file resource or socket object");
+                return false;
+            }
+
+            $this->flags = $flags;
+            if ($handle->macro(\ZE::TYPE_P) == \ZE::IS_OBJECT) {
+                $this->stream = $fd_handle;
+            } else {
+                $this->fd = $fd;
+            }
+
+            return $this;
+        }
+    }
+}
+
 if (!\class_exists('UVProcess')) {
     /**
      * Process handles will spawn a new process and allow the user to control it and
@@ -682,6 +769,161 @@ if (!\class_exists('UVProcess')) {
      */
     final class UVProcess extends \UV
     {
+        protected array $streams = [];
+
+        public function kill(int $signal)
+        {
+            return \uv_ffi()->uv_process_kill($this->uv_struct_type, $signal);
+        }
+
+        public function get_pid()
+        {
+            return \uv_ffi()->uv_process_get_pid($this->uv_struct_type);
+        }
+
+        /**
+         * @param UVLoop $loop
+         * @param string $command
+         * @param null|array $args
+         * @param null|UVStdio[] $stdio
+         * @param null|string $cwd
+         * @param array $env
+         * @param null|callable|uv_exit_cb $callback
+         * @param null|int $flags
+         * @param null|array $options
+         *
+         * @return int|UVProcess
+         */
+        public function spawn(
+            UVLoop $loop,
+            string $command,
+            array $args,
+            array $stdio,
+            string $cwd = null,
+            array $env = array(),
+            callable $callback = null,
+            int $flags = \UV::PROCESS_WINDOWS_HIDE,
+            array $uid_gid = []
+        ) {
+            $h = \zval_stack(2);
+
+            $process_options = \c_struct_type('uv_process_options_s', 'uv');
+            $process_options->memset(0, $process_options->sizeof());
+
+            /* process stdio */
+            $streams = [];
+            $stdio_count = \count($stdio) > 0 ? \count($stdio) : 1;
+            $stdio_container = \c_array_type('uv_stdio_container_t', 'uv', $stdio_count);
+            $container = $stdio_container();
+            foreach ($stdio as $key => $value) {
+                if (!$value instanceof \UVStdio) {
+                    \ze_ffi()->zend_error(\E_ERROR, "must be instance of UVStdio");
+                }
+
+                $container[$key]->flags = $value->stdio('flags');
+                if ($container[$key]->flags & \UV::INHERIT_FD) {
+                    $container[$key]->data->fd = $value->stdio('fd');
+                } elseif ($container[$key]->flags & (\UV::CREATE_PIPE | \UV::INHERIT_STREAM)) {
+                    $stream = $value->stdio('stream');
+                    $streams[] = $stream;
+                    $container[$key]->data->stream = \uv_stream($stream);
+                } else {
+                    \ze_ffi()->zend_error(\E_WARNING, "passes unexpected stdio flags");
+                    return false;
+                }
+
+                $value->__destruct();
+            }
+            $this->streams = $streams;
+
+            /* process args */
+            $n = 0;
+            $hash_len = $h->macro(\ZE::ARRVAL_P)->nNumOfElements;
+            $commands = \ffi_char($command);
+            $command_args_char = \c_array_type('char**', 'uv', $hash_len + 2);
+            $command_args = $command_args_char();
+            $command_args[$n] = $commands;
+
+            $n++;
+            foreach ($args as $value) {
+                $command_args[$n] = \ffi_char($value);
+                $n++;
+            }
+            $command_args[$n] = NULL;
+
+            /* process env */
+            $i = 0;
+            $zenv_char = \c_array_type('char*', 'uv', \count($env) + 1);
+            $zenv = $zenv_char();
+            foreach ($env as $key => $value) {
+                $tmp_env_entry = \sprintf('%s=%s', $key, $value);
+                $zenv[$i] = \ffi_char($tmp_env_entry);
+                $i++;
+            }
+            $zenv[$i] = NULL;
+            $zenv_size = $i;
+
+            $uid = \IS_LINUX && \array_key_exists('uid', $uid_gid) ? $uid_gid['uid'] : null;
+            $gid = \IS_LINUX && \array_key_exists('gid', $uid_gid) ? $uid_gid['gid'] : null;
+
+            $options = $process_options();
+            $options->file    = $commands;
+            $options->stdio   = \ffi_void($container);
+            $options->exit_cb =  function (CData $process, int $exit_status, int $term_signal) use ($callback, $process_options) {
+                if (!\is_null($callback)) {
+                    $callback($this, $exit_status, $term_signal);
+                    \zval_del_ref($callback);
+                }
+
+                unset($exit_status);
+                unset($term_signal);
+                \ffi_free($process);
+                \zval_del_ref($process_options);
+                \zval_del_ref($this);
+            };
+
+            $options->stdio_count = $stdio_count;
+            $options->env   = \ffi_void($zenv);
+            $options->args  = \ffi_void($command_args);
+
+            if (\is_null($cwd)) {
+                $cwd = \uv_cwd();
+            }
+
+            $options->cwd   = \ffi_char($cwd);
+            $options->flags = $flags;
+            $options->uid   = $uid;
+            $options->gid   = $gid;
+
+            $ret = \uv_ffi()->uv_spawn($loop(), $this->uv_struct_type, $options);
+            if ($ret === 0) {
+                \zval_add_ref($this);
+                \zval_add_ref($process_options);
+            } else {
+                \zval_del_ref($this);
+                \zval_del_ref($process_options);
+            }
+
+            if (\is_cdata($zenv)) {
+                $p = 0;
+                while ($zenv_size > $p) {
+                    \ffi_free($zenv[$p]);
+                    $p++;
+                }
+
+                \zval_del_ref($zenv_char);
+            }
+
+            if (\is_cdata($command_args)) {
+                \zval_del_ref($command_args_char);
+            }
+
+            if (\is_cdata($container)) {
+                \zval_del_ref($stdio_container);
+            }
+
+            return $ret === 0 ? $this : $ret;
+        }
     }
 }
 
@@ -747,16 +989,6 @@ if (!\class_exists('UVCheck')) {
             $status = \uv_ffi()->uv_check_init($loop(), $check());
             return $status === 0 ? $check : $status;
         }
-    }
-}
-
-if (!\class_exists('UVStdio')) {
-    /**
-     * Stdio is an I/O wrapper to be passed to uv_spawn().
-     * @return uv_stdio_container_t **pointer** by invoking `$UVStdio()`
-     */
-    final class UVStdio
-    {
     }
 }
 
@@ -1511,6 +1743,129 @@ if (!\class_exists('UVUdpSend')) {
     }
 }
 
+if (!\class_exists('UVMisc')) {
+    final class UVMisc
+    {
+        public static function interface_addresses()
+        {
+            $interfaces = \c_typedef('uv_interface_address_t', 'uv');
+            $count = \c_int_type('int');
+            $ptr = \ffi_characters(512);
+
+            $error = \uv_ffi()->uv_interface_addresses(
+                $interfaces->cast('uv_interface_address_t**'),
+                $count()
+            );
+
+            if (0 == $error) {
+                $count = $count->value();
+                $free = 0;
+                $interfaces->reset();
+                $interface = $interfaces->cast_ptr();
+                $return_value = [];
+                for ($i = 0; $i < $count; $i++) {
+                    $name = null;
+                    try {
+                        $name = \FFI::string($interface[$i]->name);
+                    } catch (\Throwable $e) {
+                    }
+
+                    if (\is_string($name)) {
+                        if ($interface[$i]->address->address4->sin_family == \AF_INET) {
+                            \uv_ffi()->uv_ip4_name(\ffi_ptr($interface[$i]->address->address4), $ptr, 512);
+                        } elseif ($interface[$i]->address->address6->sin6_family == \AF_INET6) {
+                            \uv_ffi()->uv_ip6_name(\ffi_ptr($interface[$i]->address->address6), $ptr, 512);
+                        }
+
+                        $buffer = \ffi_string($ptr);
+                        $return_value[$i] = [
+                            'name' => $name,
+                            'is_internal' => (bool) $interface[$i]->is_internal,
+                            'address' => $buffer
+                        ];
+                        $free++;
+                    }
+                }
+
+                if ($free > 0) {
+                    \uv_ffi()->uv_free_interface_addresses($interface, $free);
+                }
+
+                return $return_value;
+            }
+
+            return $error;
+        }
+
+        public static function cpu_info()
+        {
+            $cpus_type = \c_typedef('uv_cpu_info_t', 'uv');
+            $count = \c_int_type('int');
+
+            $error = \uv_ffi()->uv_cpu_info($cpus_type->cast('uv_cpu_info_t**'), $count());
+            if (0 == $error) {
+                $count = $count->value();
+                $free = 0;
+                $cpus = $cpus_type->cast_ptr();
+                $return_value = [];
+                /*
+                $ht = \ze_ffi()->_zend_new_array(0);
+                $return_zvalue = \zval_array($ht);
+                for ($i = 0; $i < $count; $i++) {
+                    $tmp = \zval_array(\ze_ffi()->_zend_new_array(0));
+                    $times = \zval_array(\ze_ffi()->_zend_new_array(0));
+
+                    \ze_ffi()->add_assoc_string_ex($tmp(), 'model', \strlen("model"), \FFI::string($cpus[$i]->model));
+                    \ze_ffi()->add_assoc_long_ex($tmp(), 'speed', \strlen("speed"), $cpus[$i]->speed);
+
+                    \ze_ffi()->add_assoc_long_ex($times(), 'sys', \strlen("sys"), \uv_cast('size_t', $cpus[$i]->cpu_times->sys)->cdata);
+                    \ze_ffi()->add_assoc_long_ex($times(), 'user', \strlen("user"), \uv_cast('size_t', $cpus[$i]->cpu_times->user)->cdata);
+                    \ze_ffi()->add_assoc_long_ex($times(), 'idle', \strlen("idle"), \uv_cast('size_t', $cpus[$i]->cpu_times->idle)->cdata);
+                    \ze_ffi()->add_assoc_long_ex($times(), 'irq', \strlen("irq"), \uv_cast('size_t', $cpus[$i]->cpu_times->irq)->cdata);
+                    \ze_ffi()->add_assoc_long_ex($times(), 'nice', \strlen("nice"), \uv_cast('size_t', $cpus[$i]->cpu_times->nice)->cdata);
+                    \ze_ffi()->add_assoc_zval_ex($tmp(), 'times', \strlen("times"), $times());
+
+                    \ze_ffi()->zend_hash_next_index_insert($ht, $tmp());
+                }
+
+                $return_value = \zval_native($return_zvalue);
+                */
+                for ($i = 0; $i < $count; $i++) {
+                    $model = null;
+                    try {
+                        $model = \FFI::string($cpus[$i]->model);
+                    } catch (\Throwable $e) {
+                    }
+
+                    if (\is_string($model)) {
+                        $return_value[$i] = [
+                            'model' => $model,
+                            'speed' => $cpus[$i]->speed,
+                            'times' => [
+                                'sys'   => \uv_cast('size_t', $cpus[$i]->cpu_times->sys)->cdata,
+                                'user'  => \uv_cast('size_t', $cpus[$i]->cpu_times->user)->cdata,
+                                'idle'  => \uv_cast('size_t', $cpus[$i]->cpu_times->idle)->cdata,
+                                'irq'   => \uv_cast('size_t', $cpus[$i]->cpu_times->irq)->cdata,
+                                'nice'  => \uv_cast('size_t', $cpus[$i]->cpu_times->nice)->cdata
+                            ]
+                        ];
+
+                        $free++;
+                    }
+                }
+
+                if ($free > 0) {
+                    \uv_ffi()->uv_free_cpu_info($cpus[0], $free);
+                }
+
+                return $return_value;
+            }
+
+            return $error;
+        }
+    }
+}
+
 if (!\class_exists('UVLib')) {
     /**
      * Provides cross platform way of loading shared libraries and retrieving a `symbol` from them.
@@ -1519,8 +1874,7 @@ if (!\class_exists('UVLib')) {
      */
     final class UVLib extends \UVTypes
     {
-        protected ?CData $uv_symbol;
-        protected ?CData $uv_symbol_ptr;
+        protected ?\CStruct $symbol;
 
         public function __invoke()
         {
@@ -1541,9 +1895,7 @@ if (!\class_exists('UVLib')) {
         {
             if (\is_cdata($this->uv_type_ptr)) {
                 \uv_ffi()->uv_dlclose($this->uv_type_ptr);
-                \FFI::free($this->uv_symbol_ptr);
-                $this->uv_symbol_ptr = null;
-                $this->uv_symbol = null;
+                $this->symbol = null;
 
                 parent::free();
             }
@@ -1551,19 +1903,18 @@ if (!\class_exists('UVLib')) {
 
         /**
          * @param string $definition
-         * @return object|int definition
+         * @return CData|int definition
          */
         public function loadSymbol(string $definition)
         {
-            $this->uv_symbol = \uv_ffi()->new('void_t');
-            $this->uv_symbol_ptr = \ffi_ptr($this->uv_symbol);
-            $status = \uv_ffi()->uv_dlsym($this->uv_type_ptr, $definition, $this->uv_symbol_ptr);
-            return $status === 0 ? $this->uv_symbol_ptr : $status;
+            $this->symbol = \c_typedef('void_t', 'uv');
+            $status = \uv_ffi()->uv_dlsym($this->uv_type_ptr, $definition, $this->symbol->addr());
+            return $status === 0 ? $this->symbol->addr() : $status;
         }
 
         public function getSymbol(): CData
         {
-            return $this->uv_symbol_ptr;
+            return $this->symbol->addr();
         }
 
         public function loadError(): string

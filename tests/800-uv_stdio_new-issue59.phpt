@@ -1,12 +1,12 @@
 --TEST--
 Test uv_stdio_new doesn't cause segfault #56
 --SKIPIF--
-<?php if (extension_loaded("ffi")) print "skip"; ?>
+<?php if (!extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';
 
-$ioRead = uv_stdio_new("foo", Uv::CREATE_PIPE | Uv::INHERIT_STREAM);
+$ioRead = uv_stdio_new("foo", UV::CREATE_PIPE | UV::INHERIT_STREAM);
 
 --EXPECTF--
-Warning: uv_stdio_new(): passed unexpected value, expected instance of UV, file resource or socket resource in %s on line %d
+PHP Warning:  passed unexpected value, expected instance of UV, file resource or socket object in %s on line %d

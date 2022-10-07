@@ -1,7 +1,7 @@
 --TEST--
 Bad uv_spawn must not segfault (issue #79)
 --SKIPIF--
-<?php if (extension_loaded("ffi")) print "skip"; ?>
+<?php if (!extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';
@@ -21,6 +21,5 @@ $rt = uv_spawn(
 var_dump($rt);
 
 uv_run();
-?>
 --EXPECTF--
 int(-%d)

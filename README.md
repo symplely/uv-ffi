@@ -6,7 +6,7 @@ This **libuv ffi** implementation is based on extension [ext-uv](https://github.
 
 The _ext-uv_ extension is on version _1.6_ of **libuv**, 1.6 is actually _1.06_, or about _39_ releases behind current 1.44.2.
 
-Getting _ext-uv_ tests implemented will indicate overall progress and follow the tests number ordering for each libuv feature being implemented. Currently **38** out of **53** _tests_ has been actually implemented. **PR** are welcome, see [Documentation] and [Contributing], to get compatibility around unreleased **ext-uv 0.3.0** version, current release version is _0.2.4beta_.
+Getting _ext-uv_ **tests and functions** implemented will indicate overall progress. All **ext-uv 0.3.0** _tests_ been implemented, except **uv_queue_work** _thread_ test. Currently, **ext-uv 0.3.0** has **150** _functions_ and so far **110** have been implemented. **PR** are welcome, see [Documentation] and [Contributing].
 
 Future versions of `uv-ffi` beyond **ext-uv 0.3.0** will include all current `libuv` features.
 
@@ -208,7 +208,7 @@ In general, functions and status parameters contain the actual error code, which
 
 All `functions/methods/classes` have there original **Libuv** _documentation_, _signatures_ embedded in DOC-BLOCKS.
 
-For deeper usage understanding, see the online [book](https://nikhilm.github.io/uvbook/index.html) for a full tutorial overview.
+For deeper usage understanding, see [An Introduction to libuv](https://codeahoy.com/learn/libuv/toc/).
 
 The following functions are present in _Windows_ `.dll`, but not in Linux _Ubuntu 20.04_ `.so`, getting `FFI\Exception: Failed resolving C function`. Could be CI build issue or wrong header parsing. Currently just focusing on Windows, the original `ext-uv` has issues of concern that needs to be fixed first.
 

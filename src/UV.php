@@ -262,22 +262,29 @@ class UV extends UVHandler
     const JOIN_GROUP = 2;
 
     /**
-     * Flags specifying how a stdio should be transmitted to the child process.
+     * No file descriptor will be provided (or redirected to
+     * `/dev/null` if it is fd 0, 1 or 2).
      */
     const IGNORE = 0x00;
 
     /**
-     * Flags specifying how a stdio should be transmitted to the child process.
+     * Open a new pipe into `data.stream`, per the flags below. The
+     * `data.stream` field must point to a uv_pipe_t object that has
+     * been initialized with `uv_pipe_init(loop, data.stream, ipc);`,
+     * but not yet opened or connected.
      */
     const CREATE_PIPE = 0x01;
 
     /**
-     * Flags specifying how a stdio should be transmitted to the child process.
+     * The child process will be given a duplicate of the parent's
+     * file descriptor given by `data.fd`.
      */
     const INHERIT_FD = 0x02;
 
     /**
-     * Flags specifying how a stdio should be transmitted to the child process.
+     * The child process will be given a duplicate of the parent's
+     * file descriptor being used by the stream handle given by
+     * `data.stream`.
      */
     const INHERIT_STREAM = 0x04;
 
@@ -289,6 +296,12 @@ class UV extends UVHandler
     const READABLE_PIPE = 0x10;
     const WRITABLE_PIPE = 0x20;
 
+    /**
+     * When `UV::CREATE_PIPE` is specified, specifying `UV::NONBLOCK_PIPE` opens the
+     * handle in non-blocking mode in the child. This may cause loss of data,
+     * if the child is not designed to handle to encounter this mode,
+     * but can also be significantly more efficient.
+     */
     const NONBLOCK_PIPE = 0x40;
 
     /**
