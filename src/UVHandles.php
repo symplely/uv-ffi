@@ -627,6 +627,40 @@ if (!\class_exists('UVTimer')) {
             $status = \uv_ffi()->uv_timer_init($loop(), $timer());
             return $status === 0 ? $timer : $status;
         }
+
+        public function start(int $timeout, int $repeat, callable $callback = null): int
+        {
+            if ($timeout < 0)
+                return \ze_ffi()->zend_error(\E_WARNING, "timeout value have to be larger than 0. given %lld", $timeout);
+
+            if ($repeat < 0)
+                return \ze_ffi()->zend_error(\E_WARNING, "repeat value have to be larger than 0. given %lld", $repeat);
+
+            if (\uv_is_active($this))
+                return \ze_ffi()->zend_error(\E_NOTICE, "Passed uv timer resource has been started. You don't have to call this method");
+
+            \zval_add_ref($this);
+            return \uv_ffi()->uv_timer_start(
+                $this->uv_struct_type,
+                \is_null($callback) ? function () {
+                } :  function (CData $handle) use ($callback) {
+                    $callback($this);
+                },
+                $timeout,
+                $repeat
+            );
+        }
+
+        public function stop(): int
+        {
+            if (!\uv_is_active($this))
+                return \ze_ffi()->zend_error(\E_NOTICE, "Passed uv timer resource has been stopped. You don't have to call this method");
+
+            $r = \uv_ffi()->uv_timer_stop($this->uv_struct_type);
+            \zval_del_ref($this);
+
+            return $r;
+        }
     }
 }
 
@@ -671,6 +705,39 @@ if (!\class_exists('UVSignal')) {
      */
     final class UVSignal extends \UV
     {
+        public static function init(?UVLoop $loop, ...$arguments)
+        {
+            if (\is_null($loop))
+                $loop = \uv_default_loop();
+
+            $signal = new self('struct _php_uv_s', 'signal');
+            $status = \uv_ffi()->uv_signal_init($loop(), $signal());
+            return $status === 0 ? $signal : $status;
+        }
+
+        public function start(callable $callback, int $signal): int
+        {
+            if (\uv_is_active($this))
+                return \ze_ffi()->zend_error(\E_NOTICE, "passed uv signal resource has been started. you don't have to call this method");
+
+            return \uv_ffi()->uv_signal_start($this->uv_struct_type, function (CData $handle, int $signal) use ($callback) {
+                \zval_add_ref($this);
+                $callback($this, $signal);
+                \zval_del_ref($this);
+                unset($signal);
+            }, $signal);
+        }
+
+        public function stop(): int
+        {
+            if (!\uv_is_active($this))
+                return \ze_ffi()->zend_error(\E_NOTICE, "passed uv signal resource has been stopped. you don't have to call this method");
+
+            $r = \uv_ffi()->uv_signal_stop($this->uv_struct_type);
+            \zval_del_ref($this);
+
+            return $r;
+        }
     }
 }
 
@@ -877,7 +944,6 @@ if (!\class_exists('UVProcess')) {
 
                 unset($exit_status);
                 unset($term_signal);
-                \ffi_free($process);
                 \zval_del_ref($process_options);
                 \zval_del_ref($this);
             };
@@ -1176,6 +1242,43 @@ if (!\class_exists('UVSemaphore')) {
      */
     final class UVSemaphore extends \UVLock
     {
+    }
+}
+
+if (!\class_exists('UVWork')) {
+    /**
+     * @return uv_work_t **pointer** by invoking `$UVWork()`
+     */
+    final class UVWork extends \UVRequest
+    {
+        public static function init(...$arguments)
+        {
+            $work = new static('struct uv_work_s');
+            if (\PHP_ZTS) {
+                $loop = \array_shift($arguments);
+                $work_cb = \array_shift($arguments);
+                $after_cb = \array_shift($arguments);
+                // $lock = \uv_mutex_init();
+                // \uv_mutex_lock($lock);
+                // \uv_mutex_unlock($lock);
+                $r = \uv_ffi()->uv_queue_work(
+                    $loop(),
+                    $work(),
+                    function (CData $req) use ($work_cb) {
+                    },
+                    function (CData $req, int $status) use ($after_cb) {
+                    }
+                );
+
+                if ($r) {
+                    return \ze_ffi()->zend_error(\E_ERROR, "uv_queue_work failed");
+                }
+            } else {
+                return \ze_ffi()->zend_error(\E_ERROR, "this PHP doesn't support this uv_queue_work. please rebuild with --enable-maintainer-zts");
+            }
+
+            return $r;
+        }
     }
 }
 

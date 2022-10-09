@@ -123,6 +123,10 @@ abstract class uv_handle_t extends FFI\CData
 abstract class uv_req_t extends FFI\CData
 {
 }
+/** Work request type. */
+abstract class uv_work_t extends uv_req_t
+{
+}
 /** Read-write lock data type. */
 abstract class uv_rwlock_t extends FFI\CData
 {
@@ -678,11 +682,16 @@ interface FFI
     public function uv_free_cpu_info(uv_cpu_info_t &$cpu_infos, int $count);
 
     /** @return int */
-    public function uv_signal_init(uv_loop_t $loop = null);
+    public function uv_signal_init(uv_loop_t &$loop = null, uv_signal_t &$handle);
 
-    public function uv_signal_start(UVSignal $handle, callable $callback, int $signal);
+    /** @return int */
+    public function uv_signal_start(uv_signal_t &$handle, uv_signal_cb $signal_cb, int $signum);
 
-    public function uv_signal_stop(UVSignal $handle);
+    /** @return int */
+    public function uv_signal_start_oneshot(uv_signal_t &$handle, uv_signal_cb $signal_cb, int $signum);
+
+    /** @return int */
+    public function uv_signal_stop(uv_signal_t &$handle);
 
     /** @return int */
     public function uv_spawn(uv_loop_t &$loop, uv_process_t &$handle, uv_process_options_t &$options);
@@ -706,8 +715,8 @@ interface FFI
 
     public function uv_stdio_new($fd, int $flags);
 
-    public function uv_queue_work(uv_loop_t &$loop, callable $callback, callable $after_callback);
-
+    /** @return int */
+    public function uv_queue_work(uv_loop_t &$loop, uv_work_t &$req, uv_work_cb $work_cb, uv_after_work_cb $after_work_cb);
 
     /** @return int */
     public function uv_prepare_init(uv_loop_t $loop = null);

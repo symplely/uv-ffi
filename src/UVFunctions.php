@@ -1390,25 +1390,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_timer_start(\UVTimer $timer, int $timeout, int $repeat, callable $callback = null): int
     {
-        if ($timeout < 0)
-            return \ze_ffi()->zend_error(\E_WARNING, "timeout value have to be larger than 0. given %lld", $timeout);
-
-        if ($repeat < 0)
-            return \ze_ffi()->zend_error(\E_WARNING, "repeat value have to be larger than 0. given %lld", $repeat);
-
-        if (\uv_is_active($timer))
-            return \ze_ffi()->zend_error(\E_NOTICE, "Passed uv timer resource has been started. You don't have to call this method");
-
-        \zval_add_ref($timer);
-        return \uv_ffi()->uv_timer_start(
-            $timer(),
-            \is_null($callback) ? function () {
-            } :  function (CData $handle) use ($callback, $timer) {
-                $callback($timer);
-            },
-            $timeout,
-            $repeat
-        );
+        return $timer->start($timeout, $repeat, $callback);
     }
 
     /**
@@ -1421,13 +1403,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_timer_stop(\UVTimer $timer): int
     {
-        if (!\uv_is_active($timer))
-            return \ze_ffi()->zend_error(\E_NOTICE, "Passed uv timer resource has been stopped. You don't have to call this method");
-
-        $r = \uv_ffi()->uv_timer_stop($timer());
-        \zval_del_ref($timer);
-
-        return $r;
+        return $timer->stop();
     }
 
     /**
@@ -1488,21 +1464,26 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVLoop $loop
      *
-     * @return UVSignal
+     * @return int|UVSignal
+     * @link http://docs.libuv.org/en/v1.x/signal.html?highlight=uv_signal_init#c.uv_signal_init
      */
     function uv_signal_init(\UVLoop $loop = null)
     {
+        return \UVSignal::init($loop);
     }
 
     /**
      * Start the signal handle with the given callback, watching for the given signal.
      *
      * @param UVSignal $handle
-     * @param callable $callback expect (\UVSignal handle, int signal)
+     * @param callable|uv_signal_cb $callback expect (\UVSignal handle, int signal)
      * @param int $signal
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/signal.html?highlight=uv_signal_init#c.uv_signal_start
      */
-    function uv_signal_start(\UVSignal $handle, callable $callback, int $signal)
+    function uv_signal_start(\UVSignal $handle, callable $callback, int $signal): int
     {
+        return $handle->start($callback, $signal);
     }
 
     /**
@@ -1511,9 +1492,11 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVSignal $handle
      *
      * @return int
+     * @link http://docs.libuv.org/en/v1.x/signal.html?highlight=uv_signal_init#c.uv_signal_stop
      */
-    function uv_signal_stop(\UVSignal $handle)
+    function uv_signal_stop(\UVSignal $handle): int
     {
+        return $handle->stop();
     }
 
     /**
@@ -1639,11 +1622,14 @@ if (!\function_exists('uv_loop_init')) {
      * Executes callbacks in another thread (requires Thread Safe enabled PHP).
      *
      * @param UVLoop $loop
-     * @param callable $callback
-     * @param callable $after_callback
+     * @param callable|uv_work_cb $callback
+     * @param callable|uv_after_work_cb $after_callback
+     * @return int|UVWork
+     * @link http://docs.libuv.org/en/v1.x/threadpool.html?highlight=uv_queue_work#c.uv_queue_work
      */
     function uv_queue_work(\UVLoop $loop, callable $callback, callable $after_callback)
     {
+        return \UVWork::init($loop, $callback, $after_callback);
     }
 
     /**
