@@ -77,7 +77,79 @@ if (!\defined('O_NOCTTY') && !\IS_WINDOWS) {
     \define('O_NOCTTY', UV::O_NOCTTY);
 }
 
+if (!\class_exists('ext_uv')) {
+    final class ext_uv extends \StandardModule
+    {
+        protected string $ffi_tag = 'uv';
+        protected static ?string $module_name = 'uv';
+        protected ?string $module_version = '0.3.0';
+        protected ?string $global_type = 'uv_globals';
+        protected bool $m_startup = true;
+        protected bool $r_shutdown = true;
+        protected string $uv_version;
+
+        public function module_startup(int $type, int $module_number): int
+        {
+            $this->uv_version = \uv_ffi()->uv_version_string();
+            \ext_uv::set_module($this);
+            return \ZE::SUCCESS;
+        }
+
+        public function request_shutdown(...$args): int
+        {
+            $uv_loop = \uv_g('default_loop');
+            if (!\is_null($uv_loop) && \is_cdata($uv_loop)) {
+                $loop = $uv_loop->loop;
+
+                /* for proper destruction: close all handles, let libuv call close callback and then close and free the loop */
+                \uv_ffi()->uv_stop($loop); /* in case we longjmp()'ed ... */
+                \uv_ffi()->uv_run($loop, \UV::RUN_DEFAULT); /* invalidate the stop ;-) */
+
+                \uv_ffi()->uv_walk($loop, function (CData $handle, CData $args) {
+                    if (!\zval_is_dtor($handle))
+                        \uv_ffi()->uv_close($handle, null);
+                }, NULL);
+
+                \uv_ffi()->uv_run($loop, \UV::RUN_DEFAULT);
+                \uv_ffi()->uv_loop_close($loop);
+                //	OBJ_RELEASE(&UV_G(default_loop)->std);
+            }
+
+            return \ZE::SUCCESS;
+        }
+
+        public function global_shutdown(CData $memory): void
+        {
+        }
+
+        public function module_info(CData $entry): void
+        {
+            \ze_ffi()->php_printf('PHP lib' . $entry->name . "-ffi Extension\n");
+            \ze_ffi()->php_info_print_table_start();
+            \ze_ffi()->php_info_print_table_header(2, "libuv Support", "enabled");
+            \ze_ffi()->php_info_print_table_row(2, "Version", $this->module_version);
+            \ze_ffi()->php_info_print_table_row(2, "libuv Version", $this->uv_version);
+            \ze_ffi()->php_info_print_table_end();
+        }
+    }
+}
+
 if (!\function_exists('uv_init')) {
+    /**
+     * Represents **ext-uv** `UV_G()` _macro_.
+     *
+     * @param string|null $element
+     * @return CData|null
+     */
+    function uv_g(?string $element = null): ?CData
+    {
+        $module = \ext_uv::get_module();
+        if (\PHP_ZTS)
+            return \ZE\Zval::tsrmg($module->global_type_id(), 'zend_uv_globals *', $element);
+
+        return $module->get_globals($element);
+    }
+
     /**
      * Returns **cast** a `uv_req_t` _base request_ pointer.
      *
@@ -98,7 +170,7 @@ if (!\function_exists('uv_init')) {
      */
     function uv_cast(string $typedef, $ptr): CData
     {
-        return Core::cast('uv', $typedef, \uv_object($ptr));
+        return \Core::cast('uv', $typedef, \uv_object($ptr));
     }
 
     /**
@@ -110,7 +182,7 @@ if (!\function_exists('uv_init')) {
     function uv_stream(object $ptr): CData
     {
         $stream = \uv_object($ptr);
-        return \is_typeof($stream, 'struct uv_stream_s*')  ? $stream : Core::cast('uv', 'uv_stream_t*', $stream);
+        return \is_typeof($stream, 'struct uv_stream_s*')  ? $stream : \Core::cast('uv', 'uv_stream_t*', $stream);
     }
 
     /**
@@ -121,11 +193,11 @@ if (!\function_exists('uv_init')) {
      */
     function uv_handle(object $ptr): CData
     {
-        if ($ptr instanceof UVInterface)
+        if ($ptr instanceof \UV)
             return $ptr(true);
 
         $handle = \uv_object($ptr);
-        return \is_typeof($handle, 'struct uv_handle_s*')  ? $handle : Core::cast('uv', 'uv_handle_t*', $handle);
+        return \is_typeof($handle, 'struct uv_handle_s*')  ? $handle : \Core::cast('uv', 'uv_handle_t*', $handle);
     }
 
     /**
@@ -142,14 +214,14 @@ if (!\function_exists('uv_init')) {
     /**
      * Checks `handle` and returns the `CData` object within.
      *
-     * @param UVInterface|object|CData $handle
+     * @param UV|object|CData $handle
      * @return CData|mixed
      */
     function uv_object($handle)
     {
         $handler = $handle;
         if (
-            $handle instanceof \UVInterface
+            $handle instanceof \UV
             || $handle instanceof \UVLoop
             || $handle instanceof \UVStream
             || $handle instanceof \UVTypes
@@ -163,12 +235,12 @@ if (!\function_exists('uv_init')) {
     /**
      * Manually removes an previously created `C` data memory pointer.
      *
-     * @param UVInterface|UVLoop|CData $ptr
+     * @param UV|UVLoop|CData $ptr
      * @return void
      */
     function uv_ffi_free(object $ptr): void
     {
-        if ($ptr instanceof \UVInterface || $ptr instanceof \UVLoop || $ptr instanceof \UVTypes || $ptr instanceof \CStruct)
+        if ($ptr instanceof \UV || $ptr instanceof \UVLoop || $ptr instanceof \UVTypes || $ptr instanceof \CStruct)
             $ptr->free();
         elseif (\is_cdata($ptr))
             \FFI::free($ptr);
@@ -481,4 +553,9 @@ if (!\function_exists('uv_init')) {
     }
 
     \uv_ffi_loader();
+    $ext_uv = new \ext_uv('', null, null, true);
+    if (!$ext_uv->is_registered()) {
+        $ext_uv->register();
+        $ext_uv->startup();
+    }
 }

@@ -832,7 +832,8 @@ interface FFI
     /** @return uv_loop_t */
     public function uv_handle_get_loop(uv_handle_t &$handle);
 
-    public function uv_walk(uv_loop_t $loop, callable $closure, array $opaque = null);
+    /** @return int */
+    public function uv_walk(uv_loop_t $loop,  uv_walk_cb $walk_cb, ?void_ptr &$arg);
 
     /** @return void */
     public function uv_loadavg(double ...$avg);
@@ -983,4 +984,7 @@ interface FFI
     public function uv_is_closing(uv_handle_t &$handle);
 
     public function uv_run_once(uv_loop_t $uv_loop = null);
+
+    /** @return const_char */
+    public function uv_version_string();
 }

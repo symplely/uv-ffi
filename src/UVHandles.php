@@ -20,30 +20,33 @@ if (!\class_exists('UVLoop')) {
     {
         /** @var uv_Loop_t */
         protected ?CData $uv_loop;
-        protected static ?CData $uv_loop_ptr = null;
+        protected ?CData $uv_loop_ptr = null;
         protected static ?UVLoop $uv_default = null;
 
         public function __destruct()
         {
-            \uv_ffi()->uv_stop(self::$uv_loop_ptr); /* in case we longjmp()'ed ... */
-            \uv_ffi()->uv_run(self::$uv_loop_ptr, \UV::RUN_DEFAULT); /* invalidate the stop ;-) */
-            //  uv_walk(loop, destruct_uv_loop_walk_cb, NULL);
-            // uv_run(loop, UV_RUN_DEFAULT);
-            \uv_ffi()->uv_loop_close(self::$uv_loop_ptr);
+            \uv_ffi()->uv_stop($this->uv_loop_ptr); /* in case we longjmp()'ed ... */
+            \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT); /* invalidate the stop ;-) */
+            \uv_ffi()->uv_walk($this->uv_loop_ptr, function (CData $handle, CData $args) {
+                if (!\zval_is_dtor($handle))
+                    \uv_ffi()->uv_close($handle, null);
+            }, null);
+            \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
+            \uv_ffi()->uv_loop_close($this->uv_loop_ptr);
             $this->free();
-            Core::clear_stdio();
-            Core::clear('uv');
+            \Core::clear('uv');
+            \Core::clear_stdio();
         }
 
         protected function free()
         {
-            self::$uv_default = null;
-            if (\is_cdata(self::$uv_loop_ptr) && !\is_null_ptr(self::$uv_loop_ptr)) {
-                \FFI::free(self::$uv_loop_ptr);
-
-                self::$uv_loop_ptr = null;
-                $this->uv_loop = null;
+            if (\is_cdata($this->uv_loop_ptr) && !\is_null_ptr($this->uv_loop_ptr)) {
+                \FFI::free($this->uv_loop_ptr);
             }
+
+            $this->uv_loop_ptr = null;
+            $this->uv_loop = null;
+            self::$uv_default = null;
         }
 
         protected function __construct(bool $compile = true, ?string $library = null, ?string $include = null, $default = false)
@@ -52,23 +55,27 @@ if (!\class_exists('UVLoop')) {
             Core::setup_stdio();
             if (!$default) {
                 $this->uv_loop = \uv_struct("struct uv_loop_s");
-                self::$uv_loop_ptr = \ffi_ptr($this->uv_loop);
+                $this->uv_loop_ptr = \ffi_ptr($this->uv_loop);
                 self::$uv_default = $this;
             }
         }
 
         public function __invoke(): CData
         {
-            return self::$uv_loop_ptr;
+            return $this->uv_loop_ptr;
+        }
+
+        public function __default(CData $loop): void
+        {
+            $this->uv_loop_ptr = $loop;
         }
 
         public static function default(bool $compile = true, string $library = null, string $include = null): self
         {
-            if (!self::$uv_default instanceof \UVLoop)
+            if (!self::$uv_default instanceof \UVLoop) {
                 self::$uv_default = new self($compile, $library, $include, true);
-
-            if (!\is_cdata(self::$uv_loop_ptr))
-                self::$uv_loop_ptr = \uv_ffi()->uv_default_loop();
+                self::$uv_default->__default(\uv_ffi()->uv_default_loop());
+            }
 
             return self::$uv_default;
         }
@@ -199,7 +206,6 @@ if (!\class_exists('UVPipe')) {
             \uv_ffi()->uv_pipe_init(\UVLoop::default()(), $pipe(), 0);
             \uv_ffi()->uv_pipe_open($pipe(), $io);
             $handler = \uv_stream($pipe);
-            // $handler->data = \ffi_void($pipe(true));
             \uv_ffi()->uv_read_start(
                 $handler,
                 function (CData $handle, int $suggested_size, CData $buf) {
@@ -222,18 +228,16 @@ if (!\class_exists('UVPipe')) {
                             \uv_ffi()->uv_close($handler, null);
                         }
 
+                        $writer = $this->__invoke(true);
+                        \FFI::free($writer);
                         \FFI::free($data->base);
-                        \FFI::free($stream->data);
                         \FFI::free($stream);
-                        \FFI::free($handler->data);
                         \FFI::free($handler);
 
-                        $writer = $this->__invoke(true);
-                        \FFI::free($writer->data);
-                        \FFI::free($writer);
 
                         $pipe->free();
                         $this->free();
+                        \zval_del_ref($pipe);
                     }
                 }
             );
@@ -1253,20 +1257,41 @@ if (!\class_exists('UVWork')) {
     {
         public static function init(...$arguments)
         {
-            $work = new static('struct uv_work_s');
             if (\PHP_ZTS) {
                 $loop = \array_shift($arguments);
                 $work_cb = \array_shift($arguments);
                 $after_cb = \array_shift($arguments);
-                // $lock = \uv_mutex_init();
-                // \uv_mutex_lock($lock);
-                // \uv_mutex_unlock($lock);
+                $work = new static('struct uv_work_s');
+                //   \zval_add_ref($work);
                 $r = \uv_ffi()->uv_queue_work(
                     $loop(),
                     $work(),
                     function (CData $req) use ($work_cb) {
+                        //   $tsrm_ls = \ze_ffi()->ts_resource_ex(0, null);
+                        //$tsrm_ls = \ze_ffi()->tsrm_new_interpreter_context();
+                        //$old = \ze_ffi()->tsrm_set_interpreter_context($tsrm_ls);
+
+                        //     \zend_pg('expose_php', 0);
+                        //  \zend_pg('auto_globals_jit', 0);
+
+                        // \ze_ffi()->php_request_startup();
+                        //   \zend_eg('current_execute_data', null);
+                        // \zend_eg('current_module', $phpext_uv_ptr);
+
+                        // require_once 'vendor/symplely/zend-ffi/preload.php';
+                        //   $work_cb();
+
+                        //\ze_ffi()->php_request_shutdown(NULL);
+                        //  \ze_ffi()->ts_free_thread();
+                        // \ze_ffi()->tsrm_set_interpreter_context($old);
+                        // \ze_ffi()->tsrm_free_interpreter_context($tsrm_ls);
                     },
-                    function (CData $req, int $status) use ($after_cb) {
+                    function (CData $req, int $status) use ($after_cb, $work) {
+                        $after_cb($status);
+                        unset($status);
+                        \FFI::free($req);
+                        // \zval_del_ref($after_cb);
+                        \zval_del_ref($work);
                     }
                 );
 
@@ -1277,7 +1302,7 @@ if (!\class_exists('UVWork')) {
                 return \ze_ffi()->zend_error(\E_ERROR, "this PHP doesn't support this uv_queue_work. please rebuild with --enable-maintainer-zts");
             }
 
-            return $r;
+            return $r === 0 ? $work : $r;
         }
     }
 }
@@ -1813,9 +1838,38 @@ if (!\class_exists('UVWriter')) {
      *
      * @return uv_write_t **pointer** by invoking `$UVWriter()`
      */
-    // final class UVWriter extends \UVTypes
     final class UVWriter extends \UVRequest
     {
+        /**
+         * @param UVStream|uv_stream_t $handle
+         * @param string $data
+         * @param callable|uv_write_cb $callback expect (\UV $handle, int $status)
+         * @return int
+         */
+        public function write(\UVStream $handle, string $data, callable $callback = null): int
+        {
+            $buffer = \uv_buf_init($data);
+            $r = \uv_ffi()->uv_write($this->uv_type_ptr, \uv_stream($handle), $buffer(), 1, \is_null($callback)
+                ? function () {
+                }
+                :  function (CData $writer, int $status) use ($callback, $handle) {
+                    $callback($handle, $status);
+                    \FFI::free($writer);
+                    $this->free();
+                    \zval_del_ref($this);
+                    \zval_del_ref($callback);
+                });
+
+            if ($r) {
+                \ze_ffi()->zend_error(\E_WARNING, "write failed");
+                \zval_del_ref($this);
+                \zval_del_ref($buffer);
+            } else {
+                \zval_add_ref($this);
+            }
+
+            return $r;
+        }
     }
 }
 

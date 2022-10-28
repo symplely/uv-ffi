@@ -2299,13 +2299,17 @@ if (!\function_exists('uv_loop_init')) {
      * Walk the list of handles: callable will be executed with the given arg.
      *
      * @param UVLoop $loop
-     * @param callable $closure
+     * @param callable|uv_walk_cb $closure
      * @param array|null $opaque
      *
-     * @return bool
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/loop.html?highlight=uv_walk#c.uv_walk
      */
     function uv_walk(\UVLoop $loop, callable $closure, array $opaque = null)
     {
+        return \uv_ffi()->uv_walk($loop(), function (CData $handle, CData $args) use ($closure) {
+            $closure($handle, $args);
+        }, $opaque);
     }
 
     /**
