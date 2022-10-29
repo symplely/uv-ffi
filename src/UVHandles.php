@@ -57,7 +57,6 @@ if (!\class_exists('UVLoop')) {
                 $this->uv_loop = \uv_struct("struct uv_loop_s");
                 $this->uv_loop_ptr = \ffi_ptr($this->uv_loop);
                 self::$uv_default = $this;
-                //   \uv_g('default_loop->loop', $this->uv_loop);
             }
         }
 
@@ -75,9 +74,7 @@ if (!\class_exists('UVLoop')) {
         {
             if (!self::$uv_default instanceof \UVLoop) {
                 self::$uv_default = new self($compile, $library, $include, true);
-                $loop = \uv_ffi()->uv_default_loop();
-                self::$uv_default->__default($loop);
-                //  \uv_g('default_loop->loop', $loop[0]);
+                self::$uv_default->__default(\uv_ffi()->uv_default_loop());
             }
 
             return self::$uv_default;

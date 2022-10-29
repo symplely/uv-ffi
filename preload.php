@@ -83,7 +83,7 @@ if (!\class_exists('ext_uv')) {
         protected string $ffi_tag = 'uv';
         protected string $module_name = 'uv';
         protected string $module_version = '0.3.0';
-        protected ?string $global_type = 'uv_globals';
+        protected ?string $global_type = 'uv_globals*';
         protected bool $m_startup = true;
         protected bool $r_shutdown = true;
         protected string $uv_version;
@@ -92,19 +92,17 @@ if (!\class_exists('ext_uv')) {
         {
             $this->uv_version = \uv_ffi()->uv_version_string();
             \ext_uv::set_module($this);
-            $this->get_globals('default_loop', null);
             return \ZE::SUCCESS;
         }
 
         public function request_shutdown(...$args): int
-        {
+        {/*
             $uv_loop = \uv_g('default_loop');
             if (!\is_null($uv_loop) && \is_cdata($uv_loop)) {
                 $loop = $uv_loop->loop;
 
-                /* for proper destruction: close all handles, let libuv call close callback and then close and free the loop */
-                \uv_ffi()->uv_stop($loop); /* in case we longjmp()'ed ... */
-                \uv_ffi()->uv_run($loop, \UV::RUN_DEFAULT); /* invalidate the stop ;-) */
+                \uv_ffi()->uv_stop($loop);
+                \uv_ffi()->uv_run($loop, \UV::RUN_DEFAULT);
 
                 \uv_ffi()->uv_walk($loop, function (CData $handle, CData $args) {
                     if (!\zval_is_dtor($handle))
@@ -114,7 +112,7 @@ if (!\class_exists('ext_uv')) {
                 \uv_ffi()->uv_run($loop, \UV::RUN_DEFAULT);
                 \uv_ffi()->uv_loop_close($loop);
                 //	OBJ_RELEASE(&UV_G(default_loop)->std);
-            }
+            }*/
 
             return \ZE::SUCCESS;
         }
@@ -133,10 +131,8 @@ if (!\class_exists('ext_uv')) {
                     );
                 }
             }
-        }
 
-        public function global_shutdown(CData $memory): void
-        {
+            //   \FFI::memset($this->get_globals(), 0, $this->globals_size());
         }
 
         public function module_info(CData $entry): void
