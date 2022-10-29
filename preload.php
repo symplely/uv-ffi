@@ -81,8 +81,8 @@ if (!\class_exists('ext_uv')) {
     final class ext_uv extends \StandardModule
     {
         protected string $ffi_tag = 'uv';
-        protected static ?string $module_name = 'uv';
-        protected ?string $module_version = '0.3.0';
+        protected string $module_name = 'uv';
+        protected string $module_version = '0.3.0';
         protected ?string $global_type = 'uv_globals';
         protected bool $m_startup = true;
         protected bool $r_shutdown = true;
@@ -92,6 +92,7 @@ if (!\class_exists('ext_uv')) {
         {
             $this->uv_version = \uv_ffi()->uv_version_string();
             \ext_uv::set_module($this);
+            $this->get_globals('default_loop', null);
             return \ZE::SUCCESS;
         }
 
@@ -118,6 +119,22 @@ if (!\class_exists('ext_uv')) {
             return \ZE::SUCCESS;
         }
 
+        public function global_startup(CData $memory): void
+        {
+            if (\PHP_ZTS) {
+                \tsrmls_activate();
+                $id = \ze_ffi()->tsrm_thread_id();
+                if (!isset($this->global_id[$id])) {
+                    $this->global_id[$id] = \ze_ffi()->ts_allocate_id(
+                        $this->global_rsrc->addr(),
+                        $this->globals_size(),
+                        null,
+                        null
+                    );
+                }
+            }
+        }
+
         public function global_shutdown(CData $memory): void
         {
         }
@@ -139,15 +156,12 @@ if (!\function_exists('uv_init')) {
      * Represents **ext-uv** `UV_G()` _macro_.
      *
      * @param string|null $element
+     * @param mixed $initialize set element value
      * @return CData|null
      */
-    function uv_g(?string $element = null): ?CData
+    function uv_g(?string $element = null, $initialize = 'empty'): ?CData
     {
-        $module = \ext_uv::get_module();
-        if (\PHP_ZTS)
-            return \ZE\Zval::tsrmg($module->global_type_id(), 'zend_uv_globals *', $element);
-
-        return $module->get_globals($element);
+        return \ext_uv::get_module()->get_globals($element, $initialize);
     }
 
     /**
@@ -553,7 +567,7 @@ if (!\function_exists('uv_init')) {
     }
 
     \uv_ffi_loader();
-    $ext_uv = new \ext_uv('', null, null, true);
+    $ext_uv = new \ext_uv(true);
     if (!$ext_uv->is_registered()) {
         $ext_uv->register();
         $ext_uv->startup();
