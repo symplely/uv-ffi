@@ -6,7 +6,45 @@ This **libuv ffi** implementation is based on extension [ext-uv](https://github.
 
 The _ext-uv_ extension is on version _1.6_ of **libuv**, 1.6 is actually _1.06_, or about _39_ releases behind current 1.44.2.
 
-Getting _ext-uv_ **tests and functions** implemented will indicate overall progress. All **ext-uv 0.3.0** _tests_ been implemented, except **uv_queue_work** _thread_ test. Currently, **ext-uv 0.3.0** has **150** _functions_ and so far **113** have been implemented. **PR** are welcome, see [Documentation] and [Contributing].
+Getting _ext-uv_ **tests and functions** implemented will indicate overall progress. All **ext-uv 0.3.0** _tests_ been implemented, except **uv_queue_work** _thread_ test. Currently, **ext-uv 0.3.0** has **150** _functions_ and so far **120** have been implemented. The following needs implementing.
+
+```h
+PHP_FE(uv_tcp_nodelay, arginfo_uv_tcp_nodelay)
+PHP_FE(uv_udp_set_multicast_loop, arginfo_uv_udp_set_multicast_loop)
+PHP_FE(uv_udp_set_multicast_ttl, arginfo_uv_udp_set_multicast_ttl)
+PHP_FE(uv_udp_set_membership, arginfo_uv_udp_set_membership)
+PHP_FE(uv_udp_set_broadcast, arginfo_uv_udp_set_broadcast)
+PHP_FE(uv_tcp_getpeername, arginfo_uv_tcp_getpeername)
+PHP_FE(uv_udp_getsockname, arginfo_uv_udp_getsockname)
+PHP_FE(uv_tcp_simultaneous_accepts, arginfo_uv_tcp_simultaneous_accepts)
+PHP_FE(uv_pipe_pending_instances, arginfo_uv_pipe_pending_instances)
+PHP_FE(uv_pipe_pending_count, arginfo_uv_pipe_pending_count)
+PHP_FE(uv_pipe_pending_type, arginfo_uv_pipe_pending_type)
+PHP_FE(uv_sem_init, arginfo_uv_sem_init)
+PHP_FE(uv_sem_post, arginfo_uv_sem_post)
+PHP_FE(uv_sem_wait, arginfo_uv_sem_wait)
+PHP_FE(uv_sem_trywait, arginfo_uv_sem_trywait)
+
+// Will be implemented last, the whole threading part is not the same for PHP 8+, as in PHP 7.4!
+** PHP_FE(uv_queue_work, NULL) **
+
+PHP_FE(uv_fs_fsync, arginfo_uv_fs_fsync)
+PHP_FE(uv_fs_fdatasync, arginfo_uv_fs_fdatasync)
+PHP_FE(uv_fs_ftruncate, arginfo_uv_fs_ftruncate)
+PHP_FE(uv_fs_unlink, arginfo_uv_fs_unlink)
+PHP_FE(uv_fs_rename, arginfo_uv_fs_rename)
+PHP_FE(uv_fs_utime, arginfo_uv_fs_utime)
+PHP_FE(uv_fs_futime, arginfo_uv_fs_futime)
+PHP_FE(uv_fs_chmod, arginfo_uv_fs_chmod)
+PHP_FE(uv_fs_fchmod, arginfo_uv_fs_fchmod)
+PHP_FE(uv_fs_chown, arginfo_uv_fs_chown)
+PHP_FE(uv_fs_fchown, arginfo_uv_fs_fchown)
+PHP_FE(uv_fs_link, arginfo_uv_fs_link)
+PHP_FE(uv_fs_symlink, arginfo_uv_fs_symlink)
+PHP_FE(uv_fs_lstat, arginfo_uv_fs_lstat)
+```
+
+**PR** are welcome, see [Documentation] and [Contributing].
 
 Future versions of `uv-ffi` beyond **ext-uv 0.3.0** will include all current `libuv` features.
 

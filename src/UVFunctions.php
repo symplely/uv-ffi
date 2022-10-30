@@ -320,6 +320,47 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
+     * Extended write function for sending handles over a pipe.
+     *
+     * The pipe must be initialized with ipc == 1.
+     *
+     * `Note:` $send must be a TCP socket or pipe, which is a server or a connection
+     * (listening or connected state). Bound sockets or pipes will be assumed to be servers.
+     *
+     * @param UVTcp|UVPipe|UVTty $handle
+     * @param string $data
+     * @param UVTcp|UVPipe $send
+     * @param callable|uv_write_cb $callback expect (\UVStream $handle, int $status).
+     *
+     * @return void
+     * @link http://docs.libuv.org/en/v1.x/stream.html?highlight=uv_write2#c.uv_write2
+     */
+    function uv_write2(\UVStream $handle, string $data, \UVStream $send, callable $callback)
+    {
+        $buffer = \uv_buf_init($data);
+        $req = \UVWriter::init('struct uv_write_s');
+        $r = \uv_ffi()->uv_write2($req(), \uv_stream($handle), $buffer(), 1, \uv_stream($send), \is_null($callback)
+            ? function () {
+            }
+            :  function (CData $writer, int $status) use ($callback, $handle, $req) {
+                $callback($handle, $status);
+                \FFI::free($writer);
+                $req->free();
+                \zval_del_ref($callback);
+            });
+
+        if ($r) {
+            \ze_ffi()->zend_error(\E_WARNING, "write2 failed");
+            \zval_del_ref($req);
+            \zval_del_ref($buffer);
+        } else {
+            \zval_add_ref($req);
+        }
+
+        return $r;
+    }
+
+    /**
      * Read data from an incoming stream.
      *
      * The `uv_read` callback will be made several times until there is no more data to read
@@ -1255,9 +1296,14 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVLoop $loop uv_loop handle.
      *
      * @return void
+     * @link http://docs.libuv.org/en/v1.x/loop.html?highlight=uv_update_time#c.uv_update_time
      */
-    function uv_update_time(\UVLoop $loop)
+    function uv_update_time(\UVLoop $loop = null): void
     {
+        if (\is_null($loop))
+            $loop = \uv_default_loop();
+
+        \uv_ffi()->uv_update_time($loop());
     }
 
     /**
@@ -1888,9 +1934,11 @@ if (!\function_exists('uv_loop_init')) {
      * @param UV $uv_handle UV.
      *
      * @return void
+     * @link http://docs.libuv.org/en/v1.x/handle.html?highlight=uv_ref#c.uv_ref
      */
     function uv_ref(\UV $uv_handle)
     {
+        \uv_ffi()->uv_ref($uv_handle(true));
     }
 
     /**
@@ -1921,25 +1969,6 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
-     * Extended write function for sending handles over a pipe.
-     *
-     * The pipe must be initialized with ipc == 1.
-     *
-     * `Note:` $send must be a TCP socket or pipe, which is a server or a connection
-     * (listening or connected state). Bound sockets or pipes will be assumed to be servers.
-     *
-     * @param UVTcp|UVPipe|UVTty $handle
-     * @param string $data
-     * @param UVTcp|UVPipe $send
-     * @param callable $callback expect (\UVStream $handle, int $status).
-     *
-     * @return void
-     */
-    function uv_write2(\UVStream $handle, string $data, $send, callable $callback)
-    {
-    }
-
-    /**
      * Enable TCP_NODELAY, which disables Nagle’s algorithm.
      *
      * @param UVTcp $handle libuv tcp handle.
@@ -1951,13 +1980,23 @@ if (!\function_exists('uv_loop_init')) {
 
     /**
      * Stop the timer, and if it is repeating restart it using the repeat value as the timeout.
+     * - If the timer has never been started before it returns UV_EINVAL.
      *
      * @param UVTimer $timer uv_timer handle.
      *
-     * @return void
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/timer.html?highlight=uv_timer_again#c.uv_timer_again
      */
-    function uv_timer_again(\UVTimer $timer)
+    function uv_timer_again(\UVTimer $timer): int
     {
+        if (\uv_is_active($timer)) {
+            \ze_ffi()->zend_error(\E_NOTICE, "Passed uv timer resource has been started. You don't have to call this method");
+            return false;
+        }
+
+        \zval_add_ref($timer);
+
+        return \uv_ffi()->uv_timer_again($timer());
     }
 
     /**
@@ -1981,9 +2020,11 @@ if (!\function_exists('uv_loop_init')) {
      * @param int $repeat repeat count.
      *
      * @return void
+     * @link http://docs.libuv.org/en/v1.x/timer.html?highlight=uv_timer_again#c.uv_timer_set_repeat
      */
     function uv_timer_set_repeat(\UVTimer $timer, int $repeat)
     {
+        \uv_ffi()->uv_timer_set_repeat($timer(), $repeat);
     }
 
     /**
@@ -1992,9 +2033,11 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVTimer $timer uv_timer handle.
      *
      * @return int
+     * @link http://docs.libuv.org/en/v1.x/timer.html?highlight=uv_timer_again#c.uv_timer_get_repeat
      */
-    function uv_timer_get_repeat(\UVTimer $timer)
+    function uv_timer_get_repeat(\UVTimer $timer): int
     {
+        return \uv_ffi()->uv_timer_get_repeat($timer());
     }
 
     /**

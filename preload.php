@@ -83,7 +83,7 @@ if (!\class_exists('ext_uv')) {
         protected string $ffi_tag = 'uv';
         protected string $module_name = 'uv';
         protected string $module_version = '0.3.0';
-        protected ?string $global_type = 'uv_globals*';
+        protected ?string $global_type = 'uv_globals';
         protected bool $m_startup = true;
         protected bool $r_shutdown = true;
         protected string $uv_version;
@@ -131,8 +131,6 @@ if (!\class_exists('ext_uv')) {
                     );
                 }
             }
-
-            //   \FFI::memset($this->get_globals(), 0, $this->globals_size());
         }
 
         public function module_info(CData $entry): void

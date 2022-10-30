@@ -3145,7 +3145,7 @@ typedef struct _php_uv_lock_s
   } lock;
 } php_uv_lock_t;
 
-typedef struct
+typedef struct _php_uv_loop_t
 {
   void_t std;
   uv_loop_t loop;

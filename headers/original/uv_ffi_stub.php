@@ -414,6 +414,9 @@ interface FFI
     public function uv_write(uv_write_t &$req, uv_stream_t &$handle, uv_buf_t $bufs, int $nbufs, uv_write_cb $callback);
 
     /** @return int */
+    public function uv_write2(uv_write_t &$req, uv_stream_t &$handle, uv_buf_t $bufs, int $nbufs, uv_stream_t &$send_handle, uv_write_cb $cb);
+
+    /** @return int */
     public function uv_try_write(uv_stream_t &$handle, uv_buf_t $bufs, int $nbufs);
 
     /** @return int */
@@ -501,7 +504,7 @@ interface FFI
     /** @return void */
     public function  uv_timer_set_repeat(uv_timer_t &$handle, uint64_t $repeat);
 
-    /** @return uint64_t */
+    /** @return uint64_t|int */
     public function  uv_timer_get_repeat(uv_timer_t &$handle);
 
     /** @return uint64_t */
@@ -752,8 +755,6 @@ interface FFI
     public function uv_unref(uv_handle_t &$uv_t);
 
     public function uv_tcp_bind6(uv_tcp_t $uv_tcp, UVSockAddr $uv_sockaddr);
-
-    public function uv_write2(uv_stream_t $handle, string $data, $send, uv_write_cb $callback);
 
     public function uv_tcp_nodelay(uv_tcp_t $handle, bool $enable);
 

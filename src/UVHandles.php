@@ -52,7 +52,7 @@ if (!\class_exists('UVLoop')) {
         protected function __construct(bool $compile = true, ?string $library = null, ?string $include = null, $default = false)
         {
             \uv_init($compile, $library, $include);
-            Core::setup_stdio();
+            \Core::setup_stdio();
             if (!$default) {
                 $this->uv_loop = \uv_struct("struct uv_loop_s");
                 $this->uv_loop_ptr = \ffi_ptr($this->uv_loop);
