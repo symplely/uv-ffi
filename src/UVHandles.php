@@ -76,7 +76,7 @@ if (!\class_exists('UVLoop')) {
             return $uv_default;
         }
 
-        public static function init(bool $compile = true, ?string $library = null, ?string $include = null)
+        public static function init()
         {
             $loop = new self();
             $status = \uv_ffi()->uv_loop_init($loop());

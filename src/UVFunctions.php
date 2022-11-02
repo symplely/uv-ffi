@@ -11,9 +11,9 @@ if (!\function_exists('uv_loop_init')) {
      * @return UVLoop|int
      * @link http://docs.libuv.org/en/v1.x/loop.html#c.uv_loop_init
      */
-    function uv_loop_init(bool $compile = true, ?string $library = null, ?string $include = null)
+    function uv_loop_init()
     {
-        return UVLoop::init($compile, $library, $include);
+        return UVLoop::init();
     }
 
     /**
@@ -36,9 +36,9 @@ if (!\function_exists('uv_loop_init')) {
      * @return UVLoop
      * @link http://docs.libuv.org/en/v1.x/loop.html#c.uv_default_loop
      */
-    function uv_default_loop(bool $compile = true, ?string $library = null, ?string $include = null): \UVLoop
+    function uv_default_loop(): \UVLoop
     {
-        return \UVLoop::default($compile, $library, $include);
+        return \UVLoop::default();
     }
 
     /**
