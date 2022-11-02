@@ -467,9 +467,9 @@ if (!\function_exists('uv_init')) {
         if (!\is_uv_ffi()) {
             // Try if preloaded
             try {
-                Core::set('uv', \FFI::scope("UV"));
+                \Core::set('uv', \FFI::scope("UV"));
             } catch (Exception $e) {
-                \uv_ffi_loader($compile, $library, $include);
+                \uv_ffi_loader();
             }
 
             if (!\is_uv_ffi()) {
