@@ -85,8 +85,21 @@ if (!\class_exists('ext_uv')) {
         protected string $module_version = '0.3.0';
         protected ?string $global_type = 'uv_globals';
         protected bool $m_startup = true;
+        protected bool $m_shutdown = true;
         protected bool $r_shutdown = true;
+
         protected string $uv_version;
+        protected ?\UVLoop $uv_default;
+
+        public function set_default(?\UVLoop $loop): void
+        {
+            $this->uv_default = $loop;
+        }
+
+        public function get_default(): ?\UVLoop
+        {
+            return $this->uv_default;
+        }
 
         public function module_startup(int $type, int $module_number): int
         {
@@ -95,11 +108,17 @@ if (!\class_exists('ext_uv')) {
             return \ZE::SUCCESS;
         }
 
+        public function module_shutdown(int $type, int $module_number): int
+        {
+            \ext_uv::set_module(null);
+            return \ZE::SUCCESS;
+        }
+
         public function request_shutdown(...$args): int
         {/*
-            $uv_loop = \uv_g('default_loop');
-            if (!\is_null($uv_loop) && \is_cdata($uv_loop)) {
-                $loop = $uv_loop->loop;
+            $uv_loop = $this->get_default();
+            if (!\is_null($uv_loop)) {
+                $loop =  $uv_loop();
 
                 \uv_ffi()->uv_stop($loop);
                 \uv_ffi()->uv_run($loop, \UV::RUN_DEFAULT);
@@ -111,7 +130,8 @@ if (!\class_exists('ext_uv')) {
 
                 \uv_ffi()->uv_run($loop, \UV::RUN_DEFAULT);
                 \uv_ffi()->uv_loop_close($loop);
-                //	OBJ_RELEASE(&UV_G(default_loop)->std);
+
+                $uv_loop->free();
             }*/
 
             return \ZE::SUCCESS;
@@ -166,7 +186,7 @@ if (!\function_exists('uv_init')) {
      */
     function uv_request(object $ptr): ?CData
     {
-        return Core::cast('uv', 'uv_req_t*', \uv_object($ptr));
+        return \Core::cast('uv', 'uv_req_t*', \uv_object($ptr));
     }
 
     /**
@@ -458,43 +478,32 @@ if (!\function_exists('uv_init')) {
         }
     }
 
-    function uv_ffi_loader(bool $compile = true, string $library = null, string $include = null)
+    function uv_ffi_loader()
     {
-        $remove = [
-            '#define', ' FFI_SCOPE ', '"__uv__"', ' FFI_LIB ',
-            '"./lib/Linux/ubuntu20.04/libuv.so.1.0.0"', '"./lib/Linux/ubuntu18.04/libuv.so.1.0.0"',
-            '"./lib/Linux/raspberry/libuv.so.1.0.0"', '"./lib/macOS/libuv.1.0.0.dylib"',
-            '".\\lib\\Windows\\uv.dll"', '"./lib/Linux/centos8+/libuv.so.1.0.0"',
-            '"./lib/Linux/centos7/libuv.so.1.0.0"'
-        ];
-
         $directory = __DIR__ . \DS;
         if (\IS_WINDOWS) {
             $code = $directory . 'headers\\uv_windows.h';
-            $lib = $directory . 'Windows\\uv.dll';
         } elseif (\PHP_OS === 'Darwin') {
             $code = $directory . 'headers/uv_macos.h';
-            $lib = $directory . 'macOS/libuv.1.0.0.dylib';
         } elseif (\php_uname('m') === 'aarch64') {
             $code = $directory . 'headers/uv_pi.h';
-            $lib = $directory . 'Linux/raspberry/libuv.so.1.0.0';
         } else {
-            /*
-        * Get the `Linux` distribution info and version.
-        * [DISTRIB_ID] => Ubuntu
-        * [DISTRIB_RELEASE] => 13.04
-        * [DISTRIB_CODENAME] => raring
-        * [DISTRIB_DESCRIPTION] => Ubuntu 13.04
-        * [NAME] => Ubuntu
-        * [VERSION] => 13.04, Raring Ringtail
-        * [ID] => ubuntu
-        * [ID_LIKE] => debian
-        * [PRETTY_NAME] => Ubuntu 13.04
-        * [VERSION_ID] => 13.04
-        * [HOME_URL] => http://www.ubuntu.com/
-        * [SUPPORT_URL] => http://help.ubuntu.com/
-        * [BUG_REPORT_URL] => http://bugs.launchpad.net/ubuntu/
-      */
+            /**
+             * Get the `Linux` distribution info and version.
+             * [DISTRIB_ID] => Ubuntu
+             * [DISTRIB_RELEASE] => 13.04
+             * [DISTRIB_CODENAME] => raring
+             * [DISTRIB_DESCRIPTION] => Ubuntu 13.04
+             * [NAME] => Ubuntu
+             * [VERSION] => 13.04, Raring Ringtail
+             * [ID] => ubuntu
+             * [ID_LIKE] => debian
+             * [PRETTY_NAME] => Ubuntu 13.04
+             * [VERSION_ID] => 13.04
+             * [HOME_URL] => http://www.ubuntu.com/
+             * [SUPPORT_URL] => http://help.ubuntu.com/
+             * [BUG_REPORT_URL] => http://bugs.launchpad.net/ubuntu/
+             */
             $os = [];
             $files = \glob('/etc/*-release');
             foreach ($files as $file) {
@@ -514,47 +523,40 @@ if (!\function_exists('uv_init')) {
             $id = \trim((string) $os['ID_LIKE']);
             $version = \trim((string) $os['VERSION_ID']);
             if ($id === 'debian') {
-                $lib = $directory . 'Linux/ubuntu' . ((float)$version < 20.04 ? '18.04' : '20.04') . '/libuv.so.1.0.0';
                 $code = $directory . 'headers/uv_ubuntu' . ((float)$version < 20.04 ? '18.04' : '20.04') . '.h';
             } elseif ($id === 'redhat') {
-                $lib = $directory . 'Linux/centos' . ((float)$version < 8 ? '7' : '8+') . '/libuv.so.1.0.0';
                 $code = $directory . 'headers/uv_centos' . ((float)$version < 8 ? '7' : '8+') . '.h';
             }
         }
 
-        if ($compile) {
-            $scope = \FFI::load($code);
-            if (\file_exists('.' . \DS . 'ffi_extension.json')) {
-                $ext_list = \json_decode(\file_get_contents('.' . \DS . 'ffi_extension.json'), true);
-                $isDir = false;
-                $iterator = [];
-                $is_opcache_cli = \ini_get('opcache.enable_cli') === '1';
-                if (isset($ext_list['preload']['directory'])) {
-                    $isDir = true;
-                    $directory = \array_shift($ext_list['preload']['directory']);
-                    $dir = new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::KEY_AS_PATHNAME);
-                    $iterator = new \RecursiveIteratorIterator($dir, \RecursiveIteratorIterator::SELF_FIRST);
-                } elseif (isset($ext_list['preload']['files'])) {
-                    $iterator = $ext_list['preload']['files'];
+        $scope = \FFI::load($code);
+        if (\file_exists('.' . \DS . 'ffi_extension.json')) {
+            $ext_list = \json_decode(\file_get_contents('.' . \DS . 'ffi_extension.json'), true);
+            $isDir = false;
+            $iterator = [];
+            $is_opcache_cli = \ini_get('opcache.enable_cli') === '1';
+            if (isset($ext_list['preload']['directory'])) {
+                $isDir = true;
+                $directory = \array_shift($ext_list['preload']['directory']);
+                $dir = new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::KEY_AS_PATHNAME);
+                $iterator = new \RecursiveIteratorIterator($dir, \RecursiveIteratorIterator::SELF_FIRST);
+            } elseif (isset($ext_list['preload']['files'])) {
+                $iterator = $ext_list['preload']['files'];
+            }
+
+            foreach ($iterator as $fileInfo) {
+                if ($isDir && !$fileInfo->isFile()) {
+                    continue;
                 }
 
-                foreach ($iterator as $fileInfo) {
-                    if ($isDir && !$fileInfo->isFile()) {
-                        continue;
-                    }
-
-                    $file = $isDir ? $fileInfo->getPathname() : $fileInfo;
-                    if ($is_opcache_cli) {
-                        if (!\opcache_is_script_cached($file))
-                            \opcache_compile_file($file);
-                    } else {
-                        include_once $file;
-                    }
+                $file = $isDir ? $fileInfo->getPathname() : $fileInfo;
+                if ($is_opcache_cli) {
+                    if (!\opcache_is_script_cached($file))
+                        \opcache_compile_file($file);
+                } else {
+                    include_once $file;
                 }
             }
-        } else {
-            $headers = empty($include) ? $code : $include;
-            $scope = \FFI::cdef(\str_replace($remove, '', \file_get_contents($headers)), (empty($library) ? $lib : $library));
         }
 
         \Core::set('uv', $scope);

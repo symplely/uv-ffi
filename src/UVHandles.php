@@ -21,7 +21,6 @@ if (!\class_exists('UVLoop')) {
         /** @var uv_Loop_t */
         protected ?CData $uv_loop;
         protected ?CData $uv_loop_ptr = null;
-        protected static ?UVLoop $uv_default = null;
 
         public function __destruct()
         {
@@ -38,7 +37,7 @@ if (!\class_exists('UVLoop')) {
             \Core::clear_stdio();
         }
 
-        protected function free()
+        public function free()
         {
             if (\is_cdata($this->uv_loop_ptr) && !\is_null_ptr($this->uv_loop_ptr)) {
                 \FFI::free($this->uv_loop_ptr);
@@ -46,18 +45,20 @@ if (!\class_exists('UVLoop')) {
 
             $this->uv_loop_ptr = null;
             $this->uv_loop = null;
-            self::$uv_default = null;
         }
 
-        protected function __construct(bool $compile = true, ?string $library = null, ?string $include = null, $default = false)
+        protected function __construct(CData $default = null)
         {
-            \uv_init($compile, $library, $include);
+            \uv_init();
             \Core::setup_stdio();
-            if (!$default) {
+            if ($default instanceof CData && \is_typeof($default, 'struct uv_loop_s*')) {
+                $this->uv_loop_ptr = $default;
+            } else {
                 $this->uv_loop = \uv_struct("struct uv_loop_s");
                 $this->uv_loop_ptr = \ffi_ptr($this->uv_loop);
-                self::$uv_default = $this;
             }
+
+            \ext_uv::get_module()->set_default($this);
         }
 
         public function __invoke(): CData
@@ -65,24 +66,19 @@ if (!\class_exists('UVLoop')) {
             return $this->uv_loop_ptr;
         }
 
-        public function __default(CData $loop): void
+        public static function default(): self
         {
-            $this->uv_loop_ptr = $loop;
-        }
-
-        public static function default(bool $compile = true, string $library = null, string $include = null): self
-        {
-            if (!self::$uv_default instanceof \UVLoop) {
-                self::$uv_default = new self($compile, $library, $include, true);
-                self::$uv_default->__default(\uv_ffi()->uv_default_loop());
+            $uv_default = \ext_uv::get_module()->get_default();
+            if (!$uv_default instanceof \UVLoop) {
+                $uv_default = new self(\uv_ffi()->uv_default_loop());
             }
 
-            return self::$uv_default;
+            return $uv_default;
         }
 
         public static function init(bool $compile = true, ?string $library = null, ?string $include = null)
         {
-            $loop = new self($compile, $library, $include);
+            $loop = new self();
             $status = \uv_ffi()->uv_loop_init($loop());
 
             return ($status === 0) ? $loop : $status;

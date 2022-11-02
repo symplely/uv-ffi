@@ -3101,22 +3101,13 @@ typedef struct _php_uv_s
     uv_idle_t idle;
     uv_timer_t timer;
     uv_async_t async;
-    uv_loop_t loop;
     uv_handle_t handle;
-    uv_req_t req;
     uv_stream_t stream;
-    uv_shutdown_t shutdown;
-    uv_udp_send_t udp_send;
-    uv_connect_t connect;
-    uv_getaddrinfo_t addrinfo;
     uv_prepare_t prepare;
     uv_check_t check;
     uv_process_t process;
-    uv_work_t work;
-    uv_fs_t fs;
     uv_fs_event_t fs_event;
     uv_tty_t tty;
-    uv_fs_poll_t fs_poll;
     uv_poll_t poll;
     uv_signal_t signal;
   } uv;
@@ -3153,7 +3144,7 @@ typedef struct _php_uv_loop_t
 
 typedef struct _zend_uv_globals
 {
-  php_uv_loop_t *default_loop;
+  php_uv_loop_t default_loop;
 } zend_uv_globals;
 
 typedef zend_uv_globals uv_globals;
