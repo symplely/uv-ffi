@@ -756,7 +756,11 @@ interface FFI
 
     public function uv_tcp_bind6(uv_tcp_t $uv_tcp, UVSockAddr $uv_sockaddr);
 
-    public function uv_tcp_nodelay(uv_tcp_t $handle, bool $enable);
+    /** @return int */
+    public function uv_tcp_nodelay(uv_tcp_t $handle, int $enable);
+
+    /** @return int */
+    public function uv_tcp_simultaneous_accepts(uv_tcp_t &$handle, int $enable);
 
     /** @return int */
     public function uv_tcp_init(uv_loop_t &$loop, uv_tcp_t &$handle);
@@ -977,9 +981,11 @@ interface FFI
     /** @return uv_handle_type */
     public function uv_handle_get_type(uv_handle_t &$uv);
 
-    public function uv_tcp_open(uv_tcp_t $handle, int $tcpfd);
+    /** @return int */
+    public function uv_tcp_open(uv_tcp_t &$handle, uv_os_sock_t $sock);
 
-    public function uv_udp_open(UVUdp $handle, int $udpfd);
+    /** @return int */
+    public function uv_udp_open(uv_udp_t &$handle, uv_os_sock_t $sock);
 
     /** @return int */
     public function uv_is_closing(uv_handle_t &$handle);

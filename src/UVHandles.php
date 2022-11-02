@@ -370,6 +370,22 @@ if (!\class_exists('UVTcp')) {
             return \uv_ffi()->uv_tcp_bind($this->uv_struct_type, \uv_sockaddr($addr), $flags);
         }
 
+        public function open($sock)
+        {
+            $fd = \get_fd_resource($sock);
+            if ($fd < 0) {
+                \ze_ffi()->zend_error(\E_WARNING, "file descriptor must be unsigned value or a valid resource");
+                return false;;
+            }
+
+            $error = \uv_ffi()->uv_tcp_open($this->uv_struct_type, $fd);
+            if ($error) {
+                \ze_ffi()->zend_error(\E_WARNING, "%s", \uv_strerror($error));
+            }
+
+            return $error;
+        }
+
         public function connect(\UVSockAddr $addr, callable $callback)
         {
             $this->uv_sock = $addr;
@@ -438,6 +454,22 @@ if (!\class_exists('UVUdp')) {
             }
 
             return $r;
+        }
+
+        public function open($sock)
+        {
+            $fd = \get_fd_resource($sock);
+            if ($fd < 0) {
+                \ze_ffi()->zend_error(\E_WARNING, "file descriptor must be unsigned value or a valid resource");
+                return false;;
+            }
+
+            $error = \uv_ffi()->uv_udp_open($this->uv_struct_type, $fd);
+            if ($error) {
+                \ze_ffi()->zend_error(\E_WARNING, "%s", \uv_strerror($error));
+            }
+
+            return $error;
         }
 
         /**

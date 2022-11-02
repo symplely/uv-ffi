@@ -1969,16 +1969,6 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
-     * Enable TCP_NODELAY, which disables Nagle’s algorithm.
-     *
-     * @param UVTcp $handle libuv tcp handle.
-     * @param bool $enable true means enabled. false means disabled.
-     */
-    function uv_tcp_nodelay(\UVTcp $handle, bool $enable)
-    {
-    }
-
-    /**
      * Stop the timer, and if it is repeating restart it using the repeat value as the timeout.
      * - If the timer has never been started before it returns UV_EINVAL.
      *
@@ -3052,6 +3042,7 @@ if (!\function_exists('uv_loop_init')) {
      * - UV_SIGNAL = 16;
      * - UV_FILE = 17;
      * - UV_HANDLE_TYPE_MAX = 18;
+     * @link http://docs.libuv.org/en/v1.x/handle.html?highlight=uv_handle_get_type#c.uv_handle_get_type
      */
     function uv_handle_get_type(\UV $handle)
     {
@@ -3067,12 +3058,45 @@ if (!\function_exists('uv_loop_init')) {
      * but it’s required that it represents a valid stream socket.
      *
      * @param UVTcp $handle
-     * @param int|resource $tcpfd
+     * @param resource $tcpfd
      *
      * @return int|false
+     * @link http://docs.libuv.org/en/v1.x/tcp.html?highlight=uv_tcp_open#c.uv_tcp_open
      */
-    function uv_tcp_open(\UVTcp $handle, int $tcpfd)
+    function uv_tcp_open(\UVTcp $handle, $tcpfd)
     {
+        return $handle->open($tcpfd);
+    }
+
+    /**
+     * Enable TCP_NODELAY, which disables Nagle’s algorithm.
+     *
+     * @param UVTcp $handle libuv tcp handle.
+     * @param bool $enable true means enabled. false means disabled.
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/tcp.html?highlight=uv_tcp_nodelay#c.uv_tcp_nodelay
+     */
+    function uv_tcp_nodelay(\UVTcp $handle, bool $enable)
+    {
+        return \uv_ffi()->uv_tcp_nodelay($handle, (int) $enable);
+    }
+
+    /**
+     * Enable / disable simultaneous asynchronous accept requests that are queued by the operating
+     * system when listening for new TCP connections.
+     *
+     * - This setting is used to tune a TCP server for the desired performance. Having simultaneous accepts
+     * can significantly improve the rate of accepting connections (which is why it is enabled by default)
+     * but may lead to uneven load distribution in multi-process setups.
+     *
+     * @param \UVUdp $handle
+     * @param bool $enable true means enabled. false means disabled.
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/tcp.html?highlight=uv_tcp_simultaneous_accepts#c.uv_tcp_simultaneous_accepts
+     */
+    function uv_tcp_simultaneous_accepts(\UVTcp $handle, bool $enable)
+    {
+        return  \uv_ffi()->uv_tcp_simultaneous_accepts($handle(), (int) $enable);
     }
 
     /**
@@ -3089,24 +3113,13 @@ if (!\function_exists('uv_loop_init')) {
      * but it’s required that it represents a valid datagram socket..
      *
      * @param UVUdp $handle
-     * @param int|resource $udpfd
+     * @param resource $udpfd
      *
      * @return int|false
+     * @link http://docs.libuv.org/en/v1.x/udp.html?highlight=uv_udp_open#c.uv_udp_open
      */
-    function uv_udp_open(\UVUdp $handle, int $udpfd)
+    function uv_udp_open(\UVUdp $handle, $udpfd)
     {
-    }
-
-    ////////////////////////
-    // Not part of `libuv`
-    ////////////////////////
-
-    /**
-     * @param UVLoop|null $uv_loop
-     *
-     * @return void
-     */
-    function uv_run_once(\UVLoop $uv_loop = null)
-    {
+        return $handle->open($udpfd);
     }
 }
