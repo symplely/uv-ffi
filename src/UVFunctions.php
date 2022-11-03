@@ -3000,9 +3000,11 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVTcp $uv_sock
      *
      * @return array ['address'], ['port'], ['family']
+     * @link http://docs.libuv.org/en/v1.x/tcp.html?highlight=uv_tcp_getpeername#c.uv_tcp_getpeername
      */
     function uv_tcp_getpeername(\UVTcp $uv_sock)
     {
+        return $uv_sock->get_name(2);
     }
 
     /**
@@ -3011,9 +3013,11 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVUdp $uv_sockaddr
      *
      * @return array ['address'], ['port'], ['family']
+     * @link http://docs.libuv.org/en/v1.x/udp.html?highlight=uv_udp_getsockname#c.uv_udp_getsockname
      */
     function uv_udp_getsockname(\UVUdp $uv_sock)
     {
+        return $uv_sock->get_name(3);
     }
 
     /**
@@ -3058,7 +3062,7 @@ if (!\function_exists('uv_loop_init')) {
      * but it’s required that it represents a valid stream socket.
      *
      * @param UVTcp $handle
-     * @param resource $tcpfd
+     * @param int|resource $tcpfd
      *
      * @return int|false
      * @link http://docs.libuv.org/en/v1.x/tcp.html?highlight=uv_tcp_open#c.uv_tcp_open
@@ -3113,7 +3117,7 @@ if (!\function_exists('uv_loop_init')) {
      * but it’s required that it represents a valid datagram socket..
      *
      * @param UVUdp $handle
-     * @param resource $udpfd
+     * @param int|resource $udpfd
      *
      * @return int|false
      * @link http://docs.libuv.org/en/v1.x/udp.html?highlight=uv_udp_open#c.uv_udp_open

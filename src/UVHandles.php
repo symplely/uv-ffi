@@ -372,10 +372,13 @@ if (!\class_exists('UVTcp')) {
 
         public function open($sock)
         {
-            $fd = \get_fd_resource($sock);
-            if ($fd < 0) {
-                \ze_ffi()->zend_error(\E_WARNING, "file descriptor must be unsigned value or a valid resource");
-                return false;;
+            $fd = $sock;
+            if (\is_resource($sock)) {
+                $fd = \get_fd_resource($sock);
+                if ($fd < 0) {
+                    \ze_ffi()->zend_error(\E_WARNING, "file descriptor must be unsigned value or a valid resource");
+                    return false;;
+                }
             }
 
             $error = \uv_ffi()->uv_tcp_open($this->uv_struct_type, $fd);
@@ -418,9 +421,6 @@ if (!\class_exists('UVTcp')) {
                 case 2:
                     \uv_ffi()->uv_tcp_getpeername($this->uv_struct_type, $addr(), $addr_len());
                     break;
-                case 3:
-                    // \uv_ffi()->uv_udp_getsockname($this->uv_struct_type, $addr(), $addr_len());
-                    break;
                 default:
                     \ze_ffi()->zend_error(\E_ERROR, "unexpected type");
                     break;
@@ -458,10 +458,13 @@ if (!\class_exists('UVUdp')) {
 
         public function open($sock)
         {
-            $fd = \get_fd_resource($sock);
-            if ($fd < 0) {
-                \ze_ffi()->zend_error(\E_WARNING, "file descriptor must be unsigned value or a valid resource");
-                return false;;
+            $fd = $sock;
+            if (\is_resource($sock)) {
+                $fd = \get_fd_resource($sock);
+                if ($fd < 0) {
+                    \ze_ffi()->zend_error(\E_WARNING, "file descriptor must be unsigned value or a valid resource");
+                    return false;;
+                }
             }
 
             $error = \uv_ffi()->uv_udp_open($this->uv_struct_type, $fd);
@@ -537,6 +540,27 @@ if (!\class_exists('UVUdp')) {
                     \zval_del_ref($callback);
                 }
             );
+        }
+
+        public function get_name(int $type)
+        {
+            $addr = \UVSockaddr::init();
+            $addr_len = \c_int_type(
+                'int',
+                'uv',
+                \FFi::sizeof($addr()[0]) * ($this->uv_sock instanceof \UVSockAddrIPv6 ? 3 : 1)
+            );
+
+            switch ($type) {
+                case 3:
+                    \uv_ffi()->uv_udp_getsockname($this->uv_struct_type, $addr(), $addr_len());
+                    break;
+                default:
+                    \ze_ffi()->zend_error(\E_ERROR, "unexpected type");
+                    break;
+            };
+
+            return \uv_address_to_array($addr);
         }
     }
 }

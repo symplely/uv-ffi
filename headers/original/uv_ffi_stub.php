@@ -975,8 +975,8 @@ interface FFI
     /** @return int */
     public function uv_tcp_getpeername(uv_tcp_t &$handle, sockaddr &$name, int_ptr &$namelen);
 
-    public function uv_udp_getsockname(UVUdp $uv_sock);
-
+    /** @return int */
+    public function uv_udp_getsockname(uv_udp_t &$handle, sockaddr &$name, int_ptr &$namelen);
 
     /** @return uv_handle_type */
     public function uv_handle_get_type(uv_handle_t &$uv);
