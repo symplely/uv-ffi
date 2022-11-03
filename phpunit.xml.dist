@@ -9,15 +9,16 @@
 
     <filter>
         <whitelist>
-            <directory suffix=".php">ffi/</directory>
+            <directory suffix=".php">src/</directory>
+            <file>preload.php</file>
             <exclude>
                 <directory suffix=".php">examples/</directory>
                 <directory suffix=".h">headers/</directory>
                 <file>headers/original/uv_ffi_stub.php</file>
-                <file>headers/original/ze_ffi_stub.php</file>
-                <file>headers/original/win_ffi_stub.php</file>
                 <file>.ignore_autoload.php</file>
+                <file>ffi_preloader.php</file>
             </exclude>
         </whitelist>
     </filter>
+
 </phpunit>
