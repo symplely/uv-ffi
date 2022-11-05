@@ -89,15 +89,23 @@ if (!\class_exists('ext_uv')) {
         protected bool $r_shutdown = true;
 
         protected string $uv_version;
-        protected ?\UVLoop $uv_default;
+
+        /** @var \UVLoop[]|null */
+        protected $uv_default;
 
         public function set_default(?\UVLoop $loop): void
         {
-            $this->uv_default = $loop;
+            if (\PHP_ZTS)
+                $this->uv_default[\ze_ffi()->tsrm_thread_id()] = $loop;
+            else
+                $this->uv_default = $loop;
         }
 
         public function get_default(): ?\UVLoop
         {
+            if (\PHP_ZTS)
+                return $this->uv_default[\ze_ffi()->tsrm_thread_id()];
+
             return $this->uv_default;
         }
 
@@ -111,46 +119,20 @@ if (!\class_exists('ext_uv')) {
         public function module_shutdown(int $type, int $module_number): int
         {
             \ext_uv::set_module(null);
+            \Core::clear_stdio();
+            \Core::clear('uv');
+
             return \ZE::SUCCESS;
         }
 
         public function request_shutdown(...$args): int
-        {/*
-            $uv_loop = $this->get_default();
-            if (!\is_null($uv_loop)) {
-                $loop =  $uv_loop();
-
-                \uv_ffi()->uv_stop($loop);
-                \uv_ffi()->uv_run($loop, \UV::RUN_DEFAULT);
-
-                \uv_ffi()->uv_walk($loop, function (CData $handle, CData $args) {
-                    if (!\zval_is_dtor($handle))
-                        \uv_ffi()->uv_close($handle, null);
-                }, NULL);
-
-                \uv_ffi()->uv_run($loop, \UV::RUN_DEFAULT);
-                \uv_ffi()->uv_loop_close($loop);
-
-                $uv_loop->free();
-            }*/
-
-            return \ZE::SUCCESS;
-        }
-
-        public function global_startup(CData $memory): void
         {
-            if (\PHP_ZTS) {
-                \tsrmls_activate();
-                $id = \ze_ffi()->tsrm_thread_id();
-                if (!isset($this->global_id[$id])) {
-                    $this->global_id[$id] = \ze_ffi()->ts_allocate_id(
-                        $this->global_rsrc->addr(),
-                        $this->globals_size(),
-                        null,
-                        null
-                    );
-                }
-            }
+            $uv_loop = $this->get_default();
+            if ($uv_loop instanceof \UVLoop && \is_cdata($uv_loop()))
+                $uv_loop->__destruct();
+
+            $this->set_default(null);
+            return \ZE::SUCCESS;
         }
 
         public function module_info(CData $entry): void
@@ -263,12 +245,12 @@ if (!\function_exists('uv_init')) {
     /**
      * Manually removes an previously created `C` data memory pointer.
      *
-     * @param UV|UVLoop|CData $ptr
+     * @param \UV|\CStruct|CData $ptr
      * @return void
      */
     function uv_ffi_free(object $ptr): void
     {
-        if ($ptr instanceof \UV || $ptr instanceof \UVLoop || $ptr instanceof \UVTypes || $ptr instanceof \CStruct)
+        if ($ptr instanceof \UV || $ptr instanceof \UVTypes || $ptr instanceof \CStruct)
             $ptr->free();
         elseif (\is_cdata($ptr))
             \FFI::free($ptr);

@@ -20,27 +20,26 @@ if (!\class_exists('UVLoop')) {
     {
         /** @var uv_Loop_t */
         protected ?CData $uv_loop;
+
+        /** @var uv_Loop_t */
         protected ?CData $uv_loop_ptr = null;
 
         public function __destruct()
         {
-            \uv_ffi()->uv_stop($this->uv_loop_ptr); /* in case we longjmp()'ed ... */
-            \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT); /* invalidate the stop ;-) */
-            \uv_ffi()->uv_walk($this->uv_loop_ptr, function (CData $handle, CData $args) {
-                if (!\zval_is_dtor($handle))
-                    \uv_ffi()->uv_close($handle, null);
-            }, null);
-            \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
-            \uv_ffi()->uv_loop_close($this->uv_loop_ptr);
-            $this->free();
-            \Core::clear('uv');
-            \Core::clear_stdio();
-        }
+            if (\is_cdata($this->uv_loop_ptr)) {
+                \uv_ffi()->uv_stop($this->uv_loop_ptr); /* in case we longjmp()'ed ... */
+                \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT); /* invalidate the stop ;-) */
 
-        public function free()
-        {
-            if (\is_cdata($this->uv_loop_ptr) && !\is_null_ptr($this->uv_loop_ptr)) {
-                \FFI::free($this->uv_loop_ptr);
+                \uv_ffi()->uv_walk($this->uv_loop_ptr, function (CData $handle, CData $args) {
+                    if (!\zval_is_dtor($handle))
+                        \uv_ffi()->uv_close($handle, null);
+                }, null);
+
+                \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
+                \uv_ffi()->uv_loop_close($this->uv_loop_ptr);
+
+                if (!\is_null_ptr($this->uv_loop_ptr))
+                    \FFI::free($this->uv_loop_ptr);
             }
 
             $this->uv_loop_ptr = null;
