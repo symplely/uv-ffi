@@ -5,6 +5,8 @@ echo 'Memory usage before autoload: ' . round(memory_get_usage() / 1048576) . 'M
 require 'vendor/autoload.php';
 echo 'Memory usage after autoload: ' . round(memory_get_usage() / 1048576) . 'MB' . "\n\n";
 
+uv_destruct_set();
+
 class TestCase
 {
   public $counter = 0;

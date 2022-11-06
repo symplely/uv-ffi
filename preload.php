@@ -113,6 +113,7 @@ if (!\class_exists('ext_uv')) {
         {
             $this->uv_version = \uv_ffi()->uv_version_string();
             \ext_uv::set_module($this);
+            \Core::setup_stdio();
             return \ZE::SUCCESS;
         }
 
@@ -127,11 +128,12 @@ if (!\class_exists('ext_uv')) {
 
         public function request_shutdown(...$args): int
         {
-            $uv_loop = $this->get_default();
-            if ($uv_loop instanceof \UVLoop && \is_cdata($uv_loop()))
-                $uv_loop->__destruct();
+            if (\is_ze_ffi()) {
+                $uv_loop = $this->get_default();
+                if ($uv_loop instanceof \UVLoop && \is_cdata($uv_loop()))
+                    $uv_loop->__destruct();
+            }
 
-            $this->set_default(null);
             return \ZE::SUCCESS;
         }
 
@@ -158,6 +160,11 @@ if (!\function_exists('uv_init')) {
     function uv_g(?string $element = null, $initialize = 'empty'): ?CData
     {
         return \ext_uv::get_module()->get_globals($element, $initialize);
+    }
+
+    function uv_destruct_set()
+    {
+        \ext_uv::get_module()->destruct_set();
     }
 
     /**
@@ -349,59 +356,6 @@ if (!\function_exists('uv_init')) {
         return ['address' => \ffi_string($ip), 'port' => $port, 'family' => $family];
     }
 
-    /**
-     * Creates a _uv structure_, can be of 40 types.
-     * @param string $typedef
-     * - typedef: `struct uv__io_s` for - **uv__io_t**
-     * - typedef: `struct uv_buf_t`
-     * - typedef: `struct uv_loop_s` for - **uv_loop_t**
-     * - typedef: `struct uv_handle_s` for - **uv_handle_t**
-     * - typedef: `struct uv_dir_s` for - **uv_dir_t**
-     * - typedef: `struct uv_stream_s` for - **uv_stream_t**
-     * - typedef: `struct uv_tcp_s` for - **uv_tcp_t**
-     * - typedef: `struct uv_udp_s` for - **uv_udp_t**
-     * - typedef: `struct uv_pipe_s` for - **uv_pipe_t**
-     * - typedef: `struct uv_tty_s` for - **uv_tty_t**
-     * - typedef: `struct uv_poll_s` for - **uv_poll_t**
-     * - typedef: `struct uv_timer_s` for - **uv_timer_t**
-     * - typedef: `struct uv_prepare_s` for - **uv_prepare_t**
-     * - typedef: `struct uv_check_s` for - **uv_check_t**
-     * - typedef: `struct uv_idle_s` for - **uv_idle_t**
-     * - typedef: `struct uv_async_s` for - **uv_async_t**
-     * - typedef: `struct uv_process_s` for - **uv_process_t**
-     * - typedef: `struct uv_fs_event_s` for - **uv_fs_event_t**
-     * - typedef: `struct uv_fs_poll_s` for - **uv_fs_poll_t**
-     * - typedef: `struct uv_signal_s` for - **uv_signal_t**
-     * - typedef: `struct uv_req_s` for - **uv_req_t**
-     * - typedef: `struct uv_getaddrinfo_s` for - **uv_getaddrinfo_t**
-     * - typedef: `struct uv_getnameinfo_s` for - **uv_getnameinfo_t**
-     * - typedef: `struct uv_shutdown_s` for - **uv_shutdown_t**
-     * - typedef: `struct uv_write_s` for - **uv_write_t**
-     * - typedef: `struct uv_connect_s` for - **uv_connect_t**
-     * - typedef: `struct uv_udp_send_s` for - **uv_udp_send_t**
-     * - typedef: `struct uv_fs_s` for - **uv_fs_t**
-     * - typedef: `struct uv_work_s` for - **uv_work_t**
-     * - typedef: `struct uv_random_s` for - **uv_random_t**
-     * - typedef: `struct uv_env_item_s` for - **uv_env_item_t**
-     * - typedef: `struct uv_cpu_info_s` for - **uv_cpu_info_t**
-     * - typedef: `struct uv_interface_address_s` for - **uv_interface_address_t**
-     * - typedef: `struct uv_dirent_s` for - **uv_dirent_t**
-     * - typedef: `struct uv_passwd_s` for - **uv_passwd_t**
-     * - typedef: `struct uv_utsname_s` for - **uv_utsname_t**
-     * - typedef: `struct uv_statfs_s` for - **uv_statfs_t**
-     * - typedef: `struct uv_stdio_container_s`
-     * - typedef: `struct uv_process_options_s`
-     * - typedef: `struct uv_thread_options_s` for - **uv_thread_options_t**
-     *
-     * @param boolean $owned
-     * @param boolean $persistent
-     * @return FFI\CData - use `uv_ptr()` to pass a **uv type** structure to a `uv function`.
-     */
-    function uv_struct($typedef, bool $owned = true, bool $persistent = false): ?CData
-    {
-        return \Core::struct('uv', $typedef, $owned, $persistent);
-    }
-
     function uv_ffi(): \FFI
     {
         return \Core::get('uv');
@@ -433,23 +387,16 @@ if (!\function_exists('uv_init')) {
 
     /**
      * **Setup** - *creates* a new **UV FFI** object or *retrieve* current `scoped`_(preloaded)_ object.
-     * - This function will try preloading first.
      *
-     * @param boolean $compile Controls how FFI library is initialized when calling **FFI::scope()** fails.
-     * - `true` calls **FFI:load()** and `opcache_compile_file()`.
-     * - `false` calls **FFI::cdef()**.
-     * @param string $library The name of a shared library file, to be loaded and linked with the header definitions.
-     * - Only used when calling **FFI::cdef()**.
-     * @param string $include Include headers, _file/string_ for *OS/platforms* not currently available.
      * @return void
      * @throws \RuntimeException
      */
-    function uv_init(bool $compile = true, string $library = null, string $include = null): void
+    function uv_init(): void
     {
         if (!\is_uv_ffi()) {
             // Try if preloaded
             try {
-                \Core::set('uv', \FFI::scope("UV"));
+                \Core::set('uv', \FFI::scope('__uv__'));
             } catch (Exception $e) {
                 \uv_ffi_loader();
             }
@@ -542,7 +489,7 @@ if (!\function_exists('uv_init')) {
         }
 
         \Core::set('uv', $scope);
-        $ext_uv = new \ext_uv(true);
+        $ext_uv = new \ext_uv();
         if (!$ext_uv->is_registered()) {
             $ext_uv->register();
             $ext_uv->startup();

@@ -837,7 +837,7 @@ interface FFI
     /** @return uv_loop_t */
     public function uv_handle_get_loop(uv_handle_t &$handle);
 
-    /** @return int */
+    /** @return void */
     public function uv_walk(uv_loop_t $loop,  uv_walk_cb $walk_cb, ?void_ptr &$arg);
 
     /** @return void */

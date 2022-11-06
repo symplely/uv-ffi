@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use FFI\CData;
-use FFI\CType;
 use ZE\Zval;
 use ZE\Resource;
 use ZE\HashTable;
@@ -31,8 +30,13 @@ if (!\class_exists('UVLoop')) {
                 \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT); /* invalidate the stop ;-) */
 
                 \uv_ffi()->uv_walk($this->uv_loop_ptr, function (CData $handle, CData $args) {
-                    if (!\zval_is_dtor($handle))
-                        \uv_ffi()->uv_close($handle, null);
+                    $fd = $handle->u->fd;
+                    if (Resource::is_valid($fd))
+                        Resource::remove_fd($fd);
+                    elseif (PhpStream::is_valid($fd))
+                        PhpStream::remove_fd($fd);
+
+                    \uv_ffi()->uv_close($handle, null);
                 }, null);
 
                 \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
@@ -40,27 +44,30 @@ if (!\class_exists('UVLoop')) {
 
                 if (!\is_null_ptr($this->uv_loop_ptr))
                     \FFI::free($this->uv_loop_ptr);
-            }
 
-            $this->uv_loop_ptr = null;
-            $this->uv_loop = null;
+                $this->uv_loop_ptr = null;
+                $this->uv_loop = null;
+
+                \ext_uv::get_module()->set_default(null);
+                if (\ext_uv::get_module()->is_destruct())
+                    \ext_uv::get_module()->module_destructor();
+            }
         }
 
         protected function __construct(CData $default = null)
         {
             \uv_init();
-            \Core::setup_stdio();
             if ($default instanceof CData && \is_typeof($default, 'struct uv_loop_s*')) {
                 $this->uv_loop_ptr = $default;
             } else {
-                $this->uv_loop = \uv_struct("struct uv_loop_s");
+                $this->uv_loop = \uv_ffi()->new("struct uv_loop_s");
                 $this->uv_loop_ptr = \ffi_ptr($this->uv_loop);
             }
 
             \ext_uv::get_module()->set_default($this);
         }
 
-        public function __invoke(): CData
+        public function __invoke(): ?CData
         {
             return $this->uv_loop_ptr;
         }
