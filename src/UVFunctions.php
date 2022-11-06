@@ -6,6 +6,16 @@ use FFI\CData;
 
 if (!\function_exists('uv_loop_init')) {
     /**
+     * Instructs the `UVloop` instance to **destruct** when _out of scope_, perform a _request shutdown_.
+     *
+     * @return void
+     */
+    function uv_destruct_set(): void
+    {
+        \ext_uv::get_module()->destruct_set();
+    }
+
+    /**
      * Initializes a `UVLoop` instance structure.
      *
      * @return UVLoop|int

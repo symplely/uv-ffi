@@ -162,11 +162,6 @@ if (!\function_exists('uv_init')) {
         return \ext_uv::get_module()->get_globals($element, $initialize);
     }
 
-    function uv_destruct_set()
-    {
-        \ext_uv::get_module()->destruct_set();
-    }
-
     /**
      * Returns **cast** a `uv_req_t` _base request_ pointer.
      *
@@ -489,7 +484,7 @@ if (!\function_exists('uv_init')) {
         }
 
         \Core::set('uv', $scope);
-        $ext_uv = new \ext_uv();
+        $ext_uv = new \ext_uv(true);
         if (!$ext_uv->is_registered()) {
             $ext_uv->register();
             $ext_uv->startup();
