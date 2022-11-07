@@ -6,14 +6,9 @@ This **libuv ffi** implementation is based on extension [ext-uv](https://github.
 
 The _ext-uv_ extension is on version _1.6_ of **libuv**, 1.6 is actually _1.06_, or about _39_ releases behind current 1.44.2.
 
-Getting _ext-uv_ **tests and functions** implemented will indicate overall progress. All **ext-uv 0.3.0** _tests_ been implemented, except **uv_queue_work** _thread_ test. Currently, **ext-uv 0.3.0** has **150** _functions_ and so far **132** have been implemented. The following needs implementing.
+Getting _ext-uv_ **tests and functions** implemented will indicate overall progress. All **ext-uv 0.3.0** _tests_ been implemented, except **uv_queue_work** _thread_ test. Currently, **ext-uv 0.3.0** has **150** _functions_ and so far **135** have been implemented. The following needs implementing.
 
 ```h
-PHP_FE(uv_sem_init, arginfo_uv_sem_init)
-PHP_FE(uv_sem_post, arginfo_uv_sem_post)
-PHP_FE(uv_sem_wait, arginfo_uv_sem_wait)
-PHP_FE(uv_sem_trywait, arginfo_uv_sem_trywait)
-
 // Will be implemented last, the whole threading part is not the same for PHP 8+, as in PHP 7.4!
 ** PHP_FE(uv_queue_work, NULL) **
 

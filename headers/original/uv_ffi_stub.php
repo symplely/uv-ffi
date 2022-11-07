@@ -914,9 +914,6 @@ interface FFI
     public function uv_sem_trywait(uv_sem_t &$sem);
 
     /** @return int */
-    //  public function uv_fs_event_init(uv_loop_t $loop, string $path, callable $callback, int $flags = 0);
-
-    /** @return int */
     public function uv_fs_event_init(uv_loop_t &$loop, uv_fs_event_t &$handle);
 
     /** @return int */

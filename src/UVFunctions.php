@@ -2558,39 +2558,50 @@ if (!\function_exists('uv_loop_init')) {
      * Initialize semaphore handle.
      *
      * @param int $value
-     * @return UVLock
+     * @return UVSemaphore|int
+     * @link http://docs.libuv.org/en/v1.x/threading.html?highlight=uv_sem_init#c.uv_sem_init
      */
     function uv_sem_init(int $value)
     {
+        $semaphore = \UVSemaphore::struct_init('_php_uv_lock_s', 'semaphore');
+        $status = \uv_ffi()->uv_sem_init($semaphore(), $value);
+
+        return $status === 0 ? $semaphore : $status;
     }
 
     /**
      * Post semaphore.
      *
-     * @param UVLock $sem UV handle (\UV sem).
+     * @param UVSemaphore $sem UV handle (\UV sem).
      *
      * @return void
+     * @link http://docs.libuv.org/en/v1.x/threading.html?highlight=uv_sem_init#c.uv_sem_post
      */
-    function uv_sem_post(\UVLock $sem)
+    function uv_sem_post(\UVSemaphore $sem): void
     {
+        \uv_ffi()->uv_sem_post($sem());
     }
 
     /**
-     * @param UVLock $sem
+     * @param UVSemaphore $sem
      *
      * @return void
+     * @link http://docs.libuv.org/en/v1.x/threading.html?highlight=uv_sem_init#c.uv_sem_wait
      */
-    function uv_sem_wait(\UVLock $sem)
+    function uv_sem_wait(\UVSemaphore $sem): void
     {
+        \uv_ffi()->uv_sem_wait($sem());
     }
 
     /**
-     * @param UVLock $sem
+     * @param UVSemaphore $sem
      *
-     * @return void
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/threading.html?highlight=uv_sem_init#c.uv_sem_trywait
      */
-    function uv_sem_trywait(\UVLock $sem)
+    function uv_sem_trywait(\UVSemaphore $sem)
     {
+        return \uv_ffi()->uv_sem_trywait($sem());
     }
 
     /**
