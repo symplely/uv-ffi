@@ -368,6 +368,9 @@ abstract class uv_connect_t extends uv_req_t
 abstract class uv_tty_mode_t extends int
 {
 }
+abstract class uv_membership extends int
+{
+}
 abstract class uv_tty_vtermstate_t extends int
 {
 }
@@ -813,15 +816,20 @@ interface FFI
     /** @return int */
     public function uv_udp_recv_start(uv_udp_t &$handle, uv_alloc_cb $alloc_cb, uv_udp_recv_cb $recv_cb);
 
-    public function uv_udp_recv_stop(UVUdp $handle);
+    /** @return int */
+    public function uv_udp_recv_stop(uv_udp_t &$handle);
 
-    public function uv_udp_set_membership(UVUdp $handle, string $multicast_addr, string $interface_addr, int $membership);
+    /** @return int */
+    public function uv_udp_set_membership(uv_udp_t &$handle, const_char &$multicast_addr, const_char &$interface_addr, uv_membership $membership);
 
-    public function uv_udp_set_multicast_loop(UVUdp $handle, bool $enabled);
+    /** @return int */
+    public function uv_udp_set_multicast_loop(uv_udp_t &$handle, int $on);
 
-    public function uv_udp_set_multicast_ttl(UVUdp $handle, int $ttl);
+    /** @return int */
+    public function uv_udp_set_multicast_ttl(uv_udp_t &$handle, int $ttl);
 
-    public function uv_udp_set_broadcast(UVUdp $handle, bool $enabled);
+    /** @return int */
+    public function uv_udp_set_broadcast(uv_udp_t &$handle, int $on);
 
     /** @return int */
     public function uv_udp_send(uv_udp_send_t &$req, uv_udp_t &$handle, uv_buf_t &$bufs, int $nbufs, sockaddr &$addr, uv_udp_send_cb $send_cb);

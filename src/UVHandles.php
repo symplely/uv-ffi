@@ -462,6 +462,37 @@ if (!\class_exists('UVUdp')) {
             return $r;
         }
 
+        public function stop()
+        {
+            if (!\uv_is_active($this)) {
+                \ze_ffi()->zend_error(\E_NOTICE, "passed uv_resource has already stopped.");
+                return false;
+            }
+
+            $r = \uv_ffi()->uv_udp_recv_stop($this->uv_struct_type);
+            \zval_del_ref($this);
+
+            return $r;
+        }
+
+        public function multicast(int $ttl)
+        {
+            if ($ttl > 255) {
+                \ze_ffi()->zend_error(\E_NOTICE, "uv_udp_set_muticast_ttl: ttl parameter expected smaller than 255.");
+                $ttl = 255;
+            } elseif ($ttl < 1) {
+                \ze_ffi()->zend_error(\E_NOTICE, "uv_udp_set_muticast_ttl: ttl parameter expected larger than 0.");
+                $ttl = 1;
+            }
+
+            $r = \uv_ffi()->uv_udp_set_multicast_ttl($this->uv_struct_type, $ttl);
+            if ($r) {
+                \ze_ffi()->zend_error(\E_NOTICE, "uv_udp_set_muticast_ttl failed");
+            }
+
+            return $r;
+        }
+
         public function open($sock)
         {
             $fd = $sock;

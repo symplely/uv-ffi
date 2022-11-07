@@ -2213,10 +2213,12 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @param UVUdp $handle
      *
-     * @return void
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/udp.html?highlight=uv_udp_recv_stop#c.uv_udp_recv_stop
      */
     function uv_udp_recv_stop(\UVUdp $handle)
     {
+        return $handle->stop();
     }
 
     /**
@@ -2225,7 +2227,7 @@ if (!\function_exists('uv_loop_init')) {
      * - handle – UDP handle. Should have been initialized with uv_udp_init().
      * - multicast_addr – Multicast address to set membership for.
      * - interface_addr – Interface address.
-     * - membership – Should be UV_JOIN_GROUP or UV_LEAVE_GROUP.
+     * - membership – Should be `UV::JOIN_GROUP` or `UV::LEAVE_GROUP`.
      *
      * @param UVUdp $handle UV handle (udp).
      * @param string $multicast_addr multicast address.
@@ -2233,9 +2235,11 @@ if (!\function_exists('uv_loop_init')) {
      * @param int $membership UV::JOIN_GROUP or UV::LEAVE_GROUP
      *
      * @return int 0 on success, or an error code < 0 on failure.
+     * @link http://docs.libuv.org/en/v1.x/udp.html?highlight=uv_udp_set_membership#c.uv_udp_set_membership
      */
     function uv_udp_set_membership(\UVUdp $handle, string $multicast_addr, string $interface_addr, int $membership)
     {
+        return \uv_ffi()->uv_udp_set_membership($handle(), $multicast_addr, $interface_addr, $membership);
     }
 
     /**
@@ -2249,10 +2253,17 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVUdp $handle UV handle (udp).
      * @param bool $enabled
      *
-     * @return void
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/udp.html?highlight=uv_udp_set_multicast_loop#c.uv_udp_set_multicast_loop
      */
     function uv_udp_set_multicast_loop(\UVUdp $handle, bool $enabled)
     {
+        $r = \uv_ffi()->uv_udp_set_multicast_loop($handle(), (int)$enabled);
+        if ($r) {
+            \ze_ffi()->zend_error(\E_NOTICE, "uv_udp_set_muticast_loop failed");
+        }
+
+        return $r;
     }
 
     /**
@@ -2264,10 +2275,12 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVUdp $handle UV handle (udp).
      * @param int $ttl multicast ttl.
      *
-     * @return void
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/udp.html?highlight=uv_udp_set_multicast_ttl#c.uv_udp_set_multicast_ttl
      */
     function uv_udp_set_multicast_ttl(\UVUdp $handle, int $ttl)
     {
+        return $handle->multicast($ttl);
     }
 
     /**
@@ -2279,10 +2292,17 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVUdp $handle UV handle (udp).
      * @param bool $enabled
      *
-     * @return void
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/udp.html?highlight=uv_udp_set_multicast_ttl#c.uv_udp_set_broadcast
      */
     function uv_udp_set_broadcast(\UVUdp $handle, bool $enabled)
     {
+        $r = \uv_ffi()->uv_udp_set_broadcast($handle(), (int) $enabled);
+        if ($r) {
+            \ze_ffi()->zend_error(\E_NOTICE, "uv_udp_set_muticast_loop failed");
+        }
+
+        return $r;
     }
 
     /**
