@@ -717,9 +717,14 @@ interface FFI
     /** @return void */
     public function uv_pipe_connect(uv_connect_t &$req, uv_pipe_t &$handle, const_char &$name, uv_connect_cb $cb);
 
-    public function uv_pipe_pending_instances(UVPipe $handle, $count);
+    /** @return void */
+    public function uv_pipe_pending_instances(uv_pipe_t &$handle, int $count);
 
-    public function uv_stdio_new($fd, int $flags);
+    /** @return int */
+    public function uv_pipe_pending_count(uv_pipe_t &$handle);
+
+    /** @return uv_handle_type|int */
+    public function uv_pipe_pending_type(uv_pipe_t &$handle);
 
     /** @return int */
     public function uv_queue_work(uv_loop_t &$loop, uv_work_t &$req, uv_work_cb $work_cb, uv_after_work_cb $after_work_cb);

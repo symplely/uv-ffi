@@ -1728,10 +1728,40 @@ if (!\function_exists('uv_loop_init')) {
      * Note: This setting applies to Windows only.
      *
      * @param UVPipe $handle
-     * @param void $count
+     * @param int $count
+     * @return void
+     * @link http://docs.libuv.org/en/v1.x/pipe.html?highlight=uv_pipe_pending_instances#c.uv_pipe_pending_instances
      */
-    function uv_pipe_pending_instances(\UVPipe $handle, $count)
+    function uv_pipe_pending_instances(\UVPipe $handle, int $count): void
     {
+        \uv_ffi()->uv_pipe_pending_instances($handle(), $count);
+    }
+
+    /**
+     * Check if there are pending handles.
+     *
+     * @param \UVPipe $handle
+     * @return integer
+     * @link http://docs.libuv.org/en/v1.x/pipe.html?highlight=uv_pipe_pending_count#c.uv_pipe_pending_count
+     */
+    function uv_pipe_pending_count(\UVPipe $handle): int
+    {
+        return \uv_ffi()->uv_pipe_pending_count($handle());
+    }
+
+    /**
+     * Used to receive handles over IPC pipes.
+     *
+     * - First - call uv_pipe_pending_count(), if it’s > 0 then initialize a handle of the given type,
+     * returned by `uv_pipe_pending_type()` and call `uv_accept(pipe, handle)`.
+     *
+     * @param \UVPipe $handle
+     * @return integer
+     * @link http://docs.libuv.org/en/v1.x/pipe.html?highlight=uv_pipe_pending_count#c.uv_pipe_pending_type
+     */
+    function uv_pipe_pending_type(\UVPipe $handle): int
+    {
+        return \uv_ffi()->uv_pipe_pending_type($handle());
     }
 
     /**
