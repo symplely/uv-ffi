@@ -1338,6 +1338,34 @@ if (!\class_exists('UVSemaphore')) {
     }
 }
 
+if (!\class_exists('UVThread')) {
+    /**
+     * @return uv_thread_t **pointer** by invoking `$UVThread()`
+     */
+    final class UVThread extends \UVTypes
+    {
+        protected function __construct(string $typedef = null, $value = null)
+        {
+            $this->uv_type = \uv_ffi()->new('uv_thread_t');
+            $this->uv_type_ptr = \ffi_ptr($this->uv_type);
+            if ($typedef === 'self' && !\is_null($value))
+                $this->uv_type_ptr[0] = $value;
+        }
+
+        public function value()
+        {
+            return $this->uv_type_ptr[0];
+        }
+
+        /** @return static */
+        public static function init(...$arguments)
+        {
+            $type = \reset($arguments);
+            return new static($type, $arguments);
+        }
+    }
+}
+
 
 if (!\class_exists('UVWork')) {
     /**

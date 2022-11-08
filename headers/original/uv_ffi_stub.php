@@ -81,6 +81,15 @@ interface uv_fs_cb extends closure
 interface uv_work_cb extends closure
 {
 }
+/**
+ * Callback that is invoked to initialize thread execution.
+ * arg is the same value that was passed to uv_thread_create().
+ *
+ * @var callable (void &$arg)
+ */
+interface uv_thread_cb extends closure
+{
+}
 /** @var callable (uv_work_t &$req, int status) */
 interface uv_after_work_cb extends closure
 {
@@ -137,6 +146,14 @@ abstract class uv_mutex_t extends uv_rwlock_t
 }
 /** Semaphore data type. */
 abstract class uv_sem_t extends uv_rwlock_t
+{
+}
+/** Thread data type. */
+abstract class uv_thread_t extends size_t
+{
+}
+/** Thread-local key data type. */
+abstract class uv_key_t extends size_ptr
 {
 }
 abstract class uv_udp_send_t extends uv_req_t
@@ -354,6 +371,9 @@ abstract class UVStat extends uv_stat_t
 {
 }
 abstract class UVRequest extends uv_req_t
+{
+}
+abstract class UVThread extends uv_thread_t
 {
 }
 abstract class UV extends uv_handle_t
@@ -1004,4 +1024,31 @@ interface FFI
 
     /** @return const_char */
     public function uv_version_string();
+
+    /** @return void */
+    public function uv_sleep(int $msec);
+
+    /** @return uv_thread_t */
+    public function uv_thread_self();
+
+    /** @return int */
+    public function uv_thread_create(uv_thread_t &$tid, uv_thread_cb $entry, void_ptr &$arg);
+
+    /** @return int */
+    public function uv_thread_join(uv_thread_t &$tid);
+
+    /** @return int */
+    public function uv_thread_equal(uv_thread_t &$t1, uv_thread_t &$t2);
+
+    /** @return int */
+    public function uv_key_create(uv_key_t &$key);
+
+    /** @return void */
+    public function uv_key_delete(uv_key_t &$key);
+
+    /** @return void_ptr */
+    public function uv_key_get(uv_key_t &$key);
+
+    /** @return void */
+    public function uv_key_set(uv_key_t &$key, void_ptr &$value);
 }

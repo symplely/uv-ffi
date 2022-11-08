@@ -1694,6 +1694,76 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
+     * Causes the calling thread to sleep for msec milliseconds.
+     *
+     * @param integer $msec
+     * @return void
+     * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=uv_sleep#c.uv_sleep
+     */
+    function uv_sleep(int $msec): void
+    {
+        \uv_ffi()->uv_sleep($msec);
+    }
+
+    /**
+     * Returns the ID of the calling thread.
+     * - This is the same value that is returned in `uv_thread_create()` that created this thread.
+     *
+     * @return \UVThread
+     * @link http://docs.libuv.org/en/v1.x/threading.html#c.uv_thread_self
+     */
+    function uv_thread_self(): \UVThread
+    {
+        return \UVThread::init('self', \uv_ffi()->uv_thread_self());
+    }
+
+    /**
+     * Starts a new thread in the calling process.
+     * - The new thread starts execution by invoking __routine__.
+     * - __args__ is passed as the sole argument of `routine()`.
+     *
+     * @param callable|uv_thread_cb $routine
+     * @param mixed $args
+     * @return int|UVThread
+     * @link http://docs.libuv.org/en/v1.x/threading.html#c.uv_thread_create
+     */
+    function uv_thread_create(callable $routine, $args)
+    {
+        $uv_thread = \UVThread::init();
+        $status = \uv_ffi()->uv_thread_create($uv_thread(), $routine, $args);
+
+        return $status === 0 ? $uv_thread : $status;
+    }
+
+    /**
+     * Waits for the thread specified to terminate.
+     * - If that thread has already terminated, then `uv_thread_join()` returns immediately.
+     * - The thread specified must be joinable.
+     *
+     * @param UVThread $tid
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/threading.html#c.uv_thread_join
+     */
+    function uv_thread_join(UVThread $tid)
+    {
+        return \uv_ffi()->uv_thread_join($tid());
+    }
+
+    /**
+     * Compares two thread identifiers.
+     * - If the two thread IDs are equal, returns a nonzero value; otherwise, it returns 0.
+     *
+     * @param UVThread $t1
+     * @param UVThread $t2
+     * @return int
+     * @link http://docs.libuv.org/en/v1.x/threading.html#c.uv_thread_equal
+     */
+    function uv_thread_equal(UVThread $t1, UVThread $t2)
+    {
+        return \uv_ffi()->uv_thread_equal($t1(), $t2());
+    }
+
+    /**
      * Bind the pipe to a file path (Unix) or a name (Windows).
      * - Note: Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes, typically between 92 and 108 bytes.
      *
