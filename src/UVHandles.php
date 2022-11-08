@@ -1338,6 +1338,7 @@ if (!\class_exists('UVSemaphore')) {
     }
 }
 
+
 if (!\class_exists('UVWork')) {
     /**
      * @return uv_work_t **pointer** by invoking `$UVWork()`
@@ -1698,8 +1699,37 @@ if (!\class_exists('UVFs')) {
                     case \UV::FS_MKDIR:
                         $result = \uv_ffi()->uv_fs_mkdir($loop(), $uv_fSystem(), $fdOrString, \array_shift($arguments), $uv_fs_cb);
                         break;
+                    case \UV::FS_RENAME:
+                        $result = \uv_ffi()->uv_fs_rename($loop(), $uv_fSystem(), $fdOrString, \array_shift($arguments), $uv_fs_cb);
+                        break;
+                    case \UV::FS_CHMOD:
+                        $result = \uv_ffi()->uv_fs_chmod($loop(), $uv_fSystem(), $fdOrString, \array_shift($arguments), $uv_fs_cb);
+                        break;
+                    case \UV::FS_UTIME:
+                        $atime = \array_shift($arguments);
+                        $mtime = \array_shift($arguments);
+                        $result = \uv_ffi()->uv_fs_utime($loop(), $uv_fSystem(), $fdOrString, $atime, $mtime, $uv_fs_cb);
+                        break;
+                    case \UV::FS_CHOWN:
+                        $uid = \array_shift($arguments);
+                        $gid = \array_shift($arguments);
+                        $result = \uv_ffi()->uv_fs_chown($loop(), $uv_fSystem(), $fdOrString, $uid, $gid, $uv_fs_cb);
+                        break;
+                    case \UV::FS_LINK:
+                        $result = \uv_ffi()->uv_fs_link($loop(), $uv_fSystem(), $fdOrString, \array_shift($arguments), $uv_fs_cb);
+                        break;
+                    case \UV::FS_SYMLINK:
+                        $new_path = \array_shift($arguments);
+                        $flags = \array_shift($arguments);
+                        $result = \uv_ffi()->uv_fs_symlink($loop(), $uv_fSystem(), $fdOrString, $new_path, $flags, $uv_fs_cb);
+                        break;
                     case \UV::FS_RMDIR:
                         $result = \uv_ffi()->uv_fs_rmdir($loop(), $uv_fSystem(), $fdOrString, $uv_fs_cb);
+                        break;
+                    case \UV::FS_FSTAT:
+                        $result = \uv_ffi()->uv_fs_lstat($loop(), $uv_fSystem(), $fdOrString, $uv_fs_cb);
+                        if (\is_null($callback))
+                            $result = \uv_stat_to_zval(\uv_fs_get_statbuf($uv_fSystem));
                         break;
                     case \UV::FS_STAT:
                         $result = \uv_ffi()->uv_fs_stat($loop(), $uv_fSystem(), $fdOrString, $uv_fs_cb);
@@ -1758,6 +1788,28 @@ if (!\class_exists('UVFs')) {
                         $result = \uv_ffi()->uv_fs_close($loop(), $uv_fSystem(), $fd, $uv_fs_cb);
                         if (\is_null($callback))
                             Resource::remove_fd($fd);
+                        break;
+                    case \UV::FS_FSYNC:
+                        $result = \uv_ffi()->uv_fs_fsync($loop(), $uv_fSystem(), $fd, $uv_fs_cb);
+                        break;
+                    case \UV::FS_FDATASYNC:
+                        $result = \uv_ffi()->uv_fs_fdatasync($loop(), $uv_fSystem(), $fd, $uv_fs_cb);
+                        break;
+                    case \UV::FS_FTRUNCATE:
+                        $result = \uv_ffi()->uv_fs_ftruncate($loop(), $uv_fSystem(), $fd, \array_shift($arguments), $uv_fs_cb);
+                        break;
+                    case \UV::FS_FCHMOD:
+                        $result = \uv_ffi()->uv_fs_fchmod($loop(), $uv_fSystem(), $fd, \array_shift($arguments), $uv_fs_cb);
+                        break;
+                    case \UV::FS_FUTIME:
+                        $atime = \array_shift($arguments);
+                        $mtime = \array_shift($arguments);
+                        $result = \uv_ffi()->uv_fs_futime($loop(), $uv_fSystem(), $fd, $atime, $mtime, $uv_fs_cb);
+                        break;
+                    case \UV::FS_FCHOWN:
+                        $uid = \array_shift($arguments);
+                        $gid = \array_shift($arguments);
+                        $result = \uv_ffi()->uv_fs_fchown($loop(), $uv_fSystem(), $fd, $uid, $gid, $uv_fs_cb);
                         break;
                     case \UV::FS_READ;
                         $offset = \array_shift($arguments);

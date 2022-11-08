@@ -6,27 +6,17 @@ This **libuv ffi** implementation is based on extension [ext-uv](https://github.
 
 The _ext-uv_ extension is on version _1.6_ of **libuv**, 1.6 is actually _1.06_, or about _39_ releases behind current 1.44.2.
 
-Getting _ext-uv_ **tests and functions** implemented will indicate overall progress. All **ext-uv 0.3.0** _tests_ been implemented, except **uv_queue_work** _thread_ test. Currently, **ext-uv 0.3.0** has **150** _functions_ and so far **135** have been implemented. The following needs implementing.
+All **ext-uv 0.3.0** _tests and functions_ been implemented, except **uv_queue_work**. Functionality has only been tested under `Windows` and mainly _PHP 7.4_, `Linux` usage behavior and corrections will begin after figuring out how the threading part will be implemented, **ext-uv 0.3.0** currently rely on:
 
 ```h
-// Will be implemented last, the whole threading part is not the same for PHP 8+, as in PHP 7.4!
-** PHP_FE(uv_queue_work, NULL) **
-
-PHP_FE(uv_fs_fsync, arginfo_uv_fs_fsync)
-PHP_FE(uv_fs_fdatasync, arginfo_uv_fs_fdatasync)
-PHP_FE(uv_fs_ftruncate, arginfo_uv_fs_ftruncate)
-PHP_FE(uv_fs_unlink, arginfo_uv_fs_unlink)
-PHP_FE(uv_fs_rename, arginfo_uv_fs_rename)
-PHP_FE(uv_fs_utime, arginfo_uv_fs_utime)
-PHP_FE(uv_fs_futime, arginfo_uv_fs_futime)
-PHP_FE(uv_fs_chmod, arginfo_uv_fs_chmod)
-PHP_FE(uv_fs_fchmod, arginfo_uv_fs_fchmod)
-PHP_FE(uv_fs_chown, arginfo_uv_fs_chown)
-PHP_FE(uv_fs_fchown, arginfo_uv_fs_fchown)
-PHP_FE(uv_fs_link, arginfo_uv_fs_link)
-PHP_FE(uv_fs_symlink, arginfo_uv_fs_symlink)
-PHP_FE(uv_fs_lstat, arginfo_uv_fs_lstat)
+/* these 3 APIs should only be used by people that fully understand the threading model
+ * used by PHP/Zend and the selected SAPI. */
+*tsrm_new_interpreter_context(void);
+TSRM_API void *tsrm_set_interpreter_context(void *new_ctx);
+TSRM_API void tsrm_free_interpreter_context(void *context);
 ```
+
+_They have been removed since PHP 8, see <https://fossies.org/linux/php/UPGRADING.INTERNALS>_
 
 **PR** are welcome, see [Documentation] and [Contributing].
 
