@@ -137,8 +137,8 @@ if (!\class_exists('ext_uv')) {
             \Core::clear('uv');
 
             if (\PHP_ZTS) {
-                \ze_ffi()->tsrm_mutex_free($this->mutex);
-                $this->mutex = null;
+                \ze_ffi()->tsrm_mutex_free($this->default_mutex);
+                $this->default_mutex = null;
             }
 
             return \ZE::SUCCESS;
