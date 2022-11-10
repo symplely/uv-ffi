@@ -1348,8 +1348,9 @@ if (!\class_exists('UVThread')) {
         {
             $this->uv_type = \uv_ffi()->new('uv_thread_t');
             $this->uv_type_ptr = \ffi_ptr($this->uv_type);
-            if ($typedef === 'self' && !\is_null($value))
+            if ($typedef === 'self' && !\is_null($value)) {
                 $this->uv_type_ptr[0] = $value;
+            }
         }
 
         public function value()
@@ -1360,8 +1361,8 @@ if (!\class_exists('UVThread')) {
         /** @return static */
         public static function init(...$arguments)
         {
-            $type = \reset($arguments);
-            return new static($type, $arguments);
+            $type = \array_shift($arguments);
+            return new static($type, \reset($arguments));
         }
     }
 }
@@ -1380,7 +1381,7 @@ if (!\class_exists('UVWork')) {
                 $work_cb = \array_shift($arguments);
                 $after_cb = \array_shift($arguments);
                 $work = new static('struct uv_work_s');
-                //   \zval_add_ref($work);
+                \zval_add_ref($work);
                 $r = \uv_ffi()->uv_queue_work(
                     $loop(),
                     $work(),
@@ -1405,11 +1406,11 @@ if (!\class_exists('UVWork')) {
                         // \ze_ffi()->tsrm_free_interpreter_context($tsrm_ls);
                     },
                     function (CData $req, int $status) use ($after_cb, $work) {
-                        $after_cb($status);
-                        unset($status);
-                        \FFI::free($req);
+                        //   $after_cb($status);
+                        //   unset($status);
+                        //   \FFI::free($req);
                         // \zval_del_ref($after_cb);
-                        \zval_del_ref($work);
+                        //   \zval_del_ref($work);
                     }
                 );
 

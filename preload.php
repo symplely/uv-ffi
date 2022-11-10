@@ -93,6 +93,13 @@ if (!\class_exists('ext_uv')) {
         /** @var \UVLoop[]|null */
         protected $uv_default;
 
+        protected ?CData $default_mutex = null;
+
+        public function get_mutex(): ?CData
+        {
+            return (\PHP_ZTS) ? $this->default_mutex : null;
+        }
+
         public function set_default(?\UVLoop $loop): void
         {
             if (\PHP_ZTS)
@@ -104,13 +111,19 @@ if (!\class_exists('ext_uv')) {
         public function get_default(): ?\UVLoop
         {
             if (\PHP_ZTS)
-                return $this->uv_default[\ze_ffi()->tsrm_thread_id()];
+                return $this->uv_default[\ze_ffi()->tsrm_thread_id()] ?? null;
 
             return $this->uv_default;
         }
 
         public function module_startup(int $type, int $module_number): int
         {
+            if (\PHP_ZTS)
+                $this->default_mutex = \ze_ffi()->tsrm_mutex_alloc();
+
+            if (\IS_WINDOWS)
+                $this->destruct_set();
+
             $this->uv_version = \uv_ffi()->uv_version_string();
             \ext_uv::set_module($this);
             \Core::setup_stdio();
@@ -122,6 +135,11 @@ if (!\class_exists('ext_uv')) {
             \ext_uv::set_module(null);
             \Core::clear_stdio();
             \Core::clear('uv');
+
+            if (\PHP_ZTS) {
+                \ze_ffi()->tsrm_mutex_free($this->mutex);
+                $this->mutex = null;
+            }
 
             return \ZE::SUCCESS;
         }

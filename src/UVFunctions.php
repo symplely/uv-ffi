@@ -1727,7 +1727,7 @@ if (!\function_exists('uv_loop_init')) {
      * @return int|UVThread
      * @link http://docs.libuv.org/en/v1.x/threading.html#c.uv_thread_create
      */
-    function uv_thread_create(callable $routine, $args)
+    function uv_thread_create(callable $routine, $args = null)
     {
         $uv_thread = \UVThread::init();
         $status = \uv_ffi()->uv_thread_create($uv_thread(), $routine, $args);
@@ -1744,7 +1744,7 @@ if (!\function_exists('uv_loop_init')) {
      * @return int
      * @link http://docs.libuv.org/en/v1.x/threading.html#c.uv_thread_join
      */
-    function uv_thread_join(UVThread $tid)
+    function uv_thread_join(\UVThread $tid)
     {
         return \uv_ffi()->uv_thread_join($tid());
     }
@@ -1758,7 +1758,7 @@ if (!\function_exists('uv_loop_init')) {
      * @return int
      * @link http://docs.libuv.org/en/v1.x/threading.html#c.uv_thread_equal
      */
-    function uv_thread_equal(UVThread $t1, UVThread $t2)
+    function uv_thread_equal(\UVThread $t1, \UVThread $t2)
     {
         return \uv_ffi()->uv_thread_equal($t1(), $t2());
     }
