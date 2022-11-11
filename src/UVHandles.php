@@ -1367,6 +1367,28 @@ if (!\class_exists('UVThread')) {
     }
 }
 
+if (!\class_exists('UVKey')) {
+    /**
+     * @return uv_key_t **pointer** by invoking `$UVKey()`
+     */
+    final class UVKey extends \UVTypes
+    {
+        public function __destruct()
+        {
+            if (\is_cdata($this->uv_type_ptr))
+                \uv_ffi()->uv_key_delete($this->uv_type_ptr);
+
+            parent::__destruct();
+        }
+
+        /** @return static */
+        public static function init(...$arguments)
+        {
+            return new static('uv_key_t');
+        }
+    }
+}
+
 
 if (!\class_exists('UVWork')) {
     /**

@@ -1764,6 +1764,39 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
+     * The total thread-local storage size may be limited.
+     * - That is, it may not be possible to create many TLS keys.
+     *
+     * @return int|\UVKey
+     * @link http://docs.libuv.org/en/v1.x/threading.html?highlight=uv_key_create#c.uv_key_create
+     */
+    function uv_key_create()
+    {
+        $key = \UVKey::init();
+        $status = \uv_ffi()->uv_key_create($key());
+
+        return $status === 0 ? $key : $status;
+    }
+
+    /** @return void */
+    function uv_key_delete(\UVKey &$key): void
+    {
+        \uv_ffi()->uv_key_delete($key());
+    }
+
+    /** @return void_ptr */
+    function uv_key_get(\UVKey &$key): CData
+    {
+        return \uv_ffi()->uv_key_get($key());
+    }
+
+    /** @return void */
+    function uv_key_set(\UVKey &$key, $value): void
+    {
+        \uv_ffi()->uv_key_set($key(), \ffi_void($value));
+    }
+
+    /**
      * Bind the pipe to a file path (Unix) or a name (Windows).
      * - Note: Paths on Unix get truncated to sizeof(sockaddr_un.sun_path) bytes, typically between 92 and 108 bytes.
      *

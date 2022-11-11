@@ -376,6 +376,9 @@ abstract class UVRequest extends uv_req_t
 abstract class UVThread extends uv_thread_t
 {
 }
+abstract class UVKey extends uv_key_t
+{
+}
 abstract class UV extends uv_handle_t
 {
 }
