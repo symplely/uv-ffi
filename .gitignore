@@ -91,3 +91,4 @@ php-7.*/
 cmd/
 php-src-php-*/
 frankenphp/
+pthreads4w-cmake/
