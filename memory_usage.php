@@ -15,8 +15,9 @@ class TestCase
   {
     $loop = uv_loop_new();
 
-    $handler = uv_pipe_init($loop, false);
-    uv_pipe_open($handler, STDOUT);
+    //$handler = uv_pipe_init($loop, false);
+    $handler = uv_tty_init($loop, STDOUT, false);
+    //uv_pipe_open($handler, STDOUT);
     $a = 0;
     while (++$a <= 1000) {
       uv_write($handler, '', function () {

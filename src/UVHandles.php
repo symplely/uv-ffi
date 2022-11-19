@@ -660,6 +660,10 @@ if (!\class_exists('UVPoll')) {
 
         public function start(int $events, callable $callback): int
         {
+            if (!\uv_is_active($this)) {
+                \zval_add_ref($this);
+            }
+
             $uv_poll_cb = function (CData $handle, int $status, int $events) use ($callback) {
                 if ($status == 0)
                     \zval_add_ref($this);
@@ -667,7 +671,12 @@ if (!\class_exists('UVPoll')) {
                 $callback($this, $status, $events, $this->fd);
             };
 
-            return \uv_ffi()->uv_poll_start($this->uv_struct_type, $events, $uv_poll_cb);
+            $error = \uv_ffi()->uv_poll_start($this->uv_struct_type, $events, $uv_poll_cb);
+            if ($error) {
+                \ze_ffi()->zend_error(\E_ERROR, "uv_poll_start failed");
+            }
+
+            return $error;
         }
     }
 }
@@ -699,7 +708,39 @@ if (!\class_exists('UVFsPoll')) {
                 $callback($this, $status, \uv_stat_to_zval($prev), \uv_stat_to_zval($curr));
             };
 
-            return \uv_ffi()->uv_fs_poll_start($this->uv_struct_type, $uv_fs_poll_cb, $path, $interval);
+            \zval_add_ref($this);
+            $error = \uv_ffi()->uv_fs_poll_start($this->uv_struct_type, $uv_fs_poll_cb, $path, $interval);
+            if ($error) {
+                \zval_del_ref($this);
+                \ze_ffi()->zend_error(\E_ERROR, "uv_fs_poll_start failed");
+            }
+
+            return $error;
+        }
+
+        public function stop()
+        {
+            if (!\uv_is_active($this)) {
+                return;
+            }
+
+            $status = \uv_ffi()->uv_fs_poll_stop($this->uv_struct_type);
+            \zval_del_ref($this);
+
+            return $status;
+        }
+
+        public function getpath()
+        {
+            $buffer = \ffi_characters(\INET6_ADDRSTRLEN);
+            $size = c_int_type('size_t', 'uv', \INET6_ADDRSTRLEN);
+            $status = \uv_ffi()->uv_fs_poll_getpath($this->uv_struct_type, $buffer, $size());
+            if ($status === \UV::ENOBUFS) {
+                $buffer = \ffi_characters($size->value());
+                $status = \uv_ffi()->uv_fs_poll_getpath($this->uv_struct_type, $buffer, $size());
+            }
+
+            return $status === 0 ? \ffi_string($buffer) : $status;
         }
     }
 }
@@ -2062,6 +2103,37 @@ if (!\class_exists('UVWriter')) {
 
             return $r;
         }
+
+        /**
+         * @param UVTcp|UVPipe|UVTty $handle
+         * @param string $data
+         * @param UVTcp|UVPipe $send
+         * @param callable|uv_write_cb $callback expect (\UVStream $handle, int $status).
+         */
+        public function write2(\UVStream $handle, string $data, \UVStream $send, callable $callback)
+        {
+            $buffer = \uv_buf_init($data);
+            $r = \uv_ffi()->uv_write2($this->uv_type_ptr, \uv_stream($handle), $buffer(), 1, \uv_stream($send), \is_null($callback)
+                ? function () {
+                }
+                :  function (CData $writer, int $status) use ($callback, $handle) {
+                    $callback($handle, $status);
+                    \FFI::free($writer);
+                    $this->free();
+                    \zval_del_ref($this);
+                    \zval_del_ref($callback);
+                });
+
+            if ($r) {
+                \ze_ffi()->zend_error(\E_WARNING, "write2 failed");
+                \zval_del_ref($this);
+                \zval_del_ref($buffer);
+            } else {
+                \zval_add_ref($this);
+            }
+
+            return $r;
+        }
     }
 }
 
@@ -2071,6 +2143,23 @@ if (!\class_exists('UVShutdown')) {
      */
     final class UVShutdown extends \UVRequest
     {
+        public function shutdown(\UVStream $handle, callable $callback = null): int
+        {
+            \zval_add_ref($this);
+            $r = \uv_ffi()->uv_shutdown($this->uv_type_ptr, \uv_stream($handle), !\is_null($callback)
+                ? function (CData $shutdown, int $status) use ($callback, $handle) {
+                    $callback($handle, $status);
+                    \FFI::free($shutdown);
+                    \zval_del_ref($this);
+                } : null);
+
+            if ($r) {
+                \ze_ffi()->zend_error(\E_WARNING, "%s", \uv_strerror($r));
+                \zval_del_ref($this);
+            }
+
+            return $r;
+        }
     }
 }
 

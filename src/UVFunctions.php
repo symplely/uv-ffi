@@ -306,27 +306,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_write(\UVStream $handle, string $data, callable $callback = null): int
     {
-        $buffer = \uv_buf_init($data);
-        $req = \UVWriter::init('struct uv_write_s');
-        $r = \uv_ffi()->uv_write($req(), \uv_stream($handle), $buffer(), 1, \is_null($callback)
-            ? function () {
-            }
-            :  function (CData $writer, int $status) use ($callback, $handle, $req) {
-                $callback($handle, $status);
-                \FFI::free($writer);
-                $req->free();
-                \zval_del_ref($callback);
-            });
-
-        if ($r) {
-            \ze_ffi()->zend_error(\E_WARNING, "write failed");
-            \zval_del_ref($req);
-            \zval_del_ref($buffer);
-        } else {
-            \zval_add_ref($req);
-        }
-
-        return $r;
+        return \UVWriter::init('struct uv_write_s')->write($handle, $data, $callback);
     }
 
     /**
@@ -347,27 +327,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_write2(\UVStream $handle, string $data, \UVStream $send, callable $callback)
     {
-        $buffer = \uv_buf_init($data);
-        $req = \UVWriter::init('struct uv_write_s');
-        $r = \uv_ffi()->uv_write2($req(), \uv_stream($handle), $buffer(), 1, \uv_stream($send), \is_null($callback)
-            ? function () {
-            }
-            :  function (CData $writer, int $status) use ($callback, $handle, $req) {
-                $callback($handle, $status);
-                \FFI::free($writer);
-                $req->free();
-                \zval_del_ref($callback);
-            });
-
-        if ($r) {
-            \ze_ffi()->zend_error(\E_WARNING, "write2 failed");
-            \zval_del_ref($req);
-            \zval_del_ref($buffer);
-        } else {
-            \zval_add_ref($req);
-        }
-
-        return $r;
+        return \UVWriter::init('struct uv_write_s')->write2($handle, $data, $send, $callback);
     }
 
     /**
@@ -790,20 +750,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_shutdown(\UVStream $handle, callable $callback = null): int
     {
-        $req = \UVShutdown::init('struct uv_shutdown_s');
-        \zval_add_ref($req);
-        $r = \uv_ffi()->uv_shutdown($req(), \uv_stream($handle), !\is_null($callback)
-            ? function (CData $shutdown, int $status) use ($callback, $handle) {
-                $callback($handle, $status);
-                \uv_ffi_free($shutdown);
-            } : null);
-
-        if ($r) {
-            \ze_ffi()->zend_error(\E_WARNING, "%s", \uv_strerror($r));
-            \zval_del_ref($req);
-        }
-
-        return $r;
+        return \UVShutdown::init('struct uv_shutdown_s')->shutdown($handle, $callback);
     }
 
     /**
@@ -1243,14 +1190,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_fs_poll_start(\UVFsPoll $fs_poll, $callback, string $path, int $interval)
     {
-        \zval_add_ref($fs_poll);
-        $error = $fs_poll->start($callback, $path, $interval);
-        if ($error) {
-            \zval_del_ref($fs_poll);
-            \ze_ffi()->zend_error(\E_ERROR, "uv_fs_poll_start failed");
-        }
-
-        return $error;
+        return $fs_poll->start($callback, $path, $interval);
     }
 
     /**
@@ -1262,14 +1202,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_fs_poll_stop(\UVFsPoll $fs_poll)
     {
-        if (!\uv_is_active($fs_poll)) {
-            return;
-        }
-
-        $status = \uv_ffi()->uv_fs_poll_stop($fs_poll());
-        \zval_del_ref($fs_poll);
-
-        return $status;
+        return $fs_poll->stop();
     }
 
     /**
@@ -1285,17 +1218,9 @@ if (!\function_exists('uv_loop_init')) {
         return \UVFsPoll::init($loop);
     }
 
-    function uv_fs_poll_getpath(\UVFsPoll $handle, char &$buffer, size_t &$size)
+    function uv_fs_poll_getpath(\UVFsPoll $handle)
     {
-        $buffer = \ffi_characters(\INET6_ADDRSTRLEN);
-        $size = \INET6_ADDRSTRLEN;
-        $status = \uv_ffi()->uv_fs_poll_getpath($handle(), $buffer, $size);
-        if ($status === \UV::ENOBUFS) {
-            $buffer = \ffi_characters($size);
-            $status = \uv_ffi()->uv_fs_poll_getpath($handle(), $buffer, $size);
-        }
-
-        return $status === 0 ? \ffi_string($buffer) : $status;
+        return $handle->getpath();
     }
 
     /**
@@ -1365,16 +1290,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_poll_start(\UVPoll $poll, $events, callable $callback): int
     {
-        if (!\uv_is_active($poll)) {
-            \zval_add_ref($poll);
-        }
-
-        $error = $poll->start($events, $callback);
-        if ($error) {
-            \ze_ffi()->zend_error(\E_ERROR, "uv_poll_start failed");
-        }
-
-        return $error;
+        return $poll->start($events, $callback);
     }
 
     /**
