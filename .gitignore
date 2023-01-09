@@ -82,13 +82,14 @@ libuv.zip
 libuv*/
 .cdef/
 phpunit
-#uv.c
 test.php
-#php_uv.h
-#php_uv.c
 php-8.*/
 php-7.*/
 cmd/
 php-src-php-*/
 frankenphp/
 pthreads4w-cmake/
+todo_in_php.c
+uv.c
+php_uv.h
+php_uv.c
