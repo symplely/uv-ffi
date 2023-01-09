@@ -6,17 +6,11 @@ This **libuv ffi** implementation is based on extension [ext-uv](https://github.
 
 The _ext-uv_ extension is on version _1.6_ of **libuv**, 1.6 is actually _1.06_, or about _39_ releases behind current 1.44.2.
 
-All **ext-uv 0.3.0** _tests and functions_ been implemented, except **uv_queue_work**. Functionality has only been tested under `Windows` and mainly _PHP 7.4_, `Linux` usage behavior and corrections will begin after figuring out how the threading part will be implemented, **ext-uv 0.3.0** currently rely on:
+All **ext-uv 0.3.0** _tests and functions_ been implemented, except **uv_queue_work**. Functionality has only been tested under `Windows` and mainly _PHP 7.4_.
 
-```h
-/* these 3 APIs should only be used by people that fully understand the threading model
- * used by PHP/Zend and the selected SAPI. */
-*tsrm_new_interpreter_context(void);
-TSRM_API void *tsrm_set_interpreter_context(void *new_ctx);
-TSRM_API void tsrm_free_interpreter_context(void *context);
-```
+`Linux` usage behavior and corrections has begun.
 
-_They have been removed since PHP 8, see <https://fossies.org/linux/php/UPGRADING.INTERNALS>_
+The actual threading feature of `uv_queue_work` in **ext-uv 0.3.0** is on pause. Getting native PThreads working with FFI, needs a lot more investigation and more likely C development of PHP source code. Seems someone else has started something similar https://github.com/mrsuh/php-pthreads.
 
 **PR** are welcome, see [Documentation] and [Contributing].
 
@@ -25,12 +19,13 @@ Future versions of `uv-ffi` beyond **ext-uv 0.3.0** will include all current `li
 ## Installation
 
 There will be two ways:
-    composer create-project symplely/uv-ffi .cdef/libuv
-and:
     composer require symplely/uv-ffi
+and:
+    composer create-project symplely/uv-ffi .cdef/libuv
 
 This package/repo is self-contained, meaning it has **GitHub Actions** building each hardware platforms libuv _binary_ `.dylib` `.dll` `.so`, and committing back to repo.
-The `require` installation will include all _binaries_, whereas `create-project` will delete the ones not detected for installers hardware. `create-project` is the **recommended** installation choice.
+
+The `require` installation will include all _binaries_ under `vendor` , whereas `create-project` will delete the ones not detected for installers hardware, and setup a different loading/installation area. This feature is still a work in progress.
 
 `FFI` is enabled by default in `php.ini` since `PHP 7.4`, as to `OpCache`, they should not be changed unless already manually disabled.
 Only the `preload` section might need setting up if better performance is desired.
