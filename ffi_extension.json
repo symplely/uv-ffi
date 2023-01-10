@@ -2,6 +2,7 @@
     "name": "libuv",
     "preload": {
         "files": [
+            "src/ext_uv.php",
             "src/UV.php",
             "src/UVFunctions.php",
             "src/UVHandler.php",
