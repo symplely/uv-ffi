@@ -18,7 +18,6 @@ uv_async_send($async);
 unset($async);
 
 uv_run($loop, UV::RUN_DEFAULT);
-uv_loop_delete($loop);
 unset($loop);
 
 echo memory_get_usage() - $m, PHP_EOL;

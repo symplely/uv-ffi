@@ -33,7 +33,7 @@ $flags = 0;
 $process = uv_spawn(
     uv_default_loop(),
     "php",
-    array('-r', 'echo "World! " . PHP_EOL; sleep(100);'),
+    array('-r', 'echo "World!" . PHP_EOL; sleep(100);'),
     $stdio,
     __DIR__,
     [],

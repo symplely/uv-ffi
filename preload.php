@@ -3,10 +3,6 @@
 declare(strict_types=1);
 
 use FFI\CData;
-use FFI\CType;
-use ZE\Zval;
-use ZE\Resource;
-use ZE\PhpStream;
 
 if (!\defined('DS'))
     \define('DS', \DIRECTORY_SEPARATOR);
@@ -305,7 +301,7 @@ if (!\function_exists('uv_init')) {
      */
     function is_uv_ffi(): bool
     {
-        return Core::get('uv') instanceof \FFI;
+        return \Core::get('uv') instanceof \FFI;
     }
 
     /**
@@ -385,19 +381,12 @@ if (!\function_exists('uv_init')) {
         if (\file_exists('.' . \DS . 'ffi_extension.json')) {
             $ext_list = \json_decode(\file_get_contents('.' . \DS . 'ffi_extension.json'), true);
             $iterator = [];
-            $is_opcache_cli = \ini_get('opcache.enable_cli') === '1';
             if (isset($ext_list['preload']['files'])) {
                 $iterator = $ext_list['preload']['files'];
             }
 
-            foreach ($iterator as $file) {
-                if ($is_opcache_cli) {
-                    if (!\opcache_is_script_cached($file))
-                        \opcache_compile_file($file);
-                } else {
-                    include_once $file;
-                }
-            }
+            foreach ($iterator as $file)
+                include_once $file;
         }
 
         \Core::set('uv', $scope);

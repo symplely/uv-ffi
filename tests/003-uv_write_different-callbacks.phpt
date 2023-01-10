@@ -13,12 +13,14 @@ uv_pipe_open($handler, STDOUT);
 
 uv_write($handler, 'A', function () { echo 'A'; });
 uv_write($handler, 'B', function () { echo 'B'; });
-uv_write($handler, 'C', function () { echo 'C'; });
+uv_write($handler, 'C', function ($handler) {
+    echo 'C';
+    uv_close($handler);
+});
 
 var_dump(uv_handle_get_type($handler));
 var_dump(uv_is_writable($handler));
 uv_run($loop);
-uv_close($handler);
 uv_loop_close($loop);
 --EXPECTF--
 int(7)

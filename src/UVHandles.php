@@ -28,15 +28,15 @@ if (!\class_exists('UVLoop')) {
             if (\is_cdata($this->uv_loop_ptr)) {
                 \uv_ffi()->uv_stop($this->uv_loop_ptr); /* in case we longjmp()'ed ... */
                 \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT); /* invalidate the stop ;-) */
-
-                \uv_ffi()->uv_walk($this->uv_loop_ptr, function (CData $handle, CData $args) {
+                \uv_ffi()->uv_walk($this->uv_loop_ptr, function (CData $handle, CData $args = null) {
                     $fd = $handle->u->fd;
                     if (Resource::is_valid($fd))
                         Resource::remove_fd($fd);
                     elseif (PhpStream::is_valid($fd))
                         PhpStream::remove_fd($fd);
 
-                    \uv_ffi()->uv_close($handle, null);
+                    if (\uv_ffi()->uv_is_active($handle))
+                        \uv_ffi()->uv_close($handle, null);
                 }, null);
 
                 \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);

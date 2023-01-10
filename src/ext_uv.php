@@ -16,6 +16,7 @@ if (!\class_exists('ext_uv')) {
         protected bool $r_shutdown = true;
 
         protected string $uv_version;
+        protected bool $restart_sapi = false;
 
         /** @var \UVLoop[]|null */
         protected $uv_default;

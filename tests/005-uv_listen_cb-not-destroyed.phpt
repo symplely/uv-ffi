@@ -51,13 +51,13 @@ $tcpServer->bind('0.0.0.0', 9876);
 $tcpServer->listen();
 
 $closed = 0;
-for ($i = 0; $i < 4; $i++) {
+for ($i = 0; $i < (\IS_WINDOWS ? 5 : 4); $i++) {
     $c = uv_tcp_init($loop);
     uv_tcp_connect($c, uv_ip4_addr('0.0.0.0', 9876), function ($stream, $stat) use (&$closed, $tcpServer) {
         $closed++;
         uv_close($stream);
 
-        if ($closed === 4) {
+        if ($closed === (\IS_WINDOWS ? 5 : 4)) {
             $tcpServer->close();
         }
     });

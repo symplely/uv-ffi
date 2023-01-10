@@ -16,4 +16,4 @@ uv_close($handler);
 uv_loop_close($loop);
 
 --EXPECTF--
-string(19) "bad file descriptor"
+string(%d) "invalid argument"
