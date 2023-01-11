@@ -83,6 +83,7 @@ if (!\class_exists('UVThreader')) {
             if ($byBase) {
                 if (!\is_cdata($this->struct_base)) {
                     $this->struct_base = \FFI::addr($this->struct);
+                    $this->struct_base->type = self::UV_LOCK_TYPE[$this->type] ?? null;
                 }
 
                 return $this->struct_base;
