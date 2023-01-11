@@ -46,11 +46,7 @@ if (!\class_exists('UVHandler')) {
             if (\is_uv_ffi() && !\is_null($this->uv_struct_type))
                 \uv_ffi()->uv_unref($this->__invoke(true));
 
-            if (\is_cdata($this->uv_struct_type) && !\is_null_ptr($this->uv_struct_type))
-                \FFI::free($this->uv_struct_type);
-
-            if (\is_cdata($this->uv_struct_ptr) && !\is_null_ptr($this->uv_struct_ptr))
-                \FFI::free($this->uv_struct_ptr);
+            \ffi_free_if($this->uv_struct_type, $this->uv_struct_ptr);
 
             $this->uv_struct_type = null;
             $this->uv_struct_ptr = null;
@@ -80,7 +76,6 @@ if (!\class_exists('UVHandler')) {
                 );
             }
 
-            //   if (!\uv_is_closing($handle)) {
             $handler = $handle(true);
             $fd = $handler->u->fd;
             if (Resource::is_valid($fd))
@@ -97,7 +92,6 @@ if (!\class_exists('UVHandler')) {
             );
 
             \zval_skip_dtor($handle);
-            //  }
         }
 
         /** @return static */

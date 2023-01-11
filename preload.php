@@ -377,6 +377,25 @@ if (!\function_exists('uv_init')) {
             }
         }
 
+        if (\file_exists('vendor\\symplely\\uv-ffi')) {
+            $vendor_code = \str_replace('.h', '_vendor.h', $code);
+            if (!\file_exists($vendor_code)) {
+                $file = \str_replace(
+                    'FFI_LIB ".',
+                    (\IS_WINDOWS ? 'FFI_LIB "vendor\\\symplely\\\uv-ffi' : 'FFI_LIB "vendor/symplely/uv-ffi'),
+                    \file_get_contents($code)
+                );
+
+                \file_put_contents(
+                    $vendor_code,
+                    $file,
+                    \LOCK_EX
+                );
+            }
+
+            $code = $vendor_code;
+        }
+
         $scope = \FFI::load($code);
         if (\file_exists('.' . \DS . 'ffi_extension.json')) {
             $ext_list = \json_decode(\file_get_contents('.' . \DS . 'ffi_extension.json'), true);
