@@ -3107,6 +3107,7 @@ typedef struct _php_uv_s
     uv_check_t check;
     uv_process_t process;
     uv_fs_event_t fs_event;
+    uv_fs_poll_t fs_poll;
     uv_tty_t tty;
     uv_poll_t poll;
     uv_signal_t signal;
@@ -3124,8 +3125,6 @@ enum php_uv_lock_type
 
 typedef struct _php_uv_lock_s
 {
-  void_t std;
-
   int locked;
   enum php_uv_lock_type type;
   union

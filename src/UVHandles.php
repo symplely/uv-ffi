@@ -1286,6 +1286,8 @@ if (!\class_exists('UVLock')) {
             if (!$this->struct_base->locked++) {
                 $this->struct_base->locked = 0x02;
             }
+
+            $this->locked = $this->struct_base->locked;
         }
 
         public function tryrdlock()
@@ -1301,6 +1303,7 @@ if (!\class_exists('UVLock')) {
                     $this->struct_base->locked = 0x02;
                 }
 
+                $this->locked = $this->struct_base->locked;
                 return true;
             } else {
                 return false;
@@ -1314,6 +1317,8 @@ if (!\class_exists('UVLock')) {
                 if (--$this->struct_base->locked == 0x01) {
                     $this->struct_base->locked = 0x00;
                 }
+
+                $this->locked = $this->struct_base->locked;
             }
         }
 
@@ -1327,6 +1332,7 @@ if (!\class_exists('UVLock')) {
             $error = \uv_ffi()->uv_rwlock_trywrlock($this->struct_ptr);
             if ($error == 0) {
                 $this->struct_base->locked = 0x01;
+                $this->locked = $this->struct_base->locked;
                 return true;
             } else {
                 return false;
@@ -1335,9 +1341,10 @@ if (!\class_exists('UVLock')) {
 
         public function wrunlock()
         {
-            if ($this->struct_base->locked  == 0x01) {
+            if ($this->struct_base->locked == 0x01) {
                 \uv_ffi()->uv_rwlock_wrunlock($this->struct_ptr);
                 $this->struct_base->locked = 0x00;
+                $this->locked = $this->struct_base->locked;
             }
         }
     }
@@ -1354,6 +1361,7 @@ if (!\class_exists('UVMutex')) {
             $error = \uv_ffi()->uv_mutex_trylock($this->struct_ptr);
             if ($error == 0) {
                 $this->struct_base->locked = 0x01;
+                $this->locked = $this->struct_base->locked;
                 return true;
             } else {
                 return false;
@@ -1365,6 +1373,7 @@ if (!\class_exists('UVMutex')) {
             if ($this->struct_base->locked == 0x01) {
                 \uv_ffi()->uv_mutex_unlock($this->struct_ptr);
                 $this->struct_base->locked = 0x00;
+                $this->locked = $this->struct_base->locked;
             }
         }
     }
@@ -1539,21 +1548,20 @@ if (!\class_exists('UVGetAddrinfo')) {
             $hint = $addrinfo();
             if (!\is_null($hints)) {
                 /** @var HashTable */
-                $h = HashTable::init_value(\zval_stack(4)()->value->arr);
-                if ($data = $h->str_find("ai_family")) {
-                    $hint->ai_family = $data->macro(ZE::LVAL_P);
+                if (\in_array('ai_family', $hints, true)) {
+                    $hint->ai_family = $hints['ai_family'];
                 }
 
-                if (($data = $h->str_find("ai_socktype"))) {
-                    $hint->ai_socktype = $data->macro(ZE::LVAL_P);
+                if (\in_array('ai_socktype', $hints, true)) {
+                    $hint->ai_socktype =  $hints['ai_socktype'];
                 }
 
-                if (($data = $h->str_find("ai_protocol"))) {
-                    $hint->ai_socktype = $data->macro(ZE::LVAL_P);
+                if (\in_array('ai_protocol', $hints, true)) {
+                    $hint->ai_socktype = $hints['ai_protocol'];
                 }
 
-                if (($data = $h->str_find("ai_flags"))) {
-                    $hint->ai_flags = $data->macro(ZE::LVAL_P);
+                if (\in_array('ai_flags', $hints, true)) {
+                    $hint->ai_flags =  $hints['ai_flags'];
                 }
             }
 
@@ -2097,8 +2105,6 @@ if (!\class_exists('UVWriter')) {
                 \ze_ffi()->zend_error(\E_WARNING, "write failed");
                 \zval_del_ref($this);
                 \zval_del_ref($buffer);
-            } else {
-                \zval_add_ref($this);
             }
 
             return $r;

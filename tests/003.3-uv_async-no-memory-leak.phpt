@@ -6,6 +6,8 @@ Check uv_async has no memory leak
 <?php
 require 'vendor/autoload.php';
 
+uv_destruct_set();
+
 $m = memory_get_usage();
 
 $loop = uv_loop_new();

@@ -28,4 +28,4 @@ uv_rwlock_rdunlock($lock);
 OK
 OK
 
-PHP Notice:  uv_rwlock: still locked resource detected; forcing rdunlock in %s
+Notice: uv_rwlock: still locked resource detected; forcing rdunlock in %S

@@ -49,9 +49,6 @@ if (!\class_exists('ext_uv')) {
             if (\PHP_ZTS)
                 $this->default_mutex = \ze_ffi()->tsrm_mutex_alloc();
 
-            if (\IS_WINDOWS)
-                $this->destruct_set();
-
             $this->uv_version = \uv_ffi()->uv_version_string();
             \Core::setup_stdio();
             return \ZE::SUCCESS;

@@ -2454,7 +2454,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_rwlock_init()
     {
-        $lock = \UVLock::struct_init('_php_uv_lock_s', 'rwlock');
+        $lock = \UVLock::type_init('php_uv_lock_t', 'rwlock');
         $status = \uv_ffi()->uv_rwlock_init($lock());
 
         return $status === 0 ? $lock : $status;
@@ -2537,7 +2537,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_mutex_init()
     {
-        $mutex = \UVMutex::struct_init('_php_uv_lock_s', 'mutex');
+        $mutex = \UVMutex::type_init('php_uv_lock_t', 'mutex');
         $status = \uv_ffi()->uv_mutex_init($mutex());
 
         return $status === 0 ? $mutex : $status;
@@ -2587,7 +2587,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_sem_init(int $value)
     {
-        $semaphore = \UVSemaphore::struct_init('_php_uv_lock_s', 'semaphore');
+        $semaphore = \UVSemaphore::type_init('php_uv_lock_t', 'semaphore');
         $status = \uv_ffi()->uv_sem_init($semaphore(), $value);
 
         return $status === 0 ? $semaphore : $status;

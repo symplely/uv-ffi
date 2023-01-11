@@ -9,6 +9,7 @@ if (!\class_exists('UVThreader')) {
     abstract class UVThreader extends \CStruct
     {
         protected string $type;
+        protected int $locked = 0x00;
         protected ?CData $struct_base;
 
         const IS_UV_RWLOCK      = 1;
@@ -25,35 +26,35 @@ if (!\class_exists('UVThreader')) {
         public function __destruct()
         {
             //  try {
-            if ($this->struct_base->type == self::IS_UV_RWLOCK) {
-                if ($this->struct_base->locked == 0x01) {
+            if ($this->type === 'rwlock') {
+                if ($this->locked == 0x01) {
                     \ze_ffi()->zend_error(\E_NOTICE, "uv_rwlock: still locked resource detected; forcing wrunlock");
                     \uv_ffi()->uv_rwlock_wrunlock($this->struct_ptr);
-                } else if ($this->struct_base->locked) {
+                } elseif ($this->locked) {
                     \ze_ffi()->zend_error(\E_NOTICE, "uv_rwlock: still locked resource detected; forcing rdunlock");
-                    while (--$this->struct_base->locked > 0) {
+                    while (--$this->locked > 0) {
                         \uv_ffi()->uv_rwlock_rdunlock($this->struct_ptr);
                     }
                 }
 
                 \uv_ffi()->uv_rwlock_destroy($this->struct_ptr);
-            } else if ($this->struct_base->type == self::IS_UV_MUTEX) {
-                if ($this->struct_base->locked == 0x01) {
+            } elseif ($this->type === 'mutex') {
+                if ($this->locked == 0x01) {
                     \ze_ffi()->zend_error(\E_NOTICE, "uv_mutex: still locked resource detected; forcing unlock");
                     \uv_ffi()->uv_mutex_unlock($this->struct_ptr);
                 }
 
                 \uv_ffi()->uv_mutex_destroy($this->struct_ptr);
-            } else if ($this->struct_base->type == self::IS_UV_SEMAPHORE) {
-                if ($this->struct_base->locked == 0x01) {
+            } elseif ($this->type === 'semaphore') {
+                if ($this->locked == 0x01) {
                     \ze_ffi()->zend_error(\E_NOTICE, "uv_sem: still locked resource detected; forcing unlock");
                     \uv_ffi()->uv_sem_post($this->struct_ptr);
                 }
 
                 \uv_ffi()->uv_sem_destroy($this->struct_ptr);
             }
-            //  } catch (\Throwable $e) {
-            //  }
+            // } catch (\Throwable $e) {
+            // }
 
             $this->free();
         }
@@ -67,11 +68,12 @@ if (!\class_exists('UVThreader')) {
             $this->tag = 'uv';
             $this->type = $type;
             if (!$isSelf || \is_string($typedef)) {
-                $this->struct = \Core::get($this->tag)->new('struct ' . $typedef);
+                $this->struct = \Core::get($this->tag)->new($typedef);
                 $this->struct_base = \FFI::addr($this->struct);
                 $this->struct_ptr = \FFI::addr($this->struct->lock->{$type});
-                $this->struct_base->type = self::UV_LOCK_TYPE["$type"] ?? null;
+                $this->struct_base->type = self::UV_LOCK_TYPE[$type] ?? null;
             } else {
+                echo 'xxxx';
                 $this->struct = \Core::get($this->tag)->new($typedef);
             }
         }
@@ -79,15 +81,14 @@ if (!\class_exists('UVThreader')) {
         public function __invoke(bool $byBase = false): CData
         {
             if ($byBase) {
-                if (\is_null($this->struct_base)) {
+                if (!\is_cdata($this->struct_base)) {
                     $this->struct_base = \FFI::addr($this->struct);
-                    $this->struct_base->type = self::UV_LOCK_TYPE[$this->type] ?? null;
                 }
 
                 return $this->struct_base;
             }
 
-            if (\is_null($this->struct_ptr)) {
+            if (!\is_cdata($this->struct_ptr)) {
                 $this->struct_ptr = \FFI::addr($this->struct->lock->{$this->type});
             }
 
