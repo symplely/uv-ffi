@@ -25,7 +25,7 @@ and:
 
 This package/repo is self-contained for Windows, meaning it has **GitHub Actions** building `libuv` _binary_ `.dll`, and committing back to repo. The other platform will you the distributions included `libuv` _binary_ version.
 
-The `require` installation will include all _binaries_ under `vendor` , whereas `create-project` will delete the ones not detected for installers hardware, and setup a different loading/installation area. This feature is still a work in progress.
+The `create-project` will setup a different loading/installation area. This feature is still a work in progress.
 
 `FFI` is enabled by default in `php.ini` since `PHP 7.4`, as to `OpCache`, they should not be changed unless already manually disabled.
 Only the `preload` section might need setting up if better performance is desired.
