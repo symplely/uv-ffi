@@ -377,12 +377,12 @@ if (!\function_exists('uv_init')) {
             }
         }
 
-        if (\file_exists('vendor\\symplely\\uv-ffi')) {
+        if (\file_exists('vendor\\symplely\\uv-ffi') && \IS_WINDOWS) {
             $vendor_code = \str_replace('.h', '_vendor.h', $code);
             if (!\file_exists($vendor_code)) {
                 $file = \str_replace(
                     'FFI_LIB ".',
-                    (\IS_WINDOWS ? 'FFI_LIB "vendor\\\symplely\\\uv-ffi' : 'FFI_LIB "vendor/symplely/uv-ffi'),
+                    'FFI_LIB "vendor\\\symplely\\\uv-ffi',
                     \file_get_contents($code)
                 );
 
