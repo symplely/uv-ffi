@@ -1,5 +1,5 @@
 #define FFI_SCOPE "__uv__"
-#define FFI_LIB "./lib/Linux/centos7/libuv.so.1.0.0"
+#define FFI_LIB "/usr/lib64/libuv.so.1.0.0"
 
 typedef long int ptrdiff_t;
 typedef long unsigned int size_t;
@@ -1594,7 +1594,6 @@ typedef void *(*uv_malloc_func)(size_t size);
 typedef void *(*uv_realloc_func)(void *ptr, size_t size);
 typedef void *(*uv_calloc_func)(size_t count, size_t size);
 typedef void (*uv_free_func)(void *ptr);
-void uv_library_shutdown(void);
 int uv_replace_allocator(uv_malloc_func malloc_func,
                          uv_realloc_func realloc_func,
                          uv_calloc_func calloc_func,
@@ -1749,12 +1748,6 @@ int uv_send_buffer_size(uv_handle_t *handle, int *value);
 int uv_recv_buffer_size(uv_handle_t *handle, int *value);
 int uv_fileno(const uv_handle_t *handle, uv_os_fd_t *fd);
 uv_buf_t uv_buf_init(char *base, unsigned int len);
-int uv_pipe(uv_file fds[2], int read_flags, int write_flags);
-int uv_socketpair(int type,
-                  int protocol,
-                  uv_os_sock_t socket_vector[2],
-                  int flags0,
-                  int flags1);
 struct uv_stream_s
 {
   void *data;
@@ -1804,10 +1797,6 @@ int uv_write2(uv_write_t *req,
 int uv_try_write(uv_stream_t *handle,
                  const uv_buf_t bufs[],
                  unsigned int nbufs);
-int uv_try_write2(uv_stream_t *handle,
-                  const uv_buf_t bufs[],
-                  unsigned int nbufs,
-                  uv_stream_t *send_handle);
 struct uv_write_s
 {
   void *data;
@@ -1988,7 +1977,6 @@ int uv_udp_try_send(uv_udp_t *handle,
 int uv_udp_recv_start(uv_udp_t *handle,
                       uv_alloc_cb alloc_cb,
                       uv_udp_recv_cb recv_cb);
-int uv_udp_using_recvmmsg(const uv_udp_t *handle);
 int uv_udp_recv_stop(uv_udp_t *handle);
 size_t uv_udp_get_send_queue_size(const uv_udp_t *handle);
 size_t uv_udp_get_send_queue_count(const uv_udp_t *handle);
@@ -2243,7 +2231,6 @@ int uv_timer_stop(uv_timer_t *handle);
 int uv_timer_again(uv_timer_t *handle);
 void uv_timer_set_repeat(uv_timer_t *handle, uint64_t repeat);
 uint64_t uv_timer_get_repeat(const uv_timer_t *handle);
-uint64_t uv_timer_get_due_in(const uv_timer_t *handle);
 
 struct uv_getaddrinfo_s
 {
@@ -2492,7 +2479,6 @@ uv_pid_t uv_os_getpid(void);
 uv_pid_t uv_os_getppid(void);
 int uv_os_getpriority(uv_pid_t pid, int *priority);
 int uv_os_setpriority(uv_pid_t pid, int priority);
-unsigned int uv_available_parallelism(void);
 int uv_cpu_info(uv_cpu_info_t **cpu_infos, int *count);
 void uv_free_cpu_info(uv_cpu_info_t *cpu_infos, int count);
 int uv_interface_addresses(uv_interface_address_t **addresses,
@@ -2511,7 +2497,6 @@ int uv_os_setenv(const char *name, const char *value);
 int uv_os_unsetenv(const char *name);
 int uv_os_gethostname(char *buffer, size_t *size);
 int uv_os_uname(uv_utsname_t *buffer);
-uint64_t uv_metrics_idle_time(uv_loop_t *loop);
 typedef enum
 {
   UV_FS_UNKNOWN = -1,
@@ -2591,7 +2576,6 @@ struct uv_fs_s
 
 uv_fs_type uv_fs_get_type(const uv_fs_t *);
 ssize_t uv_fs_get_result(const uv_fs_t *);
-int uv_fs_get_system_error(const uv_fs_t *);
 void *uv_fs_get_ptr(const uv_fs_t *);
 const char *uv_fs_get_path(const uv_fs_t *);
 uv_stat_t *uv_fs_get_statbuf(uv_fs_t *);
@@ -2718,12 +2702,6 @@ int uv_fs_utime(uv_loop_t *loop,
 int uv_fs_futime(uv_loop_t *loop,
                  uv_fs_t *req,
                  uv_file file,
-                 double atime,
-                 double mtime,
-                 uv_fs_cb cb);
-int uv_fs_lutime(uv_loop_t *loop,
-                 uv_fs_t *req,
-                 const char *path,
                  double atime,
                  double mtime,
                  uv_fs_cb cb);
@@ -2885,7 +2863,6 @@ int uv_ip4_addr(const char *ip, int port, struct sockaddr_in *addr);
 int uv_ip6_addr(const char *ip, int port, struct sockaddr_in6 *addr);
 int uv_ip4_name(const struct sockaddr_in *src, char *dst, size_t size);
 int uv_ip6_name(const struct sockaddr_in6 *src, char *dst, size_t size);
-int uv_ip_name(const struct sockaddr *src, char *dst, size_t size);
 int uv_inet_ntop(int af, const void *src, char *dst, size_t size);
 int uv_inet_pton(int af, const char *src, void *dst);
 

@@ -23,7 +23,7 @@ There will be two ways:
 and:
     composer create-project symplely/uv-ffi .cdef/libuv
 
-This package/repo is self-contained, meaning it has **GitHub Actions** building each hardware platforms libuv _binary_ `.dylib` `.dll` `.so`, and committing back to repo.
+This package/repo is self-contained for Windows, meaning it has **GitHub Actions** building `libuv` _binary_ `.dll`, and committing back to repo. The other platform will you the distributions included `libuv` _binary_ version.
 
 The `require` installation will include all _binaries_ under `vendor` , whereas `create-project` will delete the ones not detected for installers hardware, and setup a different loading/installation area. This feature is still a work in progress.
 
@@ -217,7 +217,7 @@ All `functions/methods/classes` have there original **Libuv** _documentation_, _
 
 For deeper usage understanding, see [An Introduction to libuv](https://codeahoy.com/learn/libuv/toc/).
 
-The following functions are present in _Windows_ `.dll`, but not in Linux _Ubuntu 20.04_ `.so`, getting `FFI\Exception: Failed resolving C function`. Could be CI build issue or wrong header parsing. Currently just focusing on Windows, the original `ext-uv` has issues of concern that needs to be fixed first.
+The following functions are present in _Windows_, but not in _Linux_.
 
 ```cpp
  void uv_library_shutdown(void);
@@ -244,16 +244,6 @@ The following functions are present in _Windows_ `.dll`, but not in Linux _Ubunt
                            uv_fs_cb cb);
  int uv_ip_name(const struct sockaddr* src, char* dst, size_t size);
 ```
-
-**__To recreate the necessary FFI cdef `.h` headers**
-Linux:
-    `cpp -P -D"__attribute__(ARGS)=" headers/original/uv.h -o uv_linux.h`
-Windows:
- First download [mcpp](http://mcpp.sourceforge.net/)
-    `mcpp -P -D"__attribute__(ARGS)=" -D"#pragma " headers/original/uv.h -o uv_windows.h`
-
-The option `-I  <directory>` might be needed to search/find additional include sources, and the output file will still need editing,
-`FFI` will complain, just remove the indicated before line.
 
 ## Contributing
 
