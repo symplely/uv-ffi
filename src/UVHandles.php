@@ -2135,8 +2135,6 @@ if (!\class_exists('UVWriter')) {
                 \ze_ffi()->zend_error(\E_WARNING, "write2 failed");
                 \zval_del_ref($this);
                 \zval_del_ref($buffer);
-            } else {
-                \zval_add_ref($this);
             }
 
             return $r;

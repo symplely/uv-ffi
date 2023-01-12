@@ -2232,11 +2232,6 @@ struct uv_timer_s
   uint64_t repeat;
   uint64_t start_id;
   uv_timer_cb timer_cb;
-  uv_timer_cb timer_cb;
-  void *heap_node[3];
-  uint64_t timeout;
-  uint64_t repeat;
-  uint64_t start_id;
 };
 
 int uv_timer_init(uv_loop_t *, uv_timer_t *handle);
