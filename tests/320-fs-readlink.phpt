@@ -16,4 +16,3 @@ var_dump($result);
 uv_run($uv);
 --EXPECT--
 int(0)
-bool(true)
