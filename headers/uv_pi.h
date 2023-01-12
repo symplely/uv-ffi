@@ -3076,13 +3076,8 @@ void uv_loop_set_data(uv_loop_t *, void *data);
 typedef void *void_t;
 typedef struct _php_uv_s
 {
-  void_t std; // for casting/storage of zval class objects
-
-  int type;
   // for threading
   void ***thread_ctx;
-
-  uv_os_sock_t sock;
   union
   {
     uv_tcp_t tcp;

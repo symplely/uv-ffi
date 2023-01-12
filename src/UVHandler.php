@@ -36,6 +36,11 @@ if (!\class_exists('UVHandler')) {
             return $this->uv_struct_type;
         }
 
+        public function get_sock()
+        {
+            return $this->uv_sock->__invoke();
+        }
+
         /**
          * Manually removes `C data` structure pointer memory.
          *

@@ -15,7 +15,6 @@ $symbol = \uv_dlsym($handler, '_get_osfhandle');
 
 \uv_dlclose($handler);
 \uv_run($loop);
-\uv_loop_close($loop);
 
 --EXPECTF--
 object(FFI\CData:void**)#%d (1) {

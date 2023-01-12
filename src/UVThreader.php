@@ -25,7 +25,6 @@ if (!\class_exists('UVThreader')) {
 
         public function __destruct()
         {
-            //  try {
             if ($this->type === 'rwlock') {
                 if ($this->locked == 0x01) {
                     \ze_ffi()->zend_error(\E_NOTICE, "uv_rwlock: still locked resource detected; forcing wrunlock");
@@ -53,8 +52,6 @@ if (!\class_exists('UVThreader')) {
 
                 \uv_ffi()->uv_sem_destroy($this->struct_ptr);
             }
-            // } catch (\Throwable $e) {
-            // }
 
             $this->free();
         }
@@ -73,7 +70,6 @@ if (!\class_exists('UVThreader')) {
                 $this->struct_ptr = \FFI::addr($this->struct->lock->{$type});
                 $this->struct_base->type = self::UV_LOCK_TYPE[$type] ?? null;
             } else {
-                echo 'xxxx';
                 $this->struct = \Core::get($this->tag)->new($typedef);
             }
         }
