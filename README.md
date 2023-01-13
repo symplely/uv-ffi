@@ -10,7 +10,7 @@ All **ext-uv 0.3.0** _tests and functions_ been implemented, except **uv_queue_w
 
 `Linux` usage behavior and corrections has begun.
 
-The actual threading feature of `uv_queue_work` in **ext-uv 0.3.0** is on pause. Getting native PThreads working with FFI, needs a lot more investigation and more likely C development of PHP source code. Seems someone else has started something similar https://github.com/mrsuh/php-pthreads.
+The actual threading feature of `uv_queue_work` in **ext-uv 0.3.0** is on pause. Getting native PThreads working with FFI, needs a lot more investigation and more likely C development of PHP source code. Seems someone else has started something similar <https://github.com/mrsuh/php-pthreads>.
 
 **PR** are welcome, see [Documentation] and [Contributing].
 
@@ -243,6 +243,89 @@ The following functions are present in _Windows_, but not in _Linux_.
                            double mtime,
                            uv_fs_cb cb);
  int uv_ip_name(const struct sockaddr* src, char* dst, size_t size);
+
+// ubuntu 18.04
+char *uv_strerror_r(int err, char *buf, size_t buflen);
+char *uv_err_name_r(int err, char *buf, size_t buflen);
+uv_handle_type uv_handle_get_type(const uv_handle_t *handle);
+const char *uv_handle_type_name(uv_handle_type type);
+uv_handle_type uv_handle_get_type(const uv_handle_t *handle);
+const char *uv_handle_type_name(uv_handle_type type);
+void *uv_handle_get_data(const uv_handle_t *handle);
+uv_loop_t *uv_handle_get_loop(const uv_handle_t *handle);
+void uv_handle_set_data(uv_handle_t *handle, void *data);
+void *uv_req_get_data(const uv_req_t *req);
+void uv_req_set_data(uv_req_t *req, void *data);
+uv_req_type uv_req_get_type(const uv_req_t *req);
+const char *uv_req_type_name(uv_req_type type);
+size_t uv_stream_get_write_queue_size(const uv_stream_t *stream);
+int uv_tcp_close_reset(uv_tcp_t *handle, uv_close_cb close_cb);
+int uv_udp_connect(uv_udp_t *handle, const struct sockaddr *addr);
+int uv_udp_getpeername(const uv_udp_t *handle,
+                       struct sockaddr *name,
+                       int *namelen);
+int uv_udp_set_source_membership(uv_udp_t *handle,
+                                 const char *multicast_addr,
+                                 const char *interface_addr,
+                                 const char *source_addr,
+                                 uv_membership membership);
+size_t uv_udp_get_send_queue_size(const uv_udp_t *handle);
+size_t uv_udp_get_send_queue_count(const uv_udp_t *handle);
+void uv_tty_set_vterm_state(uv_tty_vtermstate_t state);
+int uv_tty_get_vterm_state(uv_tty_vtermstate_t *state);
+uv_pid_t uv_process_get_pid(const uv_process_t *);
+int uv_open_osfhandle(uv_os_fd_t os_fd);
+int uv_os_getpriority(uv_pid_t pid, int *priority);
+int uv_os_setpriority(uv_pid_t pid, int priority);
+int uv_os_environ(uv_env_item_t **envitems, int *count);
+void uv_os_free_environ(uv_env_item_t *envitems, int count);
+int uv_os_uname(uv_utsname_t *buffer);
+uv_fs_type uv_fs_get_type(const uv_fs_t *);
+ssize_t uv_fs_get_result(const uv_fs_t *);
+void *uv_fs_get_ptr(const uv_fs_t *);
+const char *uv_fs_get_path(const uv_fs_t *);
+uv_stat_t *uv_fs_get_statbuf(uv_fs_t *);
+int uv_fs_mkstemp(uv_loop_t *loop,
+                  uv_fs_t *req,
+                  const char *tpl,
+                  uv_fs_cb cb);
+int uv_fs_opendir(uv_loop_t *loop,
+                  uv_fs_t *req,
+                  const char *path,
+                  uv_fs_cb cb);
+int uv_fs_readdir(uv_loop_t *loop,
+                  uv_fs_t *req,
+                  uv_dir_t *dir,
+                  uv_fs_cb cb);
+int uv_fs_closedir(uv_loop_t *loop,
+                   uv_fs_t *req,
+                   uv_dir_t *dir,
+                   uv_fs_cb cb);
+int uv_fs_lchown(uv_loop_t *loop,
+                 uv_fs_t *req,
+                 const char *path,
+                 uv_uid_t uid,
+                 uv_gid_t gid,
+                 uv_fs_cb cb);
+int uv_fs_statfs(uv_loop_t *loop,
+                 uv_fs_t *req,
+                 const char *path,
+                 uv_fs_cb cb);
+int uv_random(uv_loop_t *loop,
+              uv_random_t *req,
+              void *buf,
+              size_t buflen,
+              unsigned flags,
+              uv_random_cb cb);
+uint64_t uv_get_constrained_memory(void);
+void uv_sleep(unsigned int msec);
+int uv_gettimeofday(uv_timeval64_t *tv);
+int uv_thread_create_ex(uv_thread_t *tid,
+                        const uv_thread_options_t *params,
+                        uv_thread_cb entry,
+                        void *arg);
+void *uv_loop_get_data(const uv_loop_t *);
+void uv_loop_set_data(uv_loop_t *, void *data);
 ```
 
 ## Contributing
