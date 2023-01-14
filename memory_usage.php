@@ -10,9 +10,11 @@ uv_destruct_set();
 class TestCase
 {
   public $counter = 0;
+  public $version;
 
   public function run()
   {
+    $this->version = \uv_ffi()->uv_version_string();
     $loop = uv_loop_new();
 
     //$handler = uv_pipe_init($loop, false);
@@ -39,6 +41,7 @@ $t->run();
 
 $memory = memory_get_usage() - $memory;
 
+echo 'Libuv version: ' . $t->version . "\n\n";
 echo "Memory Leak/Usage:\n$t->counter\n" . $memory . "\n";
 echo "\n$t->counter\n" . round($memory / 1048576) . "MB\n\n";
 echo 'Memory usage after loop destroy: ' . round(memory_get_usage() / 1048576) . 'MB';
