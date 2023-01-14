@@ -220,27 +220,26 @@ if (!\function_exists('uv_init')) {
      */
     function uv_stat_to_zval(CData $stat): array
     {
-        $arrays = \zval_array(\ze_ffi()->_zend_new_array(0));
-        $array = $arrays();
-        \ze_ffi()->add_assoc_long_ex($array, "dev", \strlen("dev"), $stat->st_dev);
-        \ze_ffi()->add_assoc_long_ex($array, "ino", \strlen("ino"), $stat->st_ino);
-        \ze_ffi()->add_assoc_long_ex($array, "mode", \strlen("mode"), $stat->st_mode);
-        \ze_ffi()->add_assoc_long_ex($array, "nlink", \strlen("nlink"), $stat->st_nlink);
-        \ze_ffi()->add_assoc_long_ex($array, "uid", \strlen("uid"), $stat->st_uid);
-        \ze_ffi()->add_assoc_long_ex($array, "gid", \strlen("gid"), $stat->st_gid);
-        \ze_ffi()->add_assoc_long_ex($array, "rdev", \strlen("rdev"), $stat->st_rdev);
-        \ze_ffi()->add_assoc_long_ex($array, "size", \strlen("size"), $stat->st_size);
+        $array = [];
+        $array['dev'] = $stat->st_dev;
+        $array['ino'] = $stat->st_ino;
+        $array['mode'] = $stat->st_mode;
+        $array['nlink'] = $stat->st_nlink;
+        $array['uid'] = $stat->st_uid;
+        $array['gid'] = $stat->st_gid;
+        $array['rdev'] = $stat->st_rdev;
+        $array['size'] = $stat->st_size;
 
         if (\IS_LINUX) {
-            \ze_ffi()->add_assoc_long_ex($array, "blksize", \strlen("blksize"), $stat->st_blksize);
-            \ze_ffi()->add_assoc_long_ex($array, "blocks", \strlen("blocks"), $stat->st_blocks);
+            $array['blksize'] = $stat->st_blksize;
+            $array['blocks'] = $stat->st_blocks;
         }
 
-        \ze_ffi()->add_assoc_long_ex($array, "atime", \strlen("atime"), $stat->st_atim->tv_sec);
-        \ze_ffi()->add_assoc_long_ex($array, "mtime", \strlen("mtime"), $stat->st_mtim->tv_sec);
-        \ze_ffi()->add_assoc_long_ex($array, "ctime", \strlen("ctime"), $stat->st_ctim->tv_sec);
+        $array['atime'] = $stat->st_atim->tv_sec;
+        $array['mtime'] = $stat->st_mtim->tv_sec;
+        $array['ctime'] = $stat->st_ctim->tv_sec;
 
-        return \zval_native($arrays);
+        return $array;
     }
 
     /**

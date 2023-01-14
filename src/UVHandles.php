@@ -1108,7 +1108,7 @@ if (!\class_exists('UVProcess')) {
             if (\is_cdata($zenv)) {
                 $p = 0;
                 while ($zenv_size > $p) {
-                    \ffi_free($zenv[$p]);
+                    \FFI::free($zenv[$p]);
                     $p++;
                 }
 
