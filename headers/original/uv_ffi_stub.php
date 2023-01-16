@@ -645,13 +645,13 @@ interface FFI
     public function uv_fs_chmod(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, int $mode, uv_fs_cb $cb);
 
     /** @return int */
-    public function uv_fs_utime(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, double $atime, double $mtime, uv_fs_cb $cb);
+    public function uv_fs_utime(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, double_t $atime, double_t $mtime, uv_fs_cb $cb);
 
     /** @return int */
-    public function uv_fs_futime(uv_loop_t &$loop, uv_fs_t &$req, uv_file $file, double $atime, double $mtime, uv_fs_cb $cb);
+    public function uv_fs_futime(uv_loop_t &$loop, uv_fs_t &$req, uv_file $file, double_t $atime, double_t $mtime, uv_fs_cb $cb);
 
     /** @return int */
-    public function uv_fs_lutime(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, double $atime, double $mtime, uv_fs_cb $cb);
+    public function uv_fs_lutime(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, double_t $atime, double_t $mtime, uv_fs_cb $cb);
 
     /** @return int */
     public function uv_fs_lstat(uv_loop_t &$loop, uv_fs_t &$req, const_char $path, uv_fs_cb $cb);
@@ -877,7 +877,7 @@ interface FFI
     public function uv_walk(uv_loop_t $loop,  uv_walk_cb $walk_cb, ?void_ptr &$arg);
 
     /** @return void */
-    public function uv_loadavg(double ...$avg);
+    public function uv_loadavg(double_t ...$avg);
 
     /** @return int */
     public function uv_rwlock_init(uv_rwlock_t &$rwlock);
@@ -967,7 +967,7 @@ interface FFI
     public function uv_tty_get_vterm_state(uv_tty_vtermstate_t &$state);
 
     /** @return uint64_t */
-    public function uv_uptime(double &$uptime);
+    public function uv_uptime(double_t &$uptime);
 
     /** @return uint64_t */
     public function uv_get_free_memory();
