@@ -423,10 +423,10 @@ if (!\class_exists('UVTcp')) {
 
             switch ($type) {
                 case 1:
-                    \uv_ffi()->uv_tcp_getsockname($this->uv_struct_type, \uv_cast('struct sockaddr*', $addr()), $addr_len());
+                    \uv_ffi()->uv_tcp_getsockname($this->uv_struct_type, \uv_sockaddr($addr), $addr_len());
                     break;
                 case 2:
-                    \uv_ffi()->uv_tcp_getpeername($this->uv_struct_type, \uv_cast('struct sockaddr*', $addr()), $addr_len());
+                    \uv_ffi()->uv_tcp_getpeername($this->uv_struct_type, \uv_sockaddr($addr), $addr_len());
                     break;
                 default:
                     \ze_ffi()->zend_error(\E_ERROR, "unexpected type");
