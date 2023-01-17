@@ -67,7 +67,7 @@ if (!\class_exists('ext_uv')) {
             return \ZE::SUCCESS;
         }
 
-        public function request_shutdown(...$args): int
+        public function request_shutdown(int $type, int $module_number): int
         {
             if (\is_ze_ffi()) {
                 $uv_loop = $this->get_default();
