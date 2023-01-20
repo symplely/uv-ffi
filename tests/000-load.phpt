@@ -6,7 +6,7 @@ Check for php-uv presence
 <?php
 require 'vendor/autoload.php';
 
-if (class_exists('uv'))
+if (extension_loaded(ext_uv::get_name()))
   echo "uv extension is available";
 --EXPECT--
 uv extension is available
