@@ -7,7 +7,7 @@ use FFI\CData;
 
 require 'vendor/autoload.php';
 
-$loop = \uv_loop_init();
+$loop = uv_loop_init();
 ob_start();
 phpinfo(8);
 $value = ob_get_clean();
@@ -15,7 +15,7 @@ $value = ob_get_clean();
 preg_match('/libuv Support => enabled/', $value, $matches);
 var_dump($matches[0]);
 var_dump(ext_uv::get_name());
-var_dump(uv_g() instanceof CData);
+var_dump(ext_uv::get_module()->get_default() instanceof \UVLoop);
 --EXPECTF--
 string(%d) "libuv Support => enabled"
 string(%d) "uv"
