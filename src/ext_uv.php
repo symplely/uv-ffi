@@ -10,13 +10,14 @@ if (!\class_exists('ext_uv')) {
         protected string $ffi_tag = 'uv';
         protected string $module_name = 'uv';
         protected string $module_version = '0.3.0';
-        protected ?string $global_type = 'uv_globals';
+        // protected ?string $global_type = 'uv_globals';
         protected bool $m_startup = true;
         protected bool $m_shutdown = true;
         protected bool $r_shutdown = true;
 
         protected string $uv_version;
         protected bool $restart_sapi = false;
+        protected bool $uv_exited = false;
 
         /** @var \UVLoop[]|null */
         protected $uv_default;
@@ -56,12 +57,16 @@ if (!\class_exists('ext_uv')) {
 
         public function module_shutdown(int $type, int $module_number): int
         {
-            \Core::clear_stdio();
-            \Core::clear('uv');
+            if (!$this->uv_exited) {
+                \Core::clear_stdio();
+                \Core::clear('uv');
 
-            if (\PHP_ZTS) {
-                \ze_ffi()->tsrm_mutex_free($this->default_mutex);
-                $this->default_mutex = null;
+                if (\PHP_ZTS) {
+                    \ze_ffi()->tsrm_mutex_free($this->default_mutex);
+                    $this->default_mutex = null;
+                }
+
+                $this->uv_exited = true;
             }
 
             return \ZE::SUCCESS;
@@ -71,8 +76,13 @@ if (!\class_exists('ext_uv')) {
         {
             if (\is_ze_ffi()) {
                 $uv_loop = $this->get_default();
-                if ($uv_loop instanceof \UVLoop && \is_cdata($uv_loop()))
+                if ($uv_loop instanceof \UVLoop && \is_cdata($uv_loop())) {
                     $uv_loop->__destruct();
+                } elseif (!$this->uv_exited) {
+                    $module = $this->__invoke();
+                    $this->module_shutdown($module->type, $module->module_number);
+                    static::set_module(null);
+                }
             }
 
             return \ZE::SUCCESS;

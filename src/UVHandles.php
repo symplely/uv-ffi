@@ -42,8 +42,7 @@ if (!\class_exists('UVLoop')) {
                 \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
                 \uv_ffi()->uv_loop_close($this->uv_loop_ptr);
 
-                if (!\is_null_ptr($this->uv_loop_ptr))
-                    \FFI::free($this->uv_loop_ptr);
+                \ffi_free_if($this->uv_loop_ptr);
 
                 $this->uv_loop_ptr = null;
                 $this->uv_loop = null;
@@ -231,10 +230,7 @@ if (!\class_exists('UVPipe')) {
                         }
 
                         $writer = $this->__invoke(true);
-                        \FFI::free($writer);
-                        \FFI::free($data->base);
-                        \FFI::free($stream);
-                        \FFI::free($handler);
+                        \ffi_free_if($writer, $data->base, $stream, $handler);
 
 
                         $pipe->free();
@@ -2039,8 +2035,7 @@ if (!\class_exists('UVBuffer')) {
 
         public function free(): void
         {
-            if (\is_cdata($this->uv_type_ptr->base) && !\is_null_ptr($this->uv_type_ptr->base))
-                \FFI::free($this->uv_type_ptr->base);
+            \ffi_free_if($this->uv_type_ptr->base);
 
             parent::free();
         }

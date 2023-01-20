@@ -169,20 +169,6 @@ if (!\function_exists('uv_init')) {
     }
 
     /**
-     * Manually removes an previously created `C` data memory pointer.
-     *
-     * @param \UV|\CStruct|CData $ptr
-     * @return void
-     */
-    function uv_ffi_free(object $ptr): void
-    {
-        if ($ptr instanceof \UV || $ptr instanceof \UVTypes || $ptr instanceof \CStruct)
-            $ptr->free();
-        elseif (\is_cdata($ptr))
-            \FFI::free($ptr);
-    }
-
-    /**
      * @param CData $fd_ptr
      * @param integer $fd
      * @param \UVFs $req
