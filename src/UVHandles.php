@@ -49,7 +49,7 @@ if (!\class_exists('UVLoop')) {
 
                 \ext_uv::get_module()->set_default(null);
                 if (\ext_uv::get_module()->is_destruct())
-                    \ext_uv::get_module()->module_destructor();
+                    \ext_uv::get_module()->request_shutdown(0, 0);
             }
         }
 
