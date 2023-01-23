@@ -46,7 +46,6 @@ if (!\function_exists('uv_loop_init')) {
      *@link http://docs.libuv.org/en/v1.x/loop.html#c.uv_loop_alive
      */
     function uv_loop_alive(\UVLoop $loop): bool
-
     {
         return (bool)\uv_ffi()->uv_loop_alive($loop());
     }
