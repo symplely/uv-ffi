@@ -216,7 +216,7 @@ if (!\class_exists('UVPipe')) {
         protected function emulated($io): void
         {
             $pipe = new static('struct _php_uv_s', 'pipe');
-            \uv_ffi()->uv_pipe_init(\UVLoop::default()(), $pipe(), 0);
+            \uv_ffi()->uv_pipe_init(\uv_g(), $pipe(), 0);
             \uv_ffi()->uv_pipe_open($pipe(), $io);
             $handler = \uv_stream($pipe);
             \uv_ffi()->uv_read_start(
@@ -243,7 +243,6 @@ if (!\class_exists('UVPipe')) {
 
                         $writer = $this->__invoke(true);
                         \ffi_free_if($writer, $data->base, $stream, $handler);
-
 
                         $pipe->free();
                         $this->free();

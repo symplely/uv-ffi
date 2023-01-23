@@ -77,13 +77,11 @@ if (!\function_exists('uv_init')) {
     /**
      * Represents **ext-uv** `UV_G()` _macro_.
      *
-     * @param string|null $element
-     * @param mixed $initialize set element value
-     * @return CData|null
+     * @return uv_loop_t|null CData
      */
-    function uv_g(?string $element = null, $initialize = 'empty'): ?CData
+    function uv_g(): ?CData
     {
-        return \ext_uv::get_module()->get_globals($element, $initialize);
+        return \ext_uv::get_module()->get_default()();
     }
 
     /**
