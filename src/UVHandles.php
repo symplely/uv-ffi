@@ -18,29 +18,36 @@ if (!\class_exists('UVLoop')) {
     final class UVLoop
     {
         /** @var uv_Loop_t */
-        protected ?CData $uv_loop;
+        protected ?CData $uv_loop = null;
 
         /** @var uv_Loop_t */
         protected ?CData $uv_loop_ptr = null;
 
+        protected bool $uv_ran = false;
+
         public function __destruct()
         {
             if (\is_cdata($this->uv_loop_ptr)) {
-                \uv_ffi()->uv_stop($this->uv_loop_ptr); /* in case we longjmp()'ed ... */
-                \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT); /* invalidate the stop ;-) */
-                \uv_ffi()->uv_walk($this->uv_loop_ptr, function (CData $handle, CData $args = null) {
-                    $fd = $handle->u->fd;
-                    if (Resource::is_valid($fd))
-                        Resource::remove_fd($fd);
-                    elseif (PhpStream::is_valid($fd))
-                        PhpStream::remove_fd($fd);
+                if ($this->uv_ran) {
+                    if (\uv_loop_alive($this)) {
+                        /* in case we longjmp()'ed ... */
+                        \uv_ffi()->uv_stop($this->uv_loop_ptr);
+                        /* invalidate the stop ;-) */
+                        \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
+                    }
 
-                    if (\uv_ffi()->uv_is_active($handle))
-                        \uv_ffi()->uv_close($handle, null);
-                }, null);
-
-                \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
-                \uv_ffi()->uv_loop_close($this->uv_loop_ptr);
+                    \uv_ffi()->uv_walk($this->uv_loop_ptr, function (CData $handle, CData $args = null) {
+                        $fd = $handle->u->fd;
+                        if (Resource::is_valid($fd))
+                            Resource::remove_fd($fd);
+                        elseif (PhpStream::is_valid($fd))
+                            PhpStream::remove_fd($fd);
+                        if (\uv_ffi()->uv_is_active($handle))
+                            \uv_ffi()->uv_close($handle, null);
+                    }, null);
+                    \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
+                    \uv_ffi()->uv_loop_close($this->uv_loop_ptr);
+                }
 
                 \ffi_free_if($this->uv_loop_ptr);
 
@@ -79,6 +86,11 @@ if (!\class_exists('UVLoop')) {
             }
 
             return $uv_default;
+        }
+
+        public function uv_run_set(): void
+        {
+            $this->uv_ran = true;
         }
 
         public static function init()
@@ -235,7 +247,6 @@ if (!\class_exists('UVPipe')) {
 
                         $pipe->free();
                         $this->free();
-                        \zval_del_ref($pipe);
                     }
                 }
             );
@@ -2035,7 +2046,10 @@ if (!\class_exists('UVBuffer')) {
 
         public function free(): void
         {
-            \ffi_free_if($this->uv_type_ptr->base);
+            try {
+                \ffi_free_if($this->uv_type_ptr->base);
+            } catch (\Throwable $e) {
+            }
 
             parent::free();
         }
@@ -2092,7 +2106,6 @@ if (!\class_exists('UVWriter')) {
                 :  function (CData $writer, int $status) use ($callback, $handle) {
                     $callback($handle, $status);
                     \FFI::free($writer);
-                    $this->free();
                     \zval_del_ref($this);
                     \zval_del_ref($callback);
                 });

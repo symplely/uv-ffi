@@ -415,6 +415,9 @@ interface FFI
     /** @return void */
     public function uv_loop_close(uv_loop_t &$loop);
 
+    /** @return int */
+    public function uv_loop_alive(uv_loop_t &$loop);
+
     /** @return void */
     public function uv_run(uv_loop_t &$loop, int $uv_run_mode);
 

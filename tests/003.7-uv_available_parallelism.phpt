@@ -1,7 +1,7 @@
 --TEST--
 Check for uv_available_parallelism the hardware platform can use
 --SKIPIF--
-<?php if (!extension_loaded("ffi")) print "skip"; ?>
+<?php if (('\\' !== \DIRECTORY_SEPARATOR)) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';

@@ -6,6 +6,8 @@ Check for uv_write has no memory leak
 <?php
 require 'vendor/autoload.php';
 
+uv_destruct_set();
+
 class TestCase {
     public $counter = 0;
 

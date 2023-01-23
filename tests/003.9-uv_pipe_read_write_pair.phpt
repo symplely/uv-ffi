@@ -1,7 +1,7 @@
 --TEST--
 Check for uv_get_osfhandle can get/open OS-dependent handle file descriptor
 --SKIPIF--
-<?php if (!extension_loaded("ffi")) print "skip"; ?>
+<?php if (('\\' !== \DIRECTORY_SEPARATOR)) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';

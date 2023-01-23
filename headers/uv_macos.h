@@ -3101,16 +3101,3 @@ typedef struct _php_uv_lock_s
     uv_sem_t semaphore;
   } lock;
 } php_uv_lock_t;
-
-typedef struct _php_uv_loop_t
-{
-  void_t std;
-  uv_loop_t loop;
-} php_uv_loop_t;
-
-typedef struct _zend_uv_globals
-{
-  php_uv_loop_t default_loop;
-} zend_uv_globals;
-
-typedef zend_uv_globals uv_globals;

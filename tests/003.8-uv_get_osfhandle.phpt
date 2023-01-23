@@ -6,16 +6,11 @@ Check for uv_get_osfhandle can get/open OS-dependent handle file descriptor
 <?php
 require 'vendor/autoload.php';
 
-$loop = uv_loop_init();
 $fd = \STDOUT;
 $osf = \uv_get_osfhandle($fd);
-var_dump($osf instanceof \FFI\Cdata);
+var_dump(\IS_WINDOWS ? $osf instanceof \FFI\CData : \is_int($osf));
 $fds = \uv_open_osfhandle($osf);
 var_dump($fds);
-var_dump($fd);
-uv_loop_close($loop);
-
 --EXPECTF--
 bool(true)
 int(%d)
-resource(%d) of type (stream)

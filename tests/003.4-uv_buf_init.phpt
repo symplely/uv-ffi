@@ -7,13 +7,10 @@ Check for uv_buf_init constructor
 
 require 'vendor/autoload.php';
 
-$loop = uv_loop_init();
 $data = 'hello';
 $result = \uv_buf_init($data);
 var_dump($result instanceof \UVBuffer);
 var_dump($result->getString());
-uv_loop_close($loop);
-
 
 --EXPECTF--
 bool(true)

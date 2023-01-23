@@ -1,7 +1,7 @@
 --TEST--
 Check for uv_pipe_open good file descriptor - STDOUT on Linux
 --SKIPIF--
-<?php if (('\\' === \DIRECTORY_SEPARATOR)) print "skip"; ?>
+<?php if (!extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
 
@@ -17,4 +17,3 @@ uv_loop_close($loop);
 
 --EXPECTF--
 int(0)
-Segmentation fault

@@ -38,6 +38,20 @@ if (!\function_exists('uv_loop_init')) {
     }
 
     /**
+     * Returns non-zero if there are referenced active handles,
+     * active requests or closing handles in the loop.
+     *
+     * @param \UVLoop $loop
+     * @return boolean
+     *@link http://docs.libuv.org/en/v1.x/loop.html#c.uv_loop_alive
+     */
+    function uv_loop_alive(\UVLoop $loop): bool
+
+    {
+        return (bool)\uv_ffi()->uv_loop_alive($loop());
+    }
+
+    /**
      * Returns the initialized default loop.
      * This function is just a convenient way for having a global loop
      * throughout an application, the default loop is in no way
@@ -73,6 +87,7 @@ if (!\function_exists('uv_loop_init')) {
             $loop = \uv_default_loop();
 
         \uv_ffi()->uv_run($loop(), $mode);
+        $loop->uv_run_set();
         if ($mode === \UV::RUN_DEFAULT)
             \zval_del_ref($loop);
     }

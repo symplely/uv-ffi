@@ -10,7 +10,6 @@ if (!\class_exists('ext_uv')) {
         protected string $ffi_tag = 'uv';
         protected string $module_name = 'uv';
         protected string $module_version = '0.3.0';
-        // protected ?string $global_type = 'uv_globals';
         protected bool $m_startup = true;
         protected bool $m_shutdown = true;
         protected bool $r_shutdown = true;
@@ -20,7 +19,7 @@ if (!\class_exists('ext_uv')) {
         protected bool $uv_exited = false;
 
         /** @var \UVLoop[]|null */
-        protected $uv_default;
+        protected $uv_default = null;
 
         protected ?CData $default_mutex = null;
 
@@ -81,7 +80,6 @@ if (!\class_exists('ext_uv')) {
                 } elseif (!$this->uv_exited) {
                     $module = $this->__invoke();
                     $this->module_shutdown($module->type, $module->module_number);
-                    static::set_module(null);
                 }
             }
 
