@@ -23,7 +23,7 @@ jobs:
         config:
           - {toolchain: Visual Studio 16 2019, arch: x64, server: 2019}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Envinfo
         run: npx envinfo
       - name: Build
@@ -34,9 +34,9 @@ jobs:
           cd libuv-${{ env.VERSION }}
           mkdir -p build
           cd build
-          cmake .. -DBUILD_TESTING=ON -DBUILDING_UV_SHARED=1 -G "${{ matrix.config.toolchain }}" -A ${{ matrix.config.arch }}
-          cmake --build .
-          dir Debug
+          cmake .. -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DBUILDING_UV_SHARED=1 -G "${{ matrix.config.toolchain }}" -A ${{ matrix.config.arch }}
+          cmake --build . --config Release
+          dir Release
         env:
           VERSION: ${{ github.event.inputs.version }}
       - name: Upload/Commit to Repo
@@ -46,7 +46,7 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           mkdir lib\Windows\
-          copy /Y libuv-${{ env.VERSION }}\build\Debug\uv.dll lib\Windows\
+          copy /Y libuv-${{ env.VERSION }}\build\Release\uv.dll lib\Windows\
           git add lib
           git commit -m "created uv.dll - for Windows x64"
           git push -q
