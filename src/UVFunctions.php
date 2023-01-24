@@ -86,7 +86,7 @@ if (!\function_exists('uv_loop_init')) {
             $loop = \uv_default_loop();
 
         \uv_ffi()->uv_run($loop(), $mode);
-        $loop->uv_run_set();
+        $loop->uv_ran();
         if ($mode === \UV::RUN_DEFAULT)
             \zval_del_ref($loop);
     }
@@ -131,6 +131,7 @@ if (!\function_exists('uv_loop_init')) {
     function uv_loop_close(\UVLoop &$loop): void
     {
         \uv_ffi()->uv_loop_close($loop());
+        $loop->uv_closed();
         \zval_del_ref($loop);
     }
 

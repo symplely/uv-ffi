@@ -23,18 +23,20 @@ if (!\class_exists('UVLoop')) {
         /** @var uv_Loop_t */
         protected ?CData $uv_loop_ptr = null;
 
-        protected bool $uv_ran = false;
+        protected bool $uv_run_called = false;
+
+        protected bool $uv_close_called = false;
+
+        protected bool $is_default = false;
 
         public function __destruct()
         {
             if (\is_cdata($this->uv_loop_ptr)) {
-                if ($this->uv_ran) {
-                    if (\uv_loop_alive($this)) {
-                        /* in case we longjmp()'ed ... */
-                        \uv_ffi()->uv_stop($this->uv_loop_ptr);
-                        /* invalidate the stop ;-) */
-                        \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
-                    }
+                if ($this->uv_run_called && !$this->uv_close_called) {
+                    /* in case we longjmp()'ed ... */
+                    \uv_ffi()->uv_stop($this->uv_loop_ptr);
+                    /* invalidate the stop ;-) */
+                    \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
 
                     \uv_ffi()->uv_walk($this->uv_loop_ptr, function (CData $handle, CData $args = null) {
                         $fd = $handle->u->fd;
@@ -46,17 +48,19 @@ if (!\class_exists('UVLoop')) {
                             \uv_ffi()->uv_close($handle, null);
                     }, null);
                     \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
+
                     \uv_ffi()->uv_loop_close($this->uv_loop_ptr);
                 }
 
-                \ffi_free_if($this->uv_loop_ptr);
+                if (!$this->is_default && (!$this->uv_run_called || !$this->uv_close_called))
+                    \ffi_free_if($this->uv_loop_ptr);
 
                 $this->uv_loop_ptr = null;
                 $this->uv_loop = null;
 
-                \ext_uv::get_module()->set_default(null);
-                if (\ext_uv::get_module()->is_destruct())
-                    \ext_uv::get_module()->request_shutdown(0, 0);
+                $ext_uv = \ext_uv::get_module();
+                if ($ext_uv->is_destruct())
+                    $ext_uv->request_shutdown(0, 0);
             }
         }
 
@@ -64,6 +68,7 @@ if (!\class_exists('UVLoop')) {
         {
             \uv_init();
             if ($default instanceof CData && \is_typeof($default, 'struct uv_loop_s*')) {
+                $this->is_default = true;
                 $this->uv_loop_ptr = $default;
             } else {
                 $this->uv_loop = \uv_ffi()->new("struct uv_loop_s");
@@ -88,9 +93,14 @@ if (!\class_exists('UVLoop')) {
             return $uv_default;
         }
 
-        public function uv_run_set(): void
+        public function uv_ran(): void
         {
-            $this->uv_ran = true;
+            $this->uv_run_called = true;
+        }
+
+        public function uv_closed(): void
+        {
+            $this->uv_close_called = true;
         }
 
         public static function init()
