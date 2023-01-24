@@ -128,7 +128,7 @@ if (!\function_exists('uv_loop_init')) {
      * @return void
      * @link http://docs.libuv.org/en/v1.x/loop.html#c.uv_loop_close
      */
-    function uv_loop_close(\UVLoop &$loop): void
+    function uv_loop_close(\UVLoop $loop): void
     {
         \uv_ffi()->uv_loop_close($loop());
         $loop->uv_closed();
