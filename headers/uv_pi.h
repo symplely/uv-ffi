@@ -1,5 +1,5 @@
 #define FFI_SCOPE "__uv__"
-#define FFI_LIB "/usr/lib/aarch64-linux-gnu/ibuv.so.1.0.0"
+#define FFI_LIB "/usr/lib/aarch64-linux-gnu/libuv.so.1.0.0"
 
 typedef long int ptrdiff_t;
 typedef long unsigned int size_t;
@@ -1537,7 +1537,6 @@ typedef enum
   UV_WORK,
   UV_GETADDRINFO,
   UV_GETNAMEINFO,
-  UV_RANDOM,
 
   UV_REQ_TYPE_MAX
 } uv_req_type;
@@ -1866,7 +1865,6 @@ int uv_tcp_getsockname(const uv_tcp_t *handle,
 int uv_tcp_getpeername(const uv_tcp_t *handle,
                        struct sockaddr *name,
                        int *namelen);
-int uv_tcp_close_reset(uv_tcp_t *handle, uv_close_cb close_cb);
 int uv_tcp_connect(uv_connect_t *req,
                    uv_tcp_t *handle,
                    const struct sockaddr *addr,
@@ -1942,10 +1940,6 @@ int uv_udp_open(uv_udp_t *handle, uv_os_sock_t sock);
 int uv_udp_bind(uv_udp_t *handle,
                 const struct sockaddr *addr,
                 unsigned int flags);
-int uv_udp_connect(uv_udp_t *handle, const struct sockaddr *addr);
-int uv_udp_getpeername(const uv_udp_t *handle,
-                       struct sockaddr *name,
-                       int *namelen);
 int uv_udp_getsockname(const uv_udp_t *handle,
                        struct sockaddr *name,
                        int *namelen);
@@ -1953,11 +1947,6 @@ int uv_udp_set_membership(uv_udp_t *handle,
                           const char *multicast_addr,
                           const char *interface_addr,
                           uv_membership membership);
-int uv_udp_set_source_membership(uv_udp_t *handle,
-                                 const char *multicast_addr,
-                                 const char *interface_addr,
-                                 const char *source_addr,
-                                 uv_membership membership);
 int uv_udp_set_multicast_loop(uv_udp_t *handle, int on);
 int uv_udp_set_multicast_ttl(uv_udp_t *handle, int ttl);
 int uv_udp_set_multicast_interface(uv_udp_t *handle,
@@ -1978,8 +1967,6 @@ int uv_udp_recv_start(uv_udp_t *handle,
                       uv_alloc_cb alloc_cb,
                       uv_udp_recv_cb recv_cb);
 int uv_udp_recv_stop(uv_udp_t *handle);
-size_t uv_udp_get_send_queue_size(const uv_udp_t *handle);
-size_t uv_udp_get_send_queue_count(const uv_udp_t *handle);
 
 struct uv_tty_s
 {
@@ -2026,8 +2013,6 @@ int uv_tty_init(uv_loop_t *, uv_tty_t *, uv_file fd, int readable);
 int uv_tty_set_mode(uv_tty_t *, uv_tty_mode_t mode);
 int uv_tty_reset_mode(void);
 int uv_tty_get_winsize(uv_tty_t *, int *width, int *height);
-void uv_tty_set_vterm_state(uv_tty_vtermstate_t state);
-int uv_tty_get_vterm_state(uv_tty_vtermstate_t *state);
 uv_handle_type uv_guess_handle(uv_file file);
 
 struct uv_pipe_s
@@ -2344,7 +2329,6 @@ int uv_spawn(uv_loop_t *loop,
              const uv_process_options_t *options);
 int uv_process_kill(uv_process_t *, int signum);
 int uv_kill(int pid, int signum);
-uv_pid_t uv_process_get_pid(const uv_process_t *);
 
 struct uv_work_s
 {
@@ -2440,7 +2424,6 @@ int uv_set_process_title(const char *title);
 int uv_resident_set_memory(size_t *rss);
 int uv_uptime(double *uptime);
 uv_os_fd_t uv_get_osfhandle(int fd);
-int uv_open_osfhandle(uv_os_fd_t os_fd);
 typedef struct
 {
   long tv_sec;
@@ -2477,8 +2460,6 @@ int uv_os_get_passwd(uv_passwd_t *pwd);
 void uv_os_free_passwd(uv_passwd_t *pwd);
 uv_pid_t uv_os_getpid(void);
 uv_pid_t uv_os_getppid(void);
-int uv_os_getpriority(uv_pid_t pid, int *priority);
-int uv_os_setpriority(uv_pid_t pid, int priority);
 int uv_cpu_info(uv_cpu_info_t **cpu_infos, int *count);
 void uv_free_cpu_info(uv_cpu_info_t *cpu_infos, int count);
 int uv_interface_addresses(uv_interface_address_t **addresses,
@@ -2490,13 +2471,10 @@ struct uv_env_item_s
   char *name;
   char *value;
 };
-int uv_os_environ(uv_env_item_t **envitems, int *count);
-void uv_os_free_environ(uv_env_item_t *envitems, int count);
 int uv_os_getenv(const char *name, char *buffer, size_t *size);
 int uv_os_setenv(const char *name, const char *value);
 int uv_os_unsetenv(const char *name);
 int uv_os_gethostname(char *buffer, size_t *size);
-int uv_os_uname(uv_utsname_t *buffer);
 typedef enum
 {
   UV_FS_UNKNOWN = -1,
@@ -2531,11 +2509,6 @@ typedef enum
   UV_FS_REALPATH,
   UV_FS_COPYFILE,
   UV_FS_LCHOWN,
-  UV_FS_OPENDIR,
-  UV_FS_READDIR,
-  UV_FS_CLOSEDIR,
-  UV_FS_STATFS,
-  UV_FS_MKSTEMP,
   UV_FS_LUTIME
 } uv_fs_type;
 
@@ -2574,11 +2547,6 @@ struct uv_fs_s
   uv_buf_t bufsml[4];
 };
 
-uv_fs_type uv_fs_get_type(const uv_fs_t *);
-ssize_t uv_fs_get_result(const uv_fs_t *);
-void *uv_fs_get_ptr(const uv_fs_t *);
-const char *uv_fs_get_path(const uv_fs_t *);
-uv_stat_t *uv_fs_get_statbuf(uv_fs_t *);
 void uv_fs_req_cleanup(uv_fs_t *req);
 int uv_fs_close(uv_loop_t *loop,
                 uv_fs_t *req,
@@ -2623,10 +2591,6 @@ int uv_fs_mkdtemp(uv_loop_t *loop,
                   uv_fs_t *req,
                   const char *tpl,
                   uv_fs_cb cb);
-int uv_fs_mkstemp(uv_loop_t *loop,
-                  uv_fs_t *req,
-                  const char *tpl,
-                  uv_fs_cb cb);
 int uv_fs_rmdir(uv_loop_t *loop,
                 uv_fs_t *req,
                 const char *path,
@@ -2638,18 +2602,6 @@ int uv_fs_scandir(uv_loop_t *loop,
                   uv_fs_cb cb);
 int uv_fs_scandir_next(uv_fs_t *req,
                        uv_dirent_t *ent);
-int uv_fs_opendir(uv_loop_t *loop,
-                  uv_fs_t *req,
-                  const char *path,
-                  uv_fs_cb cb);
-int uv_fs_readdir(uv_loop_t *loop,
-                  uv_fs_t *req,
-                  uv_dir_t *dir,
-                  uv_fs_cb cb);
-int uv_fs_closedir(uv_loop_t *loop,
-                   uv_fs_t *req,
-                   uv_dir_t *dir,
-                   uv_fs_cb cb);
 int uv_fs_stat(uv_loop_t *loop,
                uv_fs_t *req,
                const char *path,
@@ -2750,10 +2702,6 @@ int uv_fs_lchown(uv_loop_t *loop,
                  const char *path,
                  uv_uid_t uid,
                  uv_gid_t gid,
-                 uv_fs_cb cb);
-int uv_fs_statfs(uv_loop_t *loop,
-                 uv_fs_t *req,
-                 const char *path,
                  uv_fs_cb cb);
 enum uv_fs_event
 {
@@ -2879,12 +2827,6 @@ struct uv_random_s
   struct uv__work work_req;
 };
 
-int uv_random(uv_loop_t *loop,
-              uv_random_t *req,
-              void *buf,
-              size_t buflen,
-              unsigned flags,
-              uv_random_cb cb);
 int uv_if_indextoname(unsigned int ifindex,
                       char *buffer,
                       size_t *size);
@@ -2896,9 +2838,7 @@ int uv_cwd(char *buffer, size_t *size);
 int uv_chdir(const char *dir);
 uint64_t uv_get_free_memory(void);
 uint64_t uv_get_total_memory(void);
-uint64_t uv_get_constrained_memory(void);
 uint64_t uv_hrtime(void);
-void uv_sleep(unsigned int msec);
 void uv_disable_stdio_inheritance(void);
 int uv_dlopen(const char *filename, uv_lib_t *lib);
 void uv_dlclose(uv_lib_t *lib);
@@ -2939,7 +2879,6 @@ int uv_key_create(uv_key_t *key);
 void uv_key_delete(uv_key_t *key);
 void *uv_key_get(uv_key_t *key);
 void uv_key_set(uv_key_t *key, void *value);
-int uv_gettimeofday(uv_timeval64_t *tv);
 typedef void (*uv_thread_cb)(void *arg);
 int uv_thread_create(uv_thread_t *tid, uv_thread_cb entry, void *arg);
 typedef enum
@@ -2953,10 +2892,6 @@ struct uv_thread_options_s
   size_t stack_size;
 };
 typedef struct uv_thread_options_s uv_thread_options_t;
-int uv_thread_create_ex(uv_thread_t *tid,
-                        const uv_thread_options_t *params,
-                        uv_thread_cb entry,
-                        void *arg);
 uv_thread_t uv_thread_self(void);
 int uv_thread_join(uv_thread_t *tid);
 int uv_thread_equal(const uv_thread_t *t1, const uv_thread_t *t2);
@@ -3041,9 +2976,6 @@ struct uv_loop_s
   void *inotify_watchers;
   int inotify_fd;
 };
-
-void *uv_loop_get_data(const uv_loop_t *);
-void uv_loop_set_data(uv_loop_t *, void *data);
 
 typedef void *void_t;
 typedef struct _php_uv_s
