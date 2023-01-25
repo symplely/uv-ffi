@@ -54,7 +54,7 @@ if (!\class_exists('ext_uv')) {
             return \ZE::SUCCESS;
         }
 
-        public function module_shutdown(int $type, int $module_number): int
+        public function module_clear(): void
         {
             if (!$this->uv_exited) {
                 \Core::clear_stdio();
@@ -66,6 +66,13 @@ if (!\class_exists('ext_uv')) {
                 }
 
                 $this->uv_exited = true;
+            };
+        }
+
+        public function module_shutdown(int $type, int $module_number): int
+        {
+            if (!\UVLock::is_lock_active()) {
+                $this->module_clear();
             }
 
             return \ZE::SUCCESS;

@@ -153,7 +153,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_close(\UV $handle, ?callable $callback = null)
     {
-        return UV::close($handle, $callback);
+        return \UV::close($handle, $callback);
     }
 
     /**

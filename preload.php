@@ -81,7 +81,11 @@ if (!\function_exists('uv_init')) {
      */
     function uv_g(): ?CData
     {
-        return \ext_uv::get_module()->get_default()();
+        $ext = \ext_uv::get_module()->get_default();
+        if (!\is_null($ext))
+            return $ext();
+
+        return $ext;
     }
 
     /**

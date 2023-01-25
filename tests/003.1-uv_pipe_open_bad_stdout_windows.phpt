@@ -16,4 +16,4 @@ uv_close($handler);
 uv_loop_close($loop);
 
 --EXPECTF--
-string(%d) "invalid argument"
+string(%d) "socket operation on non-socket"

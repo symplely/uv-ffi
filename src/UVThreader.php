@@ -11,6 +11,8 @@ if (!\class_exists('UVThreader')) {
         protected string $type;
         protected int $locked = 0x00;
         protected ?CData $struct_base;
+        public static bool $is_locking = false;
+        public static int $locking_counter = 0;
 
         const IS_UV_RWLOCK      = 1;
         const IS_UV_RWLOCK_RD   = 2;
@@ -36,6 +38,7 @@ if (!\class_exists('UVThreader')) {
                     }
                 }
 
+                --self::$locking_counter;
                 \uv_ffi()->uv_rwlock_destroy($this->struct_ptr);
             } elseif ($this->type === 'mutex') {
                 if ($this->locked == 0x01) {
@@ -43,6 +46,7 @@ if (!\class_exists('UVThreader')) {
                     \uv_ffi()->uv_mutex_unlock($this->struct_ptr);
                 }
 
+                --self::$locking_counter;
                 \uv_ffi()->uv_mutex_destroy($this->struct_ptr);
             } elseif ($this->type === 'semaphore') {
                 if ($this->locked == 0x01) {
@@ -50,10 +54,13 @@ if (!\class_exists('UVThreader')) {
                     \uv_ffi()->uv_sem_post($this->struct_ptr);
                 }
 
+                --self::$locking_counter;
                 \uv_ffi()->uv_sem_destroy($this->struct_ptr);
             }
 
             $this->free();
+            if (self::$locking_counter === 0)
+                \ext_uv::get_module()->module_clear();
         }
 
         protected function __construct(
@@ -64,6 +71,13 @@ if (!\class_exists('UVThreader')) {
         ) {
             $this->tag = 'uv';
             $this->type = $type;
+
+            self::$is_locking = true;
+            self::$locking_counter++;
+            if (\is_null(\uv_g())) {
+                \uv_default_loop();
+            }
+
             if (!$isSelf || \is_string($typedef)) {
                 $this->struct = \Core::get($this->tag)->new($typedef);
                 $this->struct_base = \FFI::addr($this->struct);
@@ -100,6 +114,11 @@ if (!\class_exists('UVThreader')) {
             $this->struct = null;
             $this->type = '';
             $this->tag = '';
+        }
+
+        public static function is_lock_active(): bool
+        {
+            return self::$is_locking;
         }
     }
 }
