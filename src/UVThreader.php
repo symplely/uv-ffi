@@ -74,6 +74,7 @@ if (!\class_exists('UVThreader')) {
 
             self::$is_locking = true;
             self::$locking_counter++;
+            \ext_uv::get_module()->destructor_set();
             if (\is_null(\uv_g())) {
                 \uv_default_loop();
             }
