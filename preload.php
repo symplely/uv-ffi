@@ -14,28 +14,28 @@ if (!\defined('O_RDONLY')) {
     /**
      * Open the file for read-only access.
      */
-    \define('O_RDONLY', \IS_WINDOWS ? 0x0000 : UV::O_RDONLY);
+    \define('O_RDONLY', \IS_WINDOWS ? 0x0000 : \UV::O_RDONLY);
 }
 
 if (!\defined('O_WRONLY')) {
     /**
      * Open the file for write-only access.
      */
-    \define('O_WRONLY', \IS_WINDOWS ? 0x0001 : UV::O_WRONLY);
+    \define('O_WRONLY', \IS_WINDOWS ? 0x0001 : \UV::O_WRONLY);
 }
 
 if (!\defined('O_RDWR')) {
     /**
      * Open the file for read-write access.
      */
-    \define('O_RDWR', \IS_WINDOWS ? 0x0002 : UV::O_RDWR);
+    \define('O_RDWR', \IS_WINDOWS ? 0x0002 : \UV::O_RDWR);
 }
 
 if (!\defined('O_CREAT')) {
     /**
      * The file is created if it does not already exist.
      */
-    \define('O_CREAT', \IS_WINDOWS ? 0x0100 : UV::O_CREAT);
+    \define('O_CREAT', \IS_WINDOWS ? 0x0100 : \UV::O_CREAT);
 }
 
 if (!\defined('O_EXCL')) {
@@ -43,7 +43,7 @@ if (!\defined('O_EXCL')) {
      * If the O_CREAT flag is set and the file already exists,
      * fail the open.
      */
-    \define('O_EXCL', \IS_WINDOWS ? 0x0400 : UV::O_EXCL);
+    \define('O_EXCL', \IS_WINDOWS ? 0x0400 : \UV::O_EXCL);
 }
 
 if (!\defined('O_TRUNC')) {
@@ -51,7 +51,7 @@ if (!\defined('O_TRUNC')) {
      * If the file exists and is a regular file, and the file is
      * opened successfully for write access, its length shall be truncated to zero.
      */
-    \define('O_TRUNC', \IS_WINDOWS ? 0x0200 : UV::O_TRUNC);
+    \define('O_TRUNC', \IS_WINDOWS ? 0x0200 : \UV::O_TRUNC);
 }
 
 if (!\defined('O_APPEND')) {
@@ -59,7 +59,7 @@ if (!\defined('O_APPEND')) {
      * The file is opened in append mode. Before each write,
      * the file offset is positioned at the end of the file.
      */
-    \define('O_APPEND', \IS_WINDOWS ? 0x0008 : UV::O_APPEND);
+    \define('O_APPEND', \IS_WINDOWS ? 0x0008 : \UV::O_APPEND);
 }
 
 if (!\defined('O_NOCTTY') && !\IS_WINDOWS) {
@@ -70,7 +70,7 @@ if (!\defined('O_NOCTTY') && !\IS_WINDOWS) {
      *
      * - Note O_NOCTTY is not supported on Windows.
      */
-    \define('O_NOCTTY', UV::O_NOCTTY);
+    \define('O_NOCTTY', \UV::O_NOCTTY);
 }
 
 if (!\function_exists('uv_init')) {
@@ -186,7 +186,7 @@ if (!\function_exists('uv_init')) {
                 },
                 null,
                 'stream',
-                20220101
+                \ZEND_MODULE_API_NO
             )
         );
 

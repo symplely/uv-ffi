@@ -9,4 +9,4 @@ require 'vendor/autoload.php';
 $ioRead = uv_stdio_new("foo", UV::CREATE_PIPE | UV::INHERIT_STREAM);
 
 --EXPECTF--
-Warning: passed unexpected value, expected instance of UV, file resource or socket object in %S
+PHP Warning:  passed unexpected value, expected instance of UV, file resource or socket object in %S

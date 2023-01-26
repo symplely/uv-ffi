@@ -33,7 +33,8 @@ if (!\class_exists('UVTypes')) {
          */
         public function free(): void
         {
-            \ffi_free_if($this->uv_type_ptr);
+            if (\IS_WINDOWS)
+                \ffi_free_if($this->uv_type_ptr);
 
             $this->uv_type_ptr = null;
             $this->uv_type = null;

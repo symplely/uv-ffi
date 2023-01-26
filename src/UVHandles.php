@@ -1013,7 +1013,7 @@ if (!\class_exists('UVProcess')) {
          * @return int|UVProcess
          */
         public function spawn(
-            UVLoop $loop,
+            \UVLoop $loop,
             string $command,
             array $args,
             array $stdio,
@@ -1564,7 +1564,6 @@ if (!\class_exists('UVGetAddrinfo')) {
             $addrinfo = \Addrinfo::init('struct addrinfo');
             $hint = $addrinfo();
             if (!\is_null($hints)) {
-                /** @var HashTable */
                 if (\in_array('ai_family', $hints, true)) {
                     $hint->ai_family = $hints['ai_family'];
                 }
@@ -1868,7 +1867,7 @@ if (!\class_exists('UVFs')) {
                     case \UV::FS_READLINK:
                         $result = \uv_ffi()->uv_fs_readlink($loop(), $uv_fSystem(), $fdOrString, $uv_fs_cb);
                         if (\is_null($callback))
-                            $result = \ffi_string(\ze_ffi()->uv_fs_get_ptr($uv_fSystem()));
+                            $result = \ffi_string(\uv_ffi()->uv_fs_get_ptr($uv_fSystem()));
                         break;
                     case \UV::FS_UNKNOWN:
                     case \UV::FS_CUSTOM:

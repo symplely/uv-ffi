@@ -78,6 +78,9 @@ if (!\class_exists('ext_uv')) {
                 }
 
                 $this->uv_exited = true;
+                if (\UVLock::is_lock_active()) {
+                    \ext_uv::set_module(null);
+                }
             };
         }
 
