@@ -11,8 +11,8 @@ if (!\class_exists('UVThreader')) {
         protected string $type;
         protected int $locked = 0x00;
         protected ?CData $struct_base;
-        public static bool $is_locking = false;
-        public static int $locking_counter = 0;
+        protected static bool $is_locking = false;
+        protected static int $locking_counter = 0;
 
         const IS_UV_RWLOCK      = 1;
         const IS_UV_RWLOCK_RD   = 2;
