@@ -18,10 +18,22 @@ if (!\class_exists('ext_uv')) {
         protected bool $restart_sapi = false;
         protected bool $uv_exited = false;
 
+        protected bool $shutdown_on_request = false;
+
         /** @var \UVLoop[]|null */
         protected $uv_default = null;
 
         protected ?CData $default_mutex = null;
+
+        public function shutdown_set(): void
+        {
+            $this->shutdown_on_request = true;
+        }
+
+        public function is_shutdown(): bool
+        {
+            return $this->shutdown_on_request;
+        }
 
         public function get_mutex(): ?CData
         {
