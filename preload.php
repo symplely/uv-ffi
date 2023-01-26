@@ -396,11 +396,7 @@ if (!\function_exists('uv_init')) {
         }
 
         \Core::set('uv', $scope);
-        $ext_uv = new \ext_uv();
-        if (!$ext_uv->is_registered()) {
-            $ext_uv->register();
-            $ext_uv->startup();
-        }
+        new \ext_uv();
     }
 
     \uv_ffi_loader();
