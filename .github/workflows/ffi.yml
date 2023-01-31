@@ -1,10 +1,7 @@
-name: "7.4, 8.0, 8.1, 8.2   "
+name: LibUV-FFI CI
 
 on:
-  push:
-    branches: [ 0.3x ]
-  pull_request:
-    branches: [ 0.3x ]
+  workflow_dispatch:
 
 jobs:
   multi:
