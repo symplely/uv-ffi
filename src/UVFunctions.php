@@ -465,8 +465,8 @@ if (!\function_exists('uv_loop_init')) {
 
         $error = \uv_ffi()->uv_tty_get_winsize($tty(), $_width(), $_height());
 
-        $w->change_value($_width()[0]);
-        $h->change_value($_height()[0]);
+        $w->change_value($_width->value());
+        $h->change_value($_height->value());
 
         return $error;
     }

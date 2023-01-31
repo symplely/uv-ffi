@@ -57,11 +57,11 @@ uv_read_start($out, function ($out, $nread, $buffer) use ($process) {
     });
     uv_process_kill($process, 9);
     $pid = uv_process_get_pid($process);
-    print (uv_strerror(uv_kill($pid, 2))) . EOL;
+    print (uv_strerror(uv_kill($pid, -1))) . EOL;
 });
 
 uv_run();
 --EXPECTF--
 Hello, World!
-no such process
+invalid argument
 The process was terminated with 'SIGKILL' or '9' signal!

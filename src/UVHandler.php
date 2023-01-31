@@ -51,9 +51,7 @@ if (!\class_exists('UVHandler')) {
             if (\is_uv_ffi() && !\is_null($this->uv_struct_type))
                 \uv_ffi()->uv_unref($this->__invoke(true));
 
-            if (\IS_WINDOWS)
-                \ffi_free_if($this->uv_struct_type, $this->uv_struct_ptr);
-
+            \ffi_free_if($this->uv_struct_type, $this->uv_struct_ptr);
             $this->uv_struct_type = null;
             $this->uv_struct_ptr = null;
             $this->uv_struct = null;

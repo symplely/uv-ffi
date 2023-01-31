@@ -37,9 +37,9 @@ jobs:
           composer install
           composer require --dev phpunit/phpunit ~8
       - name: Test with phpunit
-        run: vendor/bin/phpunit --coverage-clover=coverage/phpunit/clover.xml
+        run: vendor/bin/phpunit --coverage-clover clover.xml
       - name: Submit code coverage
         if: ${{ success() }} || ${{ failure() }}
         uses: codecov/codecov-action@v3
         with:
-          file: ./clover.xml # optional
+          files: ./clover.xml, build/logs/clover.xml # optional
