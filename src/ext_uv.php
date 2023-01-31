@@ -58,7 +58,7 @@ if (!\class_exists('ext_uv')) {
 
         public function module_startup(int $type, int $module_number): int
         {
-            //  \ffi_set_free(false);
+            \ffi_set_free(false);
             if (\PHP_ZTS)
                 $this->default_mutex = \ze_ffi()->tsrm_mutex_alloc();
 
