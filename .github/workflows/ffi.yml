@@ -35,6 +35,7 @@ jobs:
           tools: composer:v2, cs2pr
           extensions: ffi, opcache, fileinfo, mbstring, openssl, simplexml, dom, sockets, sodium
           coverage: ${{ matrix.php-coverage }}
+          ini-values: ffi.enable="true", opcache.enable_cli=1
       - name: Install dependencies
         run: |
           composer install
