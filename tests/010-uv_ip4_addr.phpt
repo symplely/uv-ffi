@@ -6,9 +6,9 @@ Check for uv_ip4_addr
 <?php
 require 'vendor/autoload.php';
 
-var_dump(uv_ip4_addr("0.0.0.0",0)());
+$uv_address = uv_ip4_addr("0.0.0.0",0);
+var_dump($uv_address instanceof \UVSockAddrIPv4);
+var_dump(ffi_str_typeof($uv_address()));
 --EXPECTF--
-object(FFI\CData:struct sockaddr_in*)#%d (1) {
-  [0]=>
-  NULL
-}
+bool(true)
+string(19) "struct sockaddr_in*"
