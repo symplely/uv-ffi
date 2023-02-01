@@ -936,7 +936,7 @@ if (!\class_exists('UVStdio')) {
             } elseif ($handle->macro(\ZE::TYPE_P) == \ZE::IS_RESOURCE) {
                 $fd_resource = \fd_type('php_socket_t');
                 $fd = $fd_resource();
-                $stream = \uv_cast('php_stream *', \ze_ffi()->zend_fetch_resource_ex($handle(), NULL, \ze_ffi()->php_file_le_stream()));
+                $stream = \ze_cast('php_stream *', \ze_ffi()->zend_fetch_resource_ex($handle(), NULL, \ze_ffi()->php_file_le_stream()));
                 if (\is_cdata($stream)) {
                     if (\ze_ffi()->_php_stream_cast($stream, Resource::PHP_STREAM_AS_FD | Resource::PHP_STREAM_CAST_INTERNAL, \ffi_void($fd), 1) != \ZE::SUCCESS || $fd < 0) {
                         \ze_ffi()->zend_error(\E_WARNING, "passed resource without file descriptor");
@@ -1034,8 +1034,7 @@ if (!\class_exists('UVProcess')) {
             /* process stdio */
             $streams = [];
             $stdio_count = \count($stdio) > 0 ? \count($stdio) : 1;
-            $stdio_container = \c_array_type('uv_stdio_container_t', 'uv', $stdio_count);
-            $container = $stdio_container();
+            $container = \uv_ffi()->new('uv_stdio_container_t[' . $stdio_count . ']', false);
             foreach ($stdio as $key => $value) {
                 if (!$value instanceof \UVStdio) {
                     \ze_ffi()->zend_error(\E_ERROR, "must be instance of UVStdio");
@@ -1061,8 +1060,7 @@ if (!\class_exists('UVProcess')) {
             $n = 0;
             $hash_len = $h->macro(\ZE::ARRVAL_P)->nNumOfElements;
             $commands = \ffi_char($command);
-            $command_args_char = \c_array_type('char**', 'uv', $hash_len + 2);
-            $command_args = $command_args_char();
+            $command_args = \FFI::new('char*[' . ($hash_len + 2) . ']', false);
             $command_args[$n] = $commands;
 
             $n++;
@@ -1074,8 +1072,7 @@ if (!\class_exists('UVProcess')) {
 
             /* process env */
             $i = 0;
-            $zenv_char = \c_array_type('char*', 'uv', \count($env) + 1);
-            $zenv = $zenv_char();
+            $zenv = \FFI::new('char*[' . (\count($env) + 1) . ']', false);
             foreach ($env as $key => $value) {
                 $tmp_env_entry = \sprintf('%s=%s', $key, $value);
                 $zenv[$i] = \ffi_char($tmp_env_entry);
@@ -1089,7 +1086,7 @@ if (!\class_exists('UVProcess')) {
 
             $options = $process_options();
             $options->file    = $commands;
-            $options->stdio   = \ffi_void($container);
+            $options->stdio   = \uv_cast('uv_stdio_container_t*', $container);
             $options->exit_cb =  function (CData $process, int $exit_status, int $term_signal) use ($callback, $process_options) {
                 if (!\is_null($callback)) {
                     $callback($this, $exit_status, $term_signal);
@@ -1103,8 +1100,8 @@ if (!\class_exists('UVProcess')) {
             };
 
             $options->stdio_count = $stdio_count;
-            $options->env   = \ffi_void($zenv);
-            $options->args  = \ffi_void($command_args);
+            $options->env   = \FFI::cast('char**', $zenv);
+            $options->args  = \FFI::cast('char**', $command_args);
 
             if (\is_null($cwd)) {
                 $cwd = \uv_cwd();
@@ -1131,15 +1128,15 @@ if (!\class_exists('UVProcess')) {
                     $p++;
                 }
 
-                \zval_del_ref($zenv_char);
+                \FFI::free($zenv);
             }
 
             if (\is_cdata($command_args)) {
-                \zval_del_ref($command_args_char);
+                \FFI::free($command_args);
             }
 
             if (\is_cdata($container)) {
-                \zval_del_ref($stdio_container);
+                \FFI::free($container);
             }
 
             return $ret === 0 ? $this : $ret;
