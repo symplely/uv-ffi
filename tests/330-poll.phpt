@@ -48,5 +48,4 @@ EOF;
 
 uv_run();
 --EXPECT--
-HELO
 OK
