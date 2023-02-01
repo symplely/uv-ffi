@@ -6,9 +6,9 @@ Check for uv_ip6_addr
 <?php
 require 'vendor/autoload.php';
 
-var_dump(uv_ip6_addr("::0",0)());
+$uv_address = uv_ip6_addr("::0", 0);
+var_dump($uv_address instanceof \UVSockAddrIPv6);
+var_dump(ffi_str_typeof($uv_address()));
 --EXPECTF--
-object(FFI\CData:struct sockaddr_in6*)#%d (1) {
-  [0]=>
-  NULL
-}
+bool(true)
+string(20) "struct sockaddr_in6*"
