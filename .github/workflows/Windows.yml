@@ -1,5 +1,5 @@
 # GitHub Action for building Libuv
-name: Windows
+name: dll for Windows
 
 on:
   workflow_dispatch:
