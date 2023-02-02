@@ -1,14 +1,15 @@
 # uv-ffi
 
+[![Windows ](https://github.com/symplely/uv-ffi/actions/workflows/Windows-ffi.yml/badge.svg?branch=0.3x)](https://github.com/symplely/uv-ffi/actions/workflows/Windows-ffi.yml)[![Linux ](https://github.com/symplely/uv-ffi/actions/workflows/linux-ffi.yml/badge.svg?branch=0.3x)](https://github.com/symplely/uv-ffi/actions/workflows/linux-ffi.yml)[![macOS ](https://github.com/symplely/uv-ffi/actions/workflows/macOS-ffi.yml/badge.svg?branch=0.3x)](https://github.com/symplely/uv-ffi/actions/workflows/macOS-ffi.yml)
+
  An [Foreign function interface](https://en.wikipedia.org/wiki/Foreign_function_interface) ([FFI](https://github.com/libffi/libffi)) for PHP of **[libuv](http://docs.libuv.org/en/v1.x/)** cross-platform event-driven _asynchronous_ I/O library.
 
-This **libuv ffi** implementation is based on extension [ext-uv](https://github.com/amphp/ext-uv).
+This **libuv ffi** implementation is based on PHP extension [ext-uv](https://github.com/amphp/ext-uv). All **ext-uv 0.3.0** _tests and functions_ been implemented, except **uv_queue_work**.
 
-The _ext-uv_ extension is on version _1.6_ of **libuv**, 1.6 is actually _1.06_, or about _39_ releases behind current 1.44.2.
+- Functionality works as expected under `Windows` _PHP 7.4, 8.0, 8.1, 8.2_.
+- `Linux` and `macOS` is failing, most functions and tests completes, but segfaults afterwards, issues around current **destruct/shutdown** routine implementations and usage of **FFI::free** on libuv C structures.
 
-All **ext-uv 0.3.0** _tests and functions_ been implemented, except **uv_queue_work**. Functionality has only been tested under `Windows` and mainly _PHP 7.4_.
-
-`Linux` usage behavior and corrections has begun.
+**All functionality is interdependent on [zend-ffi](https://github.com/symplely/zend-ffi).**
 
 The actual threading feature of `uv_queue_work` in **ext-uv 0.3.0** is on pause. Getting native PThreads working with FFI, needs a lot more investigation and more likely C development of PHP source code. Seems someone else has started something similar <https://github.com/mrsuh/php-pthreads>.
 

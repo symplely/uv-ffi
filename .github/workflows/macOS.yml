@@ -1,5 +1,5 @@
 # GitHub Action for building Libuv
-name: macOS
+name: dylib for macOS
 
 on:
   workflow_dispatch:
