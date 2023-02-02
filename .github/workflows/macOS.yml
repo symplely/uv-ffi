@@ -1,4 +1,4 @@
--# GitHub Action for building Libuv
+# GitHub Action for building Libuv
 name: macOS
 
 on:
