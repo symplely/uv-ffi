@@ -364,12 +364,13 @@ if (!\function_exists('uv_init')) {
             }
         }
 
-        if (\file_exists('vendor\\symplely\\uv-ffi') && \IS_WINDOWS) {
+        $vendor_dir = 'vendor' . \DS . 'symplely' . \DS . 'uv-ffi';
+        if (\file_exists($vendor_dir) && (\IS_WINDOWS || \IS_MACOS)) {
             $vendor_code = \str_replace('.h', '_vendor.h', $code);
             if (!\file_exists($vendor_code)) {
                 $file = \str_replace(
                     'FFI_LIB ".',
-                    'FFI_LIB "vendor\\\symplely\\\uv-ffi',
+                    (\IS_WINDOWS ? 'FFI_LIB "vendor\\\symplely\\\uv-ffi' : 'FFI_LIB "vendor/symplely/uv-ffi'),
                     \file_get_contents($code)
                 );
 
