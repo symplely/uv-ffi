@@ -1,5 +1,5 @@
 #define FFI_SCOPE "__uv__"
-#define FFI_LIB "/usr/lib/libuv.1.0.0.dylib"
+#define FFI_LIB "./lib/macOS/libuv.1.0.0.dylib"
 
 typedef long int ptrdiff_t;
 typedef long unsigned int size_t;
