@@ -372,6 +372,27 @@ if (!\class_exists('UVTty')) {
             $status = \uv_ffi()->uv_tty_init($loop(), $tty(), \array_shift($arguments), \reset($arguments));
             return ($status === 0) ? $tty : $status;
         }
+
+        public function get_winsize(&$width, &$height): int
+        {
+            $w = \zval_stack(0);
+            $h = \zval_stack(1);
+
+            $_width = \FFI::new('int');
+            $_width_ptr = \FFI::addr($_width);
+            $_height = \FFI::new('int');
+            $_height_ptr = \FFI::addr($_height);
+
+            $error = \uv_ffi()->uv_tty_get_winsize($this->uv_struct_type, $_width_ptr, $_height_ptr);
+
+            $w->change_value($_width_ptr[0]);
+            $h->change_value($_height_ptr[0]);
+
+            \FFI::free($_width_ptr);
+            \FFI::free($_height_ptr);
+
+            return $error;
+        }
     }
 }
 

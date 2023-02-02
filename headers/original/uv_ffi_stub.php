@@ -952,7 +952,7 @@ interface FFI
     public function uv_fs_event_getpath(uv_fs_event_t &$handle, char &$buffer, size_t $size);
 
     /** @return int */
-    public function uv_tty_get_winsize(uv_tty_t &$tty, int &$width, int &$height);
+    public function uv_tty_get_winsize(uv_tty_t &$tty, int_ptr &$width, int_ptr &$height);
 
     /** @return int */
     public function uv_tty_init(uv_loop_t &$loop, uv_tty_t &$tty, uv_file $fd, int $readable);

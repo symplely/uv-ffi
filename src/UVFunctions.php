@@ -455,20 +455,9 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return int
      */
-    function uv_tty_get_winsize(\UVTty $tty, &$width, &$height)
+    function uv_tty_get_winsize(\UVTty $tty, &$width, &$height): int
     {
-        $w = \zval_stack(1);
-        $h = \zval_stack(2);
-
-        $_width = \c_int_type('int');
-        $_height = \c_int_type('int');
-
-        $error = \uv_ffi()->uv_tty_get_winsize($tty(), $_width(), $_height());
-
-        $w->change_value($_width->value());
-        $h->change_value($_height->value());
-
-        return $error;
+        return $tty->get_winsize($width, $height);
     }
 
     /**
