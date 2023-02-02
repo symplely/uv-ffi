@@ -18,7 +18,7 @@ jobs:
         php-versions: ['7.4', '8.0', '8.1', '8.2']
         include:
           - php-versions: '7.4'
-            php-coverage: xdebug
+            php-coverage: xdebug2
           - php-versions: '8.0'
             php-coverage: none
           - php-versions: '8.1'
