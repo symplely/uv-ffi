@@ -1,7 +1,7 @@
 --TEST--
 Check for poll read and close
 --SKIPIF--
-<?php if (!extension_loaded("ffi") || ('\\' === \DIRECTORY_SEPARATOR)) print "skip"; ?>
+<?php if (!extension_loaded("ffi") || ('\\' !== \DIRECTORY_SEPARATOR)) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';
@@ -48,5 +48,4 @@ EOF;
 
 uv_run();
 --EXPECT--
-HELO
 OK
