@@ -74,7 +74,7 @@ if (!\class_exists('UVLoop')) {
                 $this->is_default = true;
                 $this->uv_loop_ptr = $default;
             } else {
-                $this->uv_loop = \uv_ffi()->new("struct uv_loop_s", false);
+                $this->uv_loop = \uv_ffi()->new("struct uv_loop_s", \IS_WINDOWS);
                 $this->uv_loop_ptr = \ffi_ptr($this->uv_loop);
             }
 

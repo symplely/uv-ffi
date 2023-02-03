@@ -21,7 +21,7 @@ if (!\class_exists('UVHandler')) {
 
         protected function __construct(string $typedef, string $uv_type)
         {
-            $this->uv_struct = \uv_ffi()->new($typedef, false);
+            $this->uv_struct = \uv_ffi()->new($typedef, \IS_WINDOWS);
             $this->uv_struct_ptr = \ffi_ptr($this->uv_struct);
             $this->uv_struct_type = \ffi_ptr($this->uv_struct_ptr->uv->{$uv_type});
         }
