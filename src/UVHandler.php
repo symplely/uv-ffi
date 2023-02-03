@@ -21,7 +21,7 @@ if (!\class_exists('UVHandler')) {
 
         protected function __construct(string $typedef, string $uv_type)
         {
-            $this->uv_struct = \uv_ffi()->new($typedef);
+            $this->uv_struct = \uv_ffi()->new($typedef, false);
             $this->uv_struct_ptr = \ffi_ptr($this->uv_struct);
             $this->uv_struct_type = \ffi_ptr($this->uv_struct_ptr->uv->{$uv_type});
         }
@@ -51,7 +51,7 @@ if (!\class_exists('UVHandler')) {
             if (\is_uv_ffi() && !\is_null($this->uv_struct_type))
                 \uv_ffi()->uv_unref($this->__invoke(true));
 
-            \ffi_free_if($this->uv_struct_type, $this->uv_struct_ptr);
+            \ffi_free_if($this->uv_struct_type, $this->uv_struct_ptr, $this->uv_struct);
             $this->uv_struct_type = null;
             $this->uv_struct_ptr = null;
             $this->uv_struct = null;
