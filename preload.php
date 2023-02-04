@@ -172,24 +172,6 @@ if (!\function_exists('uv_init')) {
     }
 
     /**
-     * @param CData $fd_ptr
-     * @param integer $fd
-     * @param \UVFs $req
-     * @return resource
-     */
-    function create_uv_fs_resource(CData $fd_ptr, int $fd, \UVFs $req)
-    {
-        $fd_zval = PhpStream::fd_to_zval($fd, 'wb+', true);
-        $resource = \zval_native($fd_zval);
-        $file = \fd_type();
-        $file->update($fd_ptr, true);
-        $file->add_object($req);
-        $file->add_pair($fd_zval, $fd, (int)$resource);
-
-        return $resource;
-    }
-
-    /**
      * Represents _ext-uv_ `php_uv_stat_to_zval` and `php_uv_make_stat` functions.
      *
      * @param CData|uv_stat_t $stat

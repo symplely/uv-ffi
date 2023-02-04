@@ -255,7 +255,10 @@ if (!\class_exists('UVPipe')) {
                         }
 
                         $writer = $this->__invoke(true);
+                        $set = \CStruct::is_ffi_free_active();
+                        \ffi_set_free(true);
                         \ffi_free_if($writer, $data->base, $stream, $handler);
+                        \ffi_set_free($set);
 
                         $pipe->free();
                         $this->free();
@@ -326,13 +329,13 @@ if (!\class_exists('UVPipe')) {
                 $zval_1 = \zval_resource(\zend_register_resource(
                     $f1,
                     \zend_register_list_destructors_ex(function (CData $rsrc) {
-                    }, null, "uv_pipe", 20220101)
+                    }, null, "uv_pipe", \ZEND_MODULE_API_NO)
                 ));
 
                 $zval_2 = \zval_resource(\zend_register_resource(
                     $f0,
                     \zend_register_list_destructors_ex(function (CData $rsrc) {
-                    }, null, "uv_pipe", 20220101)
+                    }, null, "uv_pipe", \ZEND_MODULE_API_NO)
                 ));
 
                 $ht = \zend_new_pair($zval_1(), $zval_2());
@@ -622,16 +625,17 @@ if (!\class_exists('UVUdp')) {
 
         public function get_name(int $type)
         {
-            $addr = \UVSockaddr::init();
+            $isIP6 = $this->uv_sock instanceof \UVSockAddrIPv6;
+            $addr = $isIP6 ? \UVSockAddrIPv6::init() : \UVSockAddrIPv4::init();
             $addr_len = \c_int_type(
                 'int',
                 'uv',
-                \FFi::sizeof($addr()[0]) * ($this->uv_sock instanceof \UVSockAddrIPv6 ? 3 : 1)
+                \FFi::sizeof($addr()[0]) * ($isIP6 ? 3 : 1)
             );
 
             switch ($type) {
                 case 3:
-                    \uv_ffi()->uv_udp_getsockname($this->uv_struct_type, $addr(), $addr_len());
+                    \uv_ffi()->uv_udp_getsockname($this->uv_struct_type, \uv_sockaddr($addr), $addr_len());
                     break;
                 default:
                     \ze_ffi()->zend_error(\E_ERROR, "unexpected type");
@@ -1753,7 +1757,7 @@ if (!\class_exists('UVFs')) {
                         if ($result < 0)
                             $params[0] = $result;
                         else
-                            $params[0] = \create_uv_fs_resource($req, $result, $uv_fSystem);
+                            $params[0] = \get_resource_fd($result);
                         break;
                     case \UV::FS_SCANDIR:
                         /* req->ptr may be NULL here, but uv_fs_scandir_next() knows to handle it */
@@ -1828,7 +1832,7 @@ if (!\class_exists('UVFs')) {
                         $mode = \array_shift($arguments);
                         $result = \uv_ffi()->uv_fs_open($loop(), $uv_fSystem(), $fdOrString, $flags, $mode, $uv_fs_cb);
                         if (\is_null($callback))
-                            return \create_uv_fs_resource($uv_fSystem(), $result, $uv_fSystem);
+                            return \get_resource_fd($result);
                         break;
                     case \UV::FS_UNLINK:
                         $result = \uv_ffi()->uv_fs_unlink($loop(), $uv_fSystem(), $fdOrString, $uv_fs_cb);
