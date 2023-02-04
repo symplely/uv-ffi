@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use FFI\CData;
+use ZE\PhpStream;
 
 if (!\defined('DS'))
     \define('DS', \DIRECTORY_SEPARATOR);
@@ -178,19 +179,7 @@ if (!\function_exists('uv_init')) {
      */
     function create_uv_fs_resource(CData $fd_ptr, int $fd, \UVFs $req)
     {
-        $fd_res = \zend_register_resource(
-            $fd_ptr,
-            \zend_register_list_destructors_ex(
-                function (CData $rsrc) {
-                    \uv_ffi()->uv_fs_req_cleanup(\uv_cast('uv_fs_t*', $rsrc->ptr));
-                },
-                null,
-                'stream',
-                \ZEND_MODULE_API_NO
-            )
-        );
-
-        $fd_zval = \zval_resource($fd_res);
+        $fd_zval = PhpStream::fd_to_zval($fd, 'wb+', true);
         $resource = \zval_native($fd_zval);
         $file = \fd_type();
         $file->update($fd_ptr, true);
