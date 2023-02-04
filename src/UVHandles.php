@@ -625,16 +625,17 @@ if (!\class_exists('UVUdp')) {
 
         public function get_name(int $type)
         {
-            $addr = \UVSockaddr::init();
+            $isIP6 = $this->uv_sock instanceof \UVSockAddrIPv6;
+            $addr = $isIP6 ? \UVSockAddrIPv6::init() : \UVSockAddrIPv4::init();
             $addr_len = \c_int_type(
                 'int',
                 'uv',
-                \FFi::sizeof($addr()[0]) * ($this->uv_sock instanceof \UVSockAddrIPv6 ? 3 : 1)
+                \FFi::sizeof($addr()[0]) * ($isIP6 ? 3 : 1)
             );
 
             switch ($type) {
                 case 3:
-                    \uv_ffi()->uv_udp_getsockname($this->uv_struct_type, $addr(), $addr_len());
+                    \uv_ffi()->uv_udp_getsockname($this->uv_struct_type, \uv_sockaddr($addr), $addr_len());
                     break;
                 default:
                     \ze_ffi()->zend_error(\E_ERROR, "unexpected type");
