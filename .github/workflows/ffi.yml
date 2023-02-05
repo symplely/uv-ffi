@@ -32,14 +32,13 @@ jobs:
         with:
           php-version: ${{ matrix.php-versions }}
           tools: composer:v2
-          extensions: ffi, opcache, fileinfo, mbstring, openssl, simplexml, dom, sockets, sodium, pcntl, posix, filter, readline, curl
+          extensions: ffi, opcache, fileinfo, mbstring, openssl, simplexml, dom, sockets, sodium, filter, readline
           coverage: ${{ matrix.php-coverage }}
           ini-values: ffi.enable="true", opcache.enable_cli=1
       - name: Install dependencies
         run: |
           composer install
           composer require --dev phpunit/phpunit
-          php -m
       - name: Test with phpunit
         run: vendor/bin/phpunit --coverage-clover clover.xml
       - name: Submit code coverage
