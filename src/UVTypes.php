@@ -17,7 +17,7 @@ if (!\class_exists('UVTypes')) {
 
         protected function __construct(string $typedef)
         {
-            $this->uv_type = \uv_ffi()->new($typedef, \IS_WINDOWS);
+            $this->uv_type = \uv_ffi()->new($typedef);
             $this->uv_type_ptr = \ffi_ptr($this->uv_type);
         }
 
@@ -33,7 +33,7 @@ if (!\class_exists('UVTypes')) {
          */
         public function free(): void
         {
-            \ffi_free_if($this->uv_type_ptr, $this->uv_type);
+            \ffi_free_if($this->uv_type_ptr);
             $this->uv_type_ptr = null;
             $this->uv_type = null;
         }

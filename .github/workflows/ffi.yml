@@ -23,7 +23,7 @@ jobs:
           - php-versions: '8.1'
             php-coverage: none
           - php-versions: '8.2'
-            php-coverage: xdebug
+            php-coverage: none
     steps:
       - name: Checkout
         uses: actions/checkout@v3

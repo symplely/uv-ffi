@@ -54,7 +54,7 @@ if (!\class_exists('UVLoop')) {
 
                 if (!$this->is_default && (!$this->uv_run_called || !$this->uv_close_called)) {
                     \ffi_set_free(true);
-                    \ffi_free_if($this->uv_loop_ptr, $this->uv_loop);
+                    \ffi_free_if($this->uv_loop_ptr);
                     \ffi_set_free(false);
                 }
 
@@ -74,7 +74,7 @@ if (!\class_exists('UVLoop')) {
                 $this->is_default = true;
                 $this->uv_loop_ptr = $default;
             } else {
-                $this->uv_loop = \uv_ffi()->new("struct uv_loop_s", \IS_WINDOWS);
+                $this->uv_loop = \uv_ffi()->new("struct uv_loop_s");
                 $this->uv_loop_ptr = \ffi_ptr($this->uv_loop);
             }
 
