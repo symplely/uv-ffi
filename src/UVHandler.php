@@ -10,7 +10,6 @@ if (!\class_exists('UVHandler')) {
     abstract class UVHandler
     {
         protected ?CData $uv_struct = null;
-        protected ?CData $uv_struct_ptr = null;
         protected ?CData $uv_struct_type = null;
         protected ?\UVSockAddr $uv_sock = null;
 
@@ -22,8 +21,7 @@ if (!\class_exists('UVHandler')) {
         protected function __construct(string $typedef, string $uv_type)
         {
             $this->uv_struct = \uv_ffi()->new($typedef, \IS_WINDOWS);
-            $this->uv_struct_ptr = \ffi_ptr($this->uv_struct);
-            $this->uv_struct_type = \ffi_ptr($this->uv_struct_ptr->uv->{$uv_type});
+            $this->uv_struct_type = \ffi_ptr($this->uv_struct->uv->{$uv_type});
         }
 
         public function __invoke(?bool $by_handle = false): CData
@@ -31,7 +29,7 @@ if (!\class_exists('UVHandler')) {
             if ($by_handle)
                 return \uv_handle($this->uv_struct_type);
             elseif (\is_null($by_handle))
-                return $this->uv_struct_ptr;
+                return $this->uv_struct;
 
             return $this->uv_struct_type;
         }
@@ -51,9 +49,8 @@ if (!\class_exists('UVHandler')) {
             if (\is_uv_ffi() && !\is_null($this->uv_struct_type))
                 \uv_ffi()->uv_unref($this->__invoke(true));
 
-            \ffi_free_if($this->uv_struct_type, $this->uv_struct_ptr, $this->uv_struct);
+            \ffi_free_if($this->uv_struct_type, $this->uv_struct);
             $this->uv_struct_type = null;
-            $this->uv_struct_ptr = null;
             $this->uv_struct = null;
             $this->uv_sock = null;
         }
