@@ -36,4 +36,6 @@ if (!isset($info["times"]["nice"])) {
   echo "FAILED: key `times.nice` does not exist" . PHP_EOL;
 }
 
---EXPECT--
+echo 'ok';
+--EXPECTF--
+ok

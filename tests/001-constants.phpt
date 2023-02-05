@@ -86,5 +86,6 @@ if (!defined("UV::JOIN_GROUP")) {
   echo "FAILED UV::JOIN_GROUP" . PHP_EOL;
 }
 
-
---EXPECT--
+echo 'ok';
+--EXPECTF--
+ok

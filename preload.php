@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use FFI\CData;
-use ZE\PhpStream;
 
 if (!\defined('DS'))
     \define('DS', \DIRECTORY_SEPARATOR);
@@ -158,7 +157,6 @@ if (!\function_exists('uv_init')) {
      */
     function uv_object($handle)
     {
-        $handler = $handle;
         if (
             $handle instanceof \UV
             || $handle instanceof \UVLoop
@@ -166,9 +164,9 @@ if (!\function_exists('uv_init')) {
             || $handle instanceof \UVTypes
             || $handle instanceof \CStruct
         )
-            $handler = $handle();
+            $handle = $handle();
 
-        return $handler;
+        return $handle;
     }
 
     /**
