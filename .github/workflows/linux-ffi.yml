@@ -44,7 +44,6 @@ jobs:
         timeout-minutes: 3
         run: vendor/bin/phpunit --coverage-clover=clover.xml
       - name: Submit code coverage
-        if: ${{ success() }} || ${{ failure() }}
         uses: codecov/codecov-action@v3
         with:
           files: ./clover.xml, build/logs/clover.xml # optional
