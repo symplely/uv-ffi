@@ -8,4 +8,7 @@ require 'vendor/autoload.php';
 
 $loop = uv_loop_new();
 uv_loop_close($loop);
+
+echo 'ok';
 --EXPECTF--
+ok

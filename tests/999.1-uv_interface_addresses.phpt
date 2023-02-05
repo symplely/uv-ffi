@@ -20,4 +20,6 @@ if (!isset($info["address"])) {
   echo "FAILED: key `address` does not exist" . PHP_EOL;
 }
 
---EXPECT--
+echo 'ok';
+--EXPECTF--
+ok

@@ -80,7 +80,7 @@ if (!\class_exists('UVThreader')) {
             }
 
             if (!$isSelf || \is_string($typedef)) {
-                $this->struct = \Core::get($this->tag)->new($typedef);
+                $this->struct = \Core::get($this->tag)->new($typedef, \IS_WINDOWS);
                 $this->struct_base = \FFI::addr($this->struct);
                 $this->struct_ptr = \FFI::addr($this->struct->lock->{$type});
                 $this->struct_base->type = self::UV_LOCK_TYPE[$type] ?? null;
@@ -109,7 +109,7 @@ if (!\class_exists('UVThreader')) {
 
         public function free(): void
         {
-            \ffi_free_if($this->struct_ptr, $this->struct_base);
+            \ffi_free_if($this->struct_ptr, $this->struct_base, $this->struct);
             $this->struct_ptr = null;
             $this->struct_base = null;
             $this->struct = null;

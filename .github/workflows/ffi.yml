@@ -23,7 +23,7 @@ jobs:
           - php-versions: '8.1'
             php-coverage: none
           - php-versions: '8.2'
-            php-coverage: none
+            php-coverage: xdebug
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -32,13 +32,14 @@ jobs:
         with:
           php-version: ${{ matrix.php-versions }}
           tools: composer:v2
-          extensions: ffi, opcache, fileinfo, mbstring, openssl, simplexml, dom, sockets, sodium
+          extensions: ffi, opcache, fileinfo, mbstring, openssl, simplexml, dom, sockets, sodium, pcntl, posix, filter, readline, curl
           coverage: ${{ matrix.php-coverage }}
           ini-values: ffi.enable="true", opcache.enable_cli=1
       - name: Install dependencies
         run: |
           composer install
-          composer require --dev phpunit/phpunit ~8
+          composer require --dev phpunit/phpunit
+          php -m
       - name: Test with phpunit
         run: vendor/bin/phpunit --coverage-clover clover.xml
       - name: Submit code coverage
