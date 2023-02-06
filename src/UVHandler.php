@@ -92,7 +92,7 @@ if (!\class_exists('UVHandler')) {
                     } : null)
             );
 
-            \zval_skip_dtor($handle);
+            \zval_del_ref($handle);
         }
 
         /** @return static */
