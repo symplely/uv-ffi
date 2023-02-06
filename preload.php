@@ -157,16 +157,13 @@ if (!\function_exists('uv_init')) {
      */
     function uv_object($handle)
     {
-        if (
-            $handle instanceof \UV
+        return ($handle instanceof \UV
             || $handle instanceof \UVLoop
             || $handle instanceof \UVStream
             || $handle instanceof \UVTypes
-            || $handle instanceof \CStruct
-        )
-            $handle = $handle();
-
-        return $handle;
+            || $handle instanceof \CStruct)
+            ? $handle()
+            : $handle;
     }
 
     /**
