@@ -93,40 +93,40 @@ if (!\class_exists('UV')) {
         /**
          * Open the file for read-only access.
          */
-        const O_RDONLY = \IS_WINDOWS ? 0x0000 : 1;
+        const O_RDONLY = 0x0000;
 
         /**
          * Open the file for write-only access.
          */
-        const O_WRONLY = \IS_WINDOWS ? 0x0001 : 2;
+        const O_WRONLY = 0x0001;
 
         /**
          * Open the file for read-write access.
          */
-        const O_RDWR = \IS_WINDOWS ? 0x0002 : 3;
+        const O_RDWR = 0x0002;
 
         /**
          * The file is created if it does not already exist.
          */
-        const O_CREAT = \IS_WINDOWS ? 0x0100 : 4;
+        const O_CREAT = \IS_WINDOWS ? 0x0100 : 3;
 
         /**
          * If the O_CREAT flag is set and the file already exists,
          * fail the open.
          */
-        const O_EXCL = \IS_WINDOWS ? 0x0400 : 5;
+        const O_EXCL = \IS_WINDOWS ? 0x0400 : 4;
 
         /**
          * If the file exists and is a regular file, and the file is
          * opened successfully for write access, its length shall be truncated to zero.
          */
-        const O_TRUNC = \IS_WINDOWS ? 0x0200 : 6;
+        const O_TRUNC = \IS_WINDOWS ? 0x0200 : 5;
 
         /**
          * The file is opened in append mode. Before each write,
          * the file offset is positioned at the end of the file.
          */
-        const O_APPEND = \IS_WINDOWS ? 0x0008 : 7;
+        const O_APPEND = \IS_WINDOWS ? 0x0008 : 6;
 
         /**
          * If the path identifies a terminal device, opening the path will not cause that
