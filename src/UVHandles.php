@@ -694,7 +694,7 @@ if (!\class_exists('UVPoll')) {
             $resource = \reset($arguments);
             \stream_set_blocking($resource, false);
             $poll->fd($resource);
-            $fd = \get_socket_fd(\zval_constructor($resource));
+            $fd = \get_socket_fd($resource);
             if (\IS_WINDOWS)
                 $status = \uv_ffi()->uv_poll_init_socket($loop(), $poll(), $fd);
             else
