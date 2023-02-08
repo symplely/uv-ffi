@@ -1,13 +1,13 @@
 # uv-ffi
 
-[![Windows ](https://github.com/symplely/uv-ffi/actions/workflows/Windows-ffi.yml/badge.svg?branch=0.3x)](https://github.com/symplely/uv-ffi/actions/workflows/Windows-ffi.yml)[![Linux ](https://github.com/symplely/uv-ffi/actions/workflows/linux-ffi.yml/badge.svg?branch=0.3x)](https://github.com/symplely/uv-ffi/actions/workflows/linux-ffi.yml)[![macOS ](https://github.com/symplely/uv-ffi/actions/workflows/macOS-ffi.yml/badge.svg?branch=0.3x)](https://github.com/symplely/uv-ffi/actions/workflows/macOS-ffi.yml)
+[![Windows ](https://github.com/symplely/uv-ffi/actions/workflows/Windows-ffi.yml/badge.svg?branch=0.3x)](https://github.com/symplely/uv-ffi/actions/workflows/Windows-ffi.yml)[![Linux ](https://github.com/symplely/uv-ffi/actions/workflows/linux-ffi.yml/badge.svg?branch=0.3x)](https://github.com/symplely/uv-ffi/actions/workflows/linux-ffi.yml)[![macOS ](https://github.com/symplely/uv-ffi/actions/workflows/macOS-ffi.yml/badge.svg?branch=0.3x)](https://github.com/symplely/uv-ffi/actions/workflows/macOS-ffi.yml)[![codecov](https://codecov.io/gh/symplely/uv-ffi/branch/main/graph/badge.svg?token=BUL9sf3Yv0)](https://codecov.io/gh/symplely/uv-ffi)
 
  An [Foreign function interface](https://en.wikipedia.org/wiki/Foreign_function_interface) ([FFI](https://github.com/libffi/libffi)) for PHP of **[libuv](http://docs.libuv.org/en/v1.x/)** cross-platform event-driven _asynchronous_ I/O library.
 
 This **libuv ffi** implementation is based on PHP extension [ext-uv](https://github.com/amphp/ext-uv). All **ext-uv 0.3.0** _tests and functions_ been implemented, except **uv_queue_work**.
 
 - Functionality works as expected under `Windows` _PHP 7.4, 8.0, 8.1, 8.2_.
-- `Linux` and `macOS` is failing, most functions and tests completes, but segfaults afterwards, issues around current **destruct/shutdown** routine implementations and usage of **FFI::free** on libuv C structures.
+- `Linux` and `macOS` is failing, most functions and tests completes, but `5` to `10` segfaults afterwards, issues around current **destruct/shutdown** routine implementations and usage of **FFI::free** on libuv C structures.
 
 **All functionality is interdependent on [zend-ffi](https://github.com/symplely/zend-ffi).**
 
