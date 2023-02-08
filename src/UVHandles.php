@@ -694,7 +694,7 @@ if (!\class_exists('UVPoll')) {
             $resource = \reset($arguments);
             \stream_set_blocking($resource, false);
             $poll->fd($resource);
-            $fd = \get_socket_fd(\zval_constructor($resource));
+            $fd = \get_socket_fd($resource);
             if (\IS_WINDOWS)
                 $status = \uv_ffi()->uv_poll_init_socket($loop(), $poll(), $fd);
             else
@@ -1586,7 +1586,7 @@ if (!\class_exists('UVGetAddrinfo')) {
          */
         public static function getaddrinfo(\UVLoop $loop, callable $callback, string $node, ?string $service, array $hints = [])
         {
-            $addrinfo = \Addrinfo::init('struct addrinfo');
+            $addrinfo = \UVAddrinfo::init('struct addrinfo');
             $hint = $addrinfo();
             if (!\is_null($hints)) {
                 if (\in_array('ai_family', $hints, true)) {
@@ -1708,10 +1708,7 @@ if (!\class_exists('UVFs')) {
                 return $this->buffer;
 
             if ($set === 'free') {
-                $buffer = $this->buffer;
                 $this->buffer = null;
-                if (\is_object($buffer))
-                    \zval_del_ref($buffer);
             }
 
             $this->buffer = $set instanceof UVBuffer ? $set : null;
@@ -1817,14 +1814,14 @@ if (!\class_exists('UVFs')) {
 
                 if ($fs_type !== \UV::FS_OPEN) {
                     $uv_fSystem->free();
-                    \zval_del_ref($uv_fSystem);
+                    // \zval_del_ref($uv_fSystem);
                 }
 
-                \zval_del_ref($callback);
-                unset($params);
+                // \zval_del_ref($callback);
+                // unset($params);
             };
 
-            \zval_add_ref($uv_fSystem);
+            //    \zval_add_ref($uv_fSystem);
             if (\is_string($fdOrString)) {
                 switch ($fs_type) {
                     case \UV::FS_OPEN:
@@ -1981,11 +1978,12 @@ if (!\class_exists('UVFs')) {
             }
 
             if ($result < 0) {
-                \zval_del_ref($uv_fSystem);
+                // \zval_del_ref($uv_fSystem);
+                $uv_fSystem->free();
                 \ze_ffi()->zend_error(\E_WARNING, "uv_%s failed: %s",  \strtolower(\UV::name($fs_type)), \uv_strerror($result));
             } elseif (\is_null($callback)) {
                 $uv_fSystem->free();
-                \zval_del_ref($uv_fSystem);
+                // \zval_del_ref($uv_fSystem);
             }
 
             return  $result;
@@ -2105,8 +2103,8 @@ if (!\class_exists('UVBuffer')) {
     }
 }
 
-if (!\class_exists('Addrinfo')) {
-    final class Addrinfo extends \UVTypes
+if (!\class_exists('UVAddrinfo')) {
+    final class UVAddrinfo extends \UVTypes
     {
     }
 }
