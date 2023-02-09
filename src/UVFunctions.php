@@ -13,6 +13,7 @@ if (!\function_exists('uv_loop_init')) {
     function uv_destruct_set(): void
     {
         \ext_uv::get_module()->shutdown_set();
+        \ffi_set_free(true);
     }
 
     /**
