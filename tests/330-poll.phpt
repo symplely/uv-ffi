@@ -1,7 +1,7 @@
 --TEST--
 Check for poll read and close
 --SKIPIF--
-<?php if (!extension_loaded("ffi")) print "skip"; ?>
+<?php if (!extension_loaded("ffi") || (getenv('GITHUB_ACTIONS') !== false)) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';
