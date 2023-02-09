@@ -1555,7 +1555,6 @@ if (!\class_exists('UVGetNameinfo')) {
                 $callback(($status < 0 ? $status : $hostname), $service);
                 unset($hostname);
                 unset($service);
-                \zval_del_ref($callback);
                 \zval_del_ref($nameInfo_req);
             };
 
@@ -2129,7 +2128,6 @@ if (!\class_exists('UVWriter')) {
                     $callback($handle, $status);
                     \FFI::free($writer);
                     \zval_del_ref($this);
-                    \zval_del_ref($callback);
                 });
 
             if ($r) {
@@ -2156,9 +2154,7 @@ if (!\class_exists('UVWriter')) {
                 :  function (CData $writer, int $status) use ($callback, $handle) {
                     $callback($handle, $status);
                     \FFI::free($writer);
-                    $this->free();
                     \zval_del_ref($this);
-                    \zval_del_ref($callback);
                 });
 
             if ($r) {
