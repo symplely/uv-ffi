@@ -1807,9 +1807,7 @@ if (!\class_exists('UVFs')) {
 
                 $callback(...$params);
 
-                if ($fs_type !== \UV::FS_OPEN) {
-                    \zval_del_ref($uv_fSystem);
-                }
+                \zval_del_ref($uv_fSystem);
             };
 
             if (\is_string($fdOrString)) {
