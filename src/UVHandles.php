@@ -615,9 +615,8 @@ if (!\class_exists('UVUdp')) {
                         \zval_del_ref($this);
                     }
 
-                    $buf->free();
+                    \zval_del_ref($buf);
                     \zval_del_ref($send_req);
-                    \zval_del_ref($callback);
                 }
             );
         }
@@ -1557,7 +1556,7 @@ if (!\class_exists('UVGetNameinfo')) {
                 unset($hostname);
                 unset($service);
                 \zval_del_ref($callback);
-                $nameInfo_req->free();
+                \zval_del_ref($nameInfo_req);
             };
 
             $status = \uv_ffi()->uv_getnameinfo($loop(), $nameInfo_req(), $getnameinfo_cb, $addr(), $flags);
