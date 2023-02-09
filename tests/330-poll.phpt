@@ -1,7 +1,7 @@
 --TEST--
 Check for poll read and close
 --SKIPIF--
-<?php if (!extension_loaded("ffi") || ('\\' === \DIRECTORY_SEPARATOR)) print "skip"; ?>
+<?php if (!extension_loaded("ffi")) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';
@@ -14,7 +14,7 @@ uv_poll_start($poll, UV::READABLE, function ($poll, $stat, $ev, $socket) {
     $conn = stream_socket_accept($socket, 0);
     uv_poll_stop($poll);
 
-    echo stream_get_contents($conn) . EOL;
+    echo fread($conn, 4) . EOL;
 
     $pp = uv_poll_init(uv_default_loop(), $conn);
     uv_poll_start($pp, UV::WRITABLE, function ($poll, $stat, $ev, $conn) use (&$pp) {
