@@ -206,8 +206,6 @@ if (!\class_exists('UVStream')) {
                     $callback($handle, $nRead, ($nRead > 0) ? \FFI::string($data->base) : null);
                     if ($nRead > 0)
                         \FFI::free($data->base);
-
-                    \zval_del_ref($callback);
                 }
             );
 
@@ -1890,7 +1888,7 @@ if (!\class_exists('UVFs')) {
                         break;
                 }
             } elseif (\is_resource($fdOrString)) {
-                [$zval, $fd] = \zval_to_fd_pair($fdOrString);
+                [, $fd] = \zval_to_fd_pair($fdOrString);
                 $uv_fSystem->fd_alt($fdOrString);
                 switch ($fs_type) {
                     case \UV::FS_FSTAT:
@@ -2065,16 +2063,6 @@ if (!\class_exists('UVBuffer')) {
             }
         }
 
-        public function free(): void
-        {
-            try {
-                \ffi_free_if($this->uv_type_ptr->base);
-            } catch (\Throwable $e) {
-            }
-
-            parent::free();
-        }
-
         public function getString(int $length = null)
         {
             if (\is_cdata($this->uv_type_ptr->base) && !\is_null_ptr($this->uv_type_ptr->base)) {
@@ -2124,9 +2112,10 @@ if (!\class_exists('UVWriter')) {
             $r = \uv_ffi()->uv_write($this->uv_type_ptr, \uv_stream($handle), $buffer(), 1, \is_null($callback)
                 ? function () {
                 }
-                :  function (CData $writer, int $status) use ($callback, $handle) {
+                :  function (CData $writer, int $status) use ($callback, $handle, $buffer) {
                     $callback($handle, $status);
                     \FFI::free($writer);
+                    \zval_del_ref($buffer);
                     \zval_del_ref($this);
                     \zval_del_ref($callback);
                 });
@@ -2152,9 +2141,10 @@ if (!\class_exists('UVWriter')) {
             $r = \uv_ffi()->uv_write2($this->uv_type_ptr, \uv_stream($handle), $buffer(), 1, \uv_stream($send), \is_null($callback)
                 ? function () {
                 }
-                :  function (CData $writer, int $status) use ($callback, $handle) {
+                :  function (CData $writer, int $status) use ($callback, $handle, $buffer) {
                     $callback($handle, $status);
                     \FFI::free($writer);
+                    \zval_del_ref($buffer);
                     \zval_del_ref($this);
                     \zval_del_ref($callback);
                 });
