@@ -156,13 +156,15 @@ if (!\class_exists('UVRequest')) {
 
         public function free(): void
         {
-            if (\is_cdata($this->uv_type_ptr) && \is_typeof($this->uv_type_ptr, 'struct uv_fs_s*'))
-                \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
+            if (\is_cdata($this->uv_type_ptr)) {
+                if (\is_typeof($this->uv_type_ptr, 'struct uv_fs_s*'))
+                    \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
 
-            $this->fd = null;
-            $this->fd_alt = null;
-            $this->buffer = null;
-            parent::free();
+                $this->fd = null;
+                $this->fd_alt = null;
+                $this->buffer = null;
+                parent::free();
+            }
         }
 
         public static function cancel(object $req)
@@ -296,7 +298,6 @@ if (!\class_exists('UVPipe')) {
         public function connect(string $path, callable $callback): void
         {
             $req = \UVConnect::init('struct uv_connect_s');
-            \zval_add_ref($req);
             \uv_ffi()->uv_pipe_connect(
                 $req(),
                 $this->uv_struct_type,
@@ -442,7 +443,6 @@ if (!\class_exists('UVTcp')) {
         {
             $this->uv_sock = $addr;
             $req = \UVConnect::init('struct uv_connect_s');
-            \zval_add_ref($req);
             return \uv_ffi()->uv_tcp_connect(
                 $req(),
                 $this->uv_struct_type,
@@ -603,7 +603,6 @@ if (!\class_exists('UVUdp')) {
 
             $send_req = \UVUdpSend::init('uv_udp_send_t');
             $buf = \uv_buf_init($data);
-            \zval_add_ref($send_req);
             return \uv_ffi()->uv_udp_send(
                 $send_req(),
                 $this->uv_struct_type,
@@ -616,9 +615,8 @@ if (!\class_exists('UVUdp')) {
                         \zval_del_ref($this);
                     }
 
-                    $buf->free();
+                    \zval_del_ref($buf);
                     \zval_del_ref($send_req);
-                    \zval_del_ref($callback);
                 }
             );
         }
@@ -1557,8 +1555,7 @@ if (!\class_exists('UVGetNameinfo')) {
                 $callback(($status < 0 ? $status : $hostname), $service);
                 unset($hostname);
                 unset($service);
-                \zval_del_ref($callback);
-                $nameInfo_req->free();
+                \zval_del_ref($nameInfo_req);
             };
 
             $status = \uv_ffi()->uv_getnameinfo($loop(), $nameInfo_req(), $getnameinfo_cb, $addr(), $flags);
@@ -1813,15 +1810,10 @@ if (!\class_exists('UVFs')) {
                 $callback(...$params);
 
                 if ($fs_type !== \UV::FS_OPEN) {
-                    $uv_fSystem->free();
-                    // \zval_del_ref($uv_fSystem);
+                    \zval_del_ref($uv_fSystem);
                 }
-
-                // \zval_del_ref($callback);
-                // unset($params);
             };
 
-            //    \zval_add_ref($uv_fSystem);
             if (\is_string($fdOrString)) {
                 switch ($fs_type) {
                     case \UV::FS_OPEN:
@@ -1978,12 +1970,10 @@ if (!\class_exists('UVFs')) {
             }
 
             if ($result < 0) {
-                // \zval_del_ref($uv_fSystem);
-                $uv_fSystem->free();
+                \zval_del_ref($uv_fSystem);
                 \ze_ffi()->zend_error(\E_WARNING, "uv_%s failed: %s",  \strtolower(\UV::name($fs_type)), \uv_strerror($result));
             } elseif (\is_null($callback)) {
-                $uv_fSystem->free();
-                // \zval_del_ref($uv_fSystem);
+                \zval_del_ref($uv_fSystem);
             }
 
             return  $result;
@@ -2165,7 +2155,6 @@ if (!\class_exists('UVWriter')) {
                 :  function (CData $writer, int $status) use ($callback, $handle) {
                     $callback($handle, $status);
                     \FFI::free($writer);
-                    $this->free();
                     \zval_del_ref($this);
                     \zval_del_ref($callback);
                 });
