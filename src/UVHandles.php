@@ -2128,6 +2128,7 @@ if (!\class_exists('UVWriter')) {
                     $callback($handle, $status);
                     \FFI::free($writer);
                     \zval_del_ref($this);
+                    \zval_del_ref($callback);
                 });
 
             if ($r) {
@@ -2155,6 +2156,7 @@ if (!\class_exists('UVWriter')) {
                     $callback($handle, $status);
                     \FFI::free($writer);
                     \zval_del_ref($this);
+                    \zval_del_ref($callback);
                 });
 
             if ($r) {
