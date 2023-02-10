@@ -1387,6 +1387,8 @@ struct uv__io_s
   unsigned int pevents;
   unsigned int events;
   int fd;
+  int rcount;
+  int wcount;
 };
 
 typedef struct uv_buf_t
@@ -1774,6 +1776,7 @@ struct uv_stream_s
   int delayed_error;
   int accepted_fd;
   void *queued_fds;
+  void *select;
 };
 
 size_t uv_stream_get_write_queue_size(const uv_stream_t *stream);
@@ -2008,6 +2011,7 @@ struct uv_tty_s
   int delayed_error;
   int accepted_fd;
   void *queued_fds;
+  void *select;
   struct termios orig_termios;
   int mode;
 };
@@ -2057,6 +2061,7 @@ struct uv_pipe_s
   int delayed_error;
   int accepted_fd;
   void *queued_fds;
+  void *select;
   int ipc; /* non-zero if this pipe is used for passing handles */
   const char *pipe_fname;
 };
