@@ -78,12 +78,7 @@ if (!\class_exists('UVHandler')) {
             }
 
             $handler = $handle(true);
-            $fd = $handler->u->fd;
-            if (Resource::is_valid($fd))
-                Resource::remove_fd($fd);
-            elseif (PhpStream::is_valid($fd))
-                PhpStream::remove_fd($fd);
-
+            \remove_fd_resource($handler->u->fd);
             \uv_ffi()->uv_close(
                 $handler,
                 (!\is_null($callback) ?

@@ -5,7 +5,6 @@ declare(strict_types=1);
 use FFI\CData;
 use ZE\Zval;
 use ZE\Resource;
-use ZE\HashTable;
 use ZE\PhpStream;
 
 if (!\class_exists('UVLoop')) {
@@ -39,11 +38,7 @@ if (!\class_exists('UVLoop')) {
                     \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
 
                     \uv_ffi()->uv_walk($this->uv_loop_ptr, function (CData $handle, CData $args = null) {
-                        $fd = $handle->u->fd;
-                        if (Resource::is_valid($fd))
-                            Resource::remove_fd($fd);
-                        elseif (PhpStream::is_valid($fd))
-                            PhpStream::remove_fd($fd);
+                        \remove_fd_resource($handle->u->fd);
                         if (\uv_ffi()->uv_is_active($handle))
                             \uv_ffi()->uv_close($handle, null);
                     }, null);
@@ -157,13 +152,17 @@ if (!\class_exists('UVRequest')) {
         public function free(): void
         {
             if (\is_cdata($this->uv_type_ptr)) {
-                if (\is_typeof($this->uv_type_ptr, 'struct uv_fs_s*'))
-                    \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
-
+                \remove_fd_resource($this->fd, $this->fd_alt);
                 $this->fd = null;
                 $this->fd_alt = null;
                 $this->buffer = null;
-                parent::free();
+                if (\is_typeof($this->uv_type_ptr, 'struct uv_fs_s*')) {
+                    \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
+                    $this->uv_type_ptr = null;
+                    $this->uv_type = null;
+                } else {
+                    parent::free();
+                }
             }
         }
 
@@ -245,12 +244,7 @@ if (!\class_exists('UVPipe')) {
                     if ($nRead <= 0) {
                         $handler = $pipe(true);
                         if (!\uv_is_closing($pipe)) {
-                            $fd = $handler->u->fd;
-                            if (Resource::is_valid($fd))
-                                Resource::remove_fd($fd);
-                            elseif (PhpStream::is_valid($fd))
-                                PhpStream::remove_fd($fd);
-
+                            \remove_fd_resource($handler->u->fd);
                             \uv_ffi()->uv_close($handler, null);
                         }
 
