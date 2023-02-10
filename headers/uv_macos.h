@@ -1405,7 +1405,7 @@ typedef int pthread_once_t;
 typedef pthread_once_t uv_once_t;
 typedef pthread_t uv_thread_t;
 typedef pthread_mutex_t uv_mutex_t;
-typedef semaphore_t uv_sem_t;
+typedef sem_t uv_sem_t;
 typedef pthread_rwlock_t uv_rwlock_t;
 typedef pthread_cond_t uv_cond_t;
 typedef unsigned int pthread_key_t;
