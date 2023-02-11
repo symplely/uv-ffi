@@ -2104,10 +2104,10 @@ if (!\class_exists('UVWriter')) {
             $r = \uv_ffi()->uv_write($this->uv_type_ptr, \uv_stream($handle), $buffer(), 1, \is_null($callback)
                 ? function () {
                 }
-                :  function (CData $writer, int $status) use ($callback, $handle) {
+                :  function (CData $writer, int $status) use ($callback, $handle, $buffer) {
                     $callback($handle, $status);
                     \FFI::free($writer);
-                    // \zval_del_ref($buffer);
+                    \zval_del_ref($buffer);
                     \zval_del_ref($this);
                     \zval_del_ref($callback);
                 });
@@ -2133,10 +2133,10 @@ if (!\class_exists('UVWriter')) {
             $r = \uv_ffi()->uv_write2($this->uv_type_ptr, \uv_stream($handle), $buffer(), 1, \uv_stream($send), \is_null($callback)
                 ? function () {
                 }
-                :  function (CData $writer, int $status) use ($callback, $handle) {
+                :  function (CData $writer, int $status) use ($callback, $handle, $buffer) {
                     $callback($handle, $status);
                     \FFI::free($writer);
-                    // \zval_del_ref($buffer);
+                    \zval_del_ref($buffer);
                     \zval_del_ref($this);
                     \zval_del_ref($callback);
                 });
