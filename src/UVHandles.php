@@ -152,17 +152,17 @@ if (!\class_exists('UVRequest')) {
         public function free(): void
         {
             if (\is_cdata($this->uv_type_ptr)) {
-                \remove_fd_resource($this->fd, $this->fd_alt);
+                if (\is_typeof($this->uv_type_ptr, 'struct uv_fs_s*'))
+                    \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
+                else
+                    \ffi_free_if($this->uv_type_ptr);
+
+                //\remove_fd_resource($this->fd, $this->fd_alt);
                 $this->fd = null;
                 $this->fd_alt = null;
                 $this->buffer = null;
-                if (\is_typeof($this->uv_type_ptr, 'struct uv_fs_s*')) {
-                    \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
-                    $this->uv_type_ptr = null;
-                    $this->uv_type = null;
-                } else {
-                    parent::free();
-                }
+                $this->uv_type_ptr = null;
+                $this->uv_type = null;
             }
         }
 
@@ -1743,7 +1743,7 @@ if (!\class_exists('UVFs')) {
                         if ($result < 0)
                             $params[0] = $result;
                         else
-                            $params[0] = \get_resource_fd($result);
+                            $params[0] = \create_uv_fs_resource($result, $uv_fSystem);
                         break;
                     case \UV::FS_SCANDIR:
                         /* req->ptr may be NULL here, but uv_fs_scandir_next() knows to handle it */
@@ -1811,7 +1811,7 @@ if (!\class_exists('UVFs')) {
                         $mode = \array_shift($arguments);
                         $result = \uv_ffi()->uv_fs_open($loop(), $uv_fSystem(), $fdOrString, $flags, $mode, $uv_fs_cb);
                         if (\is_null($callback))
-                            return \get_resource_fd($result);
+                            return \create_uv_fs_resource($result, $uv_fSystem);
                         break;
                     case \UV::FS_UNLINK:
                         $result = \uv_ffi()->uv_fs_unlink($loop(), $uv_fSystem(), $fdOrString, $uv_fs_cb);
