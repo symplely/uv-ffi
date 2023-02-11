@@ -1797,12 +1797,16 @@ if (!\class_exists('UVFs')) {
                 }
 
                 $callback(...$params);
-                if (\is_resource($params[0]) || $fs_type === \UV::FS_CLOSE)
+                if (\is_resource($params[0]) || $fs_type === \UV::FS_CLOSE) {
                     \remove_fd_resource($fs_type === \UV::FS_CLOSE ? $uv_fSystem->fd_alt() : $params[0]);
+                    //       \zval_del_ref($uv_fSystem);
+                }
 
-                \zval_del_ref($uv_fSystem);
+                \zval_del_ref($callback);
+                unset($params);
             };
 
+            \zval_add_ref($uv_fSystem);
             if (\is_string($fdOrString)) {
                 switch ($fs_type) {
                     case \UV::FS_OPEN:
