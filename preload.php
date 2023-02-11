@@ -205,7 +205,8 @@ if (!\function_exists('uv_init')) {
     function uv_address_to_array(\UVSockAddr $addr): array
     {
         $ip = \ffi_characters(\INET6_ADDRSTRLEN);
-        $port = $family = null;
+        $port = 0;
+        $family = '';
         switch ($addr->family()) {
             case \AF_INET6:
                 $a6 = \uv_cast('struct sockaddr_in6 *', $addr);
