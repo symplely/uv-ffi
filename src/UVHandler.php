@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 use FFI\CData;
-use ZE\Resource;
-use ZE\PhpStream;
 
 if (!\class_exists('UVHandler')) {
     abstract class UVHandler
