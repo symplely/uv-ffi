@@ -37,7 +37,7 @@ if (!\class_exists('UVLoop')) {
                     \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
 
                     \uv_ffi()->uv_walk($this->uv_loop_ptr, function (CData $handle, CData $args = null) {
-                        \remove_fd_resource($handle->u->fd);
+                        // \remove_fd_resource($handle->u->fd);
                         if (\uv_ffi()->uv_is_active($handle))
                             \uv_ffi()->uv_close($handle, null);
                     }, null);
@@ -154,7 +154,7 @@ if (!\class_exists('UVRequest')) {
                 if (\is_typeof($this->uv_type_ptr, 'struct uv_fs_s*'))
                     \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
                 else
-                    \FFI::free($this->uv_type_ptr);
+                    \ffi_free_if($this->uv_type_ptr);
 
                 $this->uv_type_ptr = null;
                 $this->uv_type = null;
