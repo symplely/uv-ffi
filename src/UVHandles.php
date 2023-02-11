@@ -152,17 +152,13 @@ if (!\class_exists('UVRequest')) {
         public function free(): void
         {
             if (\is_cdata($this->uv_type_ptr)) {
-                if (\is_typeof($this->uv_type_ptr, 'struct uv_fs_s*'))
-                    \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
-                else
-                    \ffi_free_if($this->uv_type_ptr);
+                \remove_fd_resource($this->fd, $this->fd_alt);
 
-                //\remove_fd_resource($this->fd, $this->fd_alt);
-                $this->fd = null;
-                $this->fd_alt = null;
-                $this->buffer = null;
                 $this->uv_type_ptr = null;
                 $this->uv_type = null;
+                $this->buffer = null;
+                $this->fd = null;
+                $this->fd_alt = null;
             }
         }
 
