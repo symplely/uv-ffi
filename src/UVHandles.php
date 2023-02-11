@@ -37,7 +37,7 @@ if (!\class_exists('UVLoop')) {
                     \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
 
                     \uv_ffi()->uv_walk($this->uv_loop_ptr, function (CData $handle, CData $args = null) {
-                        // \remove_fd_resource($handle->u->fd);
+                        \remove_fd_resource($handle->u->fd);
                         if (\uv_ffi()->uv_is_active($handle))
                             \uv_ffi()->uv_close($handle, null);
                     }, null);
@@ -1890,6 +1890,7 @@ if (!\class_exists('UVFs')) {
                     case \UV::FS_SENDFILE:
                         $in = \array_shift($arguments);
                         [$zval_alt, $in_fd] = \zval_to_fd_pair($in);
+                        $uv_fSystem->fd_alt(\create_uv_fs_resource($fd, $uv_fSystem));
                         $uv_fSystem->fd($zval_alt);
                         $offset = \array_shift($arguments);
                         $length = \array_shift($arguments);

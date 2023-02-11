@@ -236,7 +236,7 @@ if (!\function_exists('uv_init')) {
             $fd_ptr,
             \zend_register_list_destructors_ex(
                 function (CData $rsrc) {
-                    //  \uv_ffi()->uv_fs_req_cleanup(\uv_cast('uv_fs_t*', $rsrc->ptr));
+                    \uv_ffi()->uv_fs_req_cleanup(\uv_cast('uv_fs_t*', $rsrc->ptr));
                 },
                 null,
                 'stream',
