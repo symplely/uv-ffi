@@ -152,7 +152,10 @@ if (!\class_exists('UVRequest')) {
         public function free(): void
         {
             if (\is_cdata($this->uv_type_ptr)) {
-                \remove_fd_resource($this->fd, $this->fd_alt);
+                if (\is_typeof($this->uv_type_ptr, 'struct uv_fs_s*'))
+                    \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
+                else
+                    \ffi_free_if($this->uv_type_ptr);
 
                 $this->uv_type_ptr = null;
                 $this->uv_type = null;
@@ -1715,7 +1718,6 @@ if (!\class_exists('UVFs')) {
                 $fs_type = \uv_ffi()->uv_fs_get_type($req);
                 switch ($fs_type) {
                     case \UV::FS_CLOSE:
-                        Resource::remove_fd((int)$params[0]);
                     case \UV::FS_SYMLINK:
                     case \UV::FS_LINK:
                     case \UV::FS_CHMOD:
@@ -1796,6 +1798,8 @@ if (!\class_exists('UVFs')) {
                 }
 
                 $callback(...$params);
+                if (\is_resource($params[0]) || $fs_type === \UV::FS_CLOSE)
+                    \remove_fd_resource($fs_type === \UV::FS_CLOSE ? $uv_fSystem->fd_alt() : $params[0]);
 
                 \zval_del_ref($uv_fSystem);
             };
