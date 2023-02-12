@@ -96,7 +96,7 @@ if (!\function_exists('uv_loop_init')) {
      * @return void
      * @deprecated 1.0
      */
-    function uv_loop_delete(\UVLoop &$loop): void
+    function uv_loop_delete(\UVLoop $loop): void
     {
         \uv_ffi()->uv_loop_delete($loop());
     }
@@ -166,8 +166,7 @@ if (!\function_exists('uv_loop_init')) {
         if (\is_null($loop))
             $loop = \uv_default_loop();
 
-        \uv_ffi()->uv_stop($loop());
-        \zval_del_ref($loop);
+        $loop->stop();
     }
 
     /**

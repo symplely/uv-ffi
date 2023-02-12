@@ -25,16 +25,20 @@ if (!\class_exists('UVLoop')) {
 
         protected bool $close_called = false;
 
+        protected bool $stop_called = false;
+
         protected bool $is_default = false;
 
         public function __destruct()
         {
             if (\is_cdata($this->uv_loop_ptr)) {
                 if ($this->run_called && !$this->close_called) {
-                    /* in case we longjmp()'ed ... */
-                    \uv_ffi()->uv_stop($this->uv_loop_ptr);
-                    /* invalidate the stop ;-) */
-                    \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
+                    if (!$this->stop_called) {
+                        /* in case we longjmp()'ed ... */
+                        \uv_ffi()->uv_stop($this->uv_loop_ptr);
+                        /* invalidate the stop ;-) */
+                        \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
+                    }
 
                     \uv_ffi()->uv_walk($this->uv_loop_ptr, function (CData $handle, CData $args = null) {
                         \remove_fd_resource($handle->u->fd);
@@ -84,7 +88,7 @@ if (!\class_exists('UVLoop')) {
         {
             \uv_ffi()->uv_loop_close($this->uv_loop_ptr);
             $this->close_called = true;
-            if (!$this->run_called)
+            if (!$this->run_called && !$this->stop_called)
                 \zval_del_ref($this);
         }
 
@@ -93,6 +97,14 @@ if (!\class_exists('UVLoop')) {
             \uv_ffi()->uv_run($this->uv_loop_ptr, $mode);
             $this->run_called = true;
             if ($mode === \UV::RUN_DEFAULT)
+                \zval_del_ref($this);
+        }
+
+        public function stop(): void
+        {
+            \uv_ffi()->uv_stop($this->uv_loop_ptr);
+            $this->stop_called = true;
+            if (!$this->close_called)
                 \zval_del_ref($this);
         }
 
