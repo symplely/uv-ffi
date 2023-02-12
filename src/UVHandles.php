@@ -50,11 +50,8 @@ if (!\class_exists('UVLoop')) {
                     \uv_ffi()->uv_loop_close($this->uv_loop_ptr);
                 }
 
-                if (!$this->is_default && (!$this->run_called || !$this->close_called)) {
+                if (!$this->is_default && (!$this->run_called || !$this->close_called))
                     \FFI::free($this->uv_loop_ptr);
-                    if (!\IS_WINDOWS)
-                        \FFI::free($this->uv_loop);
-                }
 
                 $this->uv_loop_ptr = null;
                 $this->uv_loop = null;
