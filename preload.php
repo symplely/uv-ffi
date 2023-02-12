@@ -210,14 +210,12 @@ if (!\function_exists('uv_init')) {
         switch ($addr->family()) {
             case \AF_INET6:
                 $a6 = \uv_cast('struct sockaddr_in6 *', $addr);
-                // $ip = \uv_inet_ntop(\AF_INET6, $a6);
                 \uv_ffi()->uv_ip6_name($a6, $ip, \INET6_ADDRSTRLEN);
                 $port = \ntohs($a6->sin6_port);
                 $family = 'IPv6';
                 break;
             case \AF_INET:
                 $a4 = \uv_cast('struct sockaddr_in *', $addr);
-                // $ip = \uv_inet_ntop(\AF_INET, $a4);
                 \uv_ffi()->uv_ip4_name($a4, $ip, \INET6_ADDRSTRLEN);
                 $port = \ntohs($a4->sin_port);
                 $family = 'IPv4';

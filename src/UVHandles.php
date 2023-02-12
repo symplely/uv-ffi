@@ -2122,6 +2122,9 @@ if (!\class_exists('UVWriter')) {
                 }
                 :  function (CData $writer, int $status) use ($callback, $handle, $buffer) {
                     $callback($handle, $status);
+                    if (\IS_WINDOWS)
+                        \FFI::free($writer);
+
                     \zval_del_ref($buffer);
                     \zval_del_ref($this);
                     \zval_del_ref($callback);
@@ -2150,6 +2153,9 @@ if (!\class_exists('UVWriter')) {
                 }
                 :  function (CData $writer, int $status) use ($callback, $handle, $buffer) {
                     $callback($handle, $status);
+                    if (\IS_WINDOWS)
+                        \FFI::free($writer);
+
                     \zval_del_ref($buffer);
                     \zval_del_ref($this);
                     \zval_del_ref($callback);
