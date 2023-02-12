@@ -5,8 +5,6 @@ declare(strict_types=1);
 use FFI\CData;
 use ZE\Zval;
 use ZE\Resource;
-use ZE\HashTable;
-use ZE\PhpStream;
 
 if (!\class_exists('UVLoop')) {
     /**
@@ -23,27 +21,27 @@ if (!\class_exists('UVLoop')) {
         /** @var uv_Loop_t */
         protected ?CData $uv_loop_ptr = null;
 
-        protected bool $uv_run_called = false;
+        protected bool $run_called = false;
 
-        protected bool $uv_close_called = false;
+        protected bool $close_called = false;
+
+        protected bool $stop_called = false;
 
         protected bool $is_default = false;
 
         public function __destruct()
         {
             if (\is_cdata($this->uv_loop_ptr)) {
-                if ($this->uv_run_called && !$this->uv_close_called) {
-                    /* in case we longjmp()'ed ... */
-                    \uv_ffi()->uv_stop($this->uv_loop_ptr);
-                    /* invalidate the stop ;-) */
-                    \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
+                if ($this->run_called && !$this->close_called) {
+                    if (!$this->stop_called) {
+                        /* in case we longjmp()'ed ... */
+                        \uv_ffi()->uv_stop($this->uv_loop_ptr);
+                        /* invalidate the stop ;-) */
+                        \uv_ffi()->uv_run($this->uv_loop_ptr, \UV::RUN_DEFAULT);
+                    }
 
                     \uv_ffi()->uv_walk($this->uv_loop_ptr, function (CData $handle, CData $args = null) {
-                        $fd = $handle->u->fd;
-                        if (Resource::is_valid($fd))
-                            Resource::remove_fd($fd);
-                        elseif (PhpStream::is_valid($fd))
-                            PhpStream::remove_fd($fd);
+                        \remove_fd_resource($handle->u->fd);
                         if (\uv_ffi()->uv_is_active($handle))
                             \uv_ffi()->uv_close($handle, null);
                     }, null);
@@ -52,7 +50,7 @@ if (!\class_exists('UVLoop')) {
                     \uv_ffi()->uv_loop_close($this->uv_loop_ptr);
                 }
 
-                if (!$this->is_default && (!$this->uv_run_called || !$this->uv_close_called)) {
+                if (!$this->is_default && (!$this->run_called || !$this->close_called)) {
                     \ffi_set_free(true);
                     \ffi_free_if($this->uv_loop_ptr, $this->uv_loop);
                     \ffi_set_free(false);
@@ -86,6 +84,30 @@ if (!\class_exists('UVLoop')) {
             return $this->uv_loop_ptr;
         }
 
+        public function close(): void
+        {
+            \uv_ffi()->uv_loop_close($this->uv_loop_ptr);
+            $this->close_called = true;
+            if (!$this->run_called && !$this->stop_called)
+                \zval_del_ref($this);
+        }
+
+        public function run(int $mode = \UV::RUN_DEFAULT): void
+        {
+            \uv_ffi()->uv_run($this->uv_loop_ptr, $mode);
+            $this->run_called = true;
+            if ($mode === \UV::RUN_DEFAULT)
+                \zval_del_ref($this);
+        }
+
+        public function stop(): void
+        {
+            \uv_ffi()->uv_stop($this->uv_loop_ptr);
+            $this->stop_called = true;
+            if (!$this->close_called)
+                \zval_del_ref($this);
+        }
+
         public static function default(): self
         {
             $uv_default = \ext_uv::get_module()->get_default();
@@ -94,16 +116,6 @@ if (!\class_exists('UVLoop')) {
             }
 
             return $uv_default;
-        }
-
-        public function uv_ran(): void
-        {
-            $this->uv_run_called = true;
-        }
-
-        public function uv_closed(): void
-        {
-            $this->uv_close_called = true;
         }
 
         public static function init()
@@ -156,14 +168,18 @@ if (!\class_exists('UVRequest')) {
 
         public function free(): void
         {
+            $this->buffer = null;
+            $this->fd = null;
+            $this->fd_alt = null;
+
             if (\is_cdata($this->uv_type_ptr)) {
                 if (\is_typeof($this->uv_type_ptr, 'struct uv_fs_s*'))
                     \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
+                else
+                    \ffi_free_if($this->uv_type_ptr);
 
-                $this->fd = null;
-                $this->fd_alt = null;
-                $this->buffer = null;
-                parent::free();
+                $this->uv_type_ptr = null;
+                $this->uv_type = null;
             }
         }
 
@@ -245,12 +261,7 @@ if (!\class_exists('UVPipe')) {
                     if ($nRead <= 0) {
                         $handler = $pipe(true);
                         if (!\uv_is_closing($pipe)) {
-                            $fd = $handler->u->fd;
-                            if (Resource::is_valid($fd))
-                                Resource::remove_fd($fd);
-                            elseif (PhpStream::is_valid($fd))
-                                PhpStream::remove_fd($fd);
-
+                            \remove_fd_resource($handler->u->fd);
                             \uv_ffi()->uv_close($handler, null);
                         }
 
@@ -1702,10 +1713,6 @@ if (!\class_exists('UVFs')) {
             if (\is_null($set))
                 return $this->buffer;
 
-            if ($set === 'free') {
-                $this->buffer = null;
-            }
-
             $this->buffer = $set instanceof UVBuffer ? $set : null;
         }
 
@@ -1725,7 +1732,6 @@ if (!\class_exists('UVFs')) {
                 $fs_type = \uv_ffi()->uv_fs_get_type($req);
                 switch ($fs_type) {
                     case \UV::FS_CLOSE:
-                        Resource::remove_fd((int)$params[0]);
                     case \UV::FS_SYMLINK:
                     case \UV::FS_LINK:
                     case \UV::FS_CHMOD:
@@ -1749,7 +1755,7 @@ if (!\class_exists('UVFs')) {
                         if ($result < 0)
                             $params[0] = $result;
                         else
-                            $params[0] = \get_resource_fd($result);
+                            $params[0] = \create_uv_fs_resource($result, $uv_fSystem);
                         break;
                     case \UV::FS_SCANDIR:
                         /* req->ptr may be NULL here, but uv_fs_scandir_next() knows to handle it */
@@ -1789,14 +1795,12 @@ if (!\class_exists('UVFs')) {
                             $params[1] = $buffer->getString($result);
                         else
                             $params[1] = $result;
-                        $uv_fSystem->buffer('free');
                         break;
                     case \UV::FS_SENDFILE:
                         $params[1] = $result;
                         break;
                     case \UV::FS_WRITE:
                         $params[1] = $result;
-                        $uv_fSystem->buffer('free');
                         break;
                     case \UV::FS_UNKNOWN:
                     case \UV::FS_CUSTOM:
@@ -1806,6 +1810,10 @@ if (!\class_exists('UVFs')) {
                 }
 
                 $callback(...$params);
+                if (\is_resource($params[0]) || $fs_type === \UV::FS_CLOSE) {
+                    \remove_fd_resource($fs_type === \UV::FS_CLOSE ? $uv_fSystem->fd_alt() : $params[0]);
+                    $uv_fSystem->free();
+                }
 
                 \zval_del_ref($uv_fSystem);
             };
@@ -1817,7 +1825,7 @@ if (!\class_exists('UVFs')) {
                         $mode = \array_shift($arguments);
                         $result = \uv_ffi()->uv_fs_open($loop(), $uv_fSystem(), $fdOrString, $flags, $mode, $uv_fs_cb);
                         if (\is_null($callback))
-                            return \get_resource_fd($result);
+                            return \create_uv_fs_resource($result, $uv_fSystem);
                         break;
                     case \UV::FS_UNLINK:
                         $result = \uv_ffi()->uv_fs_unlink($loop(), $uv_fSystem(), $fdOrString, $uv_fs_cb);
@@ -1897,6 +1905,7 @@ if (!\class_exists('UVFs')) {
                     case \UV::FS_SENDFILE:
                         $in = \array_shift($arguments);
                         [$zval_alt, $in_fd] = \zval_to_fd_pair($in);
+                        $uv_fSystem->fd_alt(\create_uv_fs_resource($fd, $uv_fSystem));
                         $uv_fSystem->fd($zval_alt);
                         $offset = \array_shift($arguments);
                         $length = \array_shift($arguments);
@@ -2012,6 +2021,7 @@ if (!\class_exists('UVFsEvent')) {
 
         public function start(callable $callback, string $path, int $flags): int
         {
+            \zval_add_ref($this);
             $uv_fs_event_cb = function (CData $handle, ?string $filename, int $events, int $status) use ($callback) {
                 $callback($this, $filename, $events, $status);
             };
@@ -2112,7 +2122,9 @@ if (!\class_exists('UVWriter')) {
                 }
                 :  function (CData $writer, int $status) use ($callback, $handle, $buffer) {
                     $callback($handle, $status);
-                    \FFI::free($writer);
+                    if (\IS_WINDOWS)
+                        \FFI::free($writer);
+
                     \zval_del_ref($buffer);
                     \zval_del_ref($this);
                     \zval_del_ref($callback);
@@ -2141,7 +2153,9 @@ if (!\class_exists('UVWriter')) {
                 }
                 :  function (CData $writer, int $status) use ($callback, $handle, $buffer) {
                     $callback($handle, $status);
-                    \FFI::free($writer);
+                    if (\IS_WINDOWS)
+                        \FFI::free($writer);
+
                     \zval_del_ref($buffer);
                     \zval_del_ref($this);
                     \zval_del_ref($callback);
@@ -2170,7 +2184,6 @@ if (!\class_exists('UVShutdown')) {
             $r = \uv_ffi()->uv_shutdown($this->uv_type_ptr, \uv_stream($handle), !\is_null($callback)
                 ? function (CData $shutdown, int $status) use ($callback, $handle) {
                     $callback($handle, $status);
-                    \FFI::free($shutdown);
                     \zval_del_ref($this);
                 } : null);
 

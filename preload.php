@@ -205,18 +205,17 @@ if (!\function_exists('uv_init')) {
     function uv_address_to_array(\UVSockAddr $addr): array
     {
         $ip = \ffi_characters(\INET6_ADDRSTRLEN);
-        $port = $family = null;
+        $port = 0;
+        $family = '';
         switch ($addr->family()) {
             case \AF_INET6:
                 $a6 = \uv_cast('struct sockaddr_in6 *', $addr);
-                // $ip = \uv_inet_ntop(\AF_INET6, $a6);
                 \uv_ffi()->uv_ip6_name($a6, $ip, \INET6_ADDRSTRLEN);
                 $port = \ntohs($a6->sin6_port);
                 $family = 'IPv6';
                 break;
             case \AF_INET:
                 $a4 = \uv_cast('struct sockaddr_in *', $addr);
-                // $ip = \uv_inet_ntop(\AF_INET, $a4);
                 \uv_ffi()->uv_ip4_name($a4, $ip, \INET6_ADDRSTRLEN);
                 $port = \ntohs($a4->sin_port);
                 $family = 'IPv4';
@@ -227,6 +226,30 @@ if (!\function_exists('uv_init')) {
 
         \zval_del_ref($addr);
         return ['address' => \ffi_string($ip), 'port' => $port, 'family' => $family];
+    }
+
+    function create_uv_fs_resource(int $fd, \UVFs $req)
+    {
+        $fd_ptr = $req();
+        $fd_res = \zend_register_resource(
+            $fd_ptr,
+            \zend_register_list_destructors_ex(
+                function (CData $rsrc) {
+                    \uv_ffi()->uv_fs_req_cleanup(\uv_cast('uv_fs_t*', $rsrc->ptr));
+                },
+                null,
+                'stream',
+                \ZEND_MODULE_API_NO
+            )
+        );
+
+        $fd_zval = \zval_resource($fd_res);
+        $resource = \zval_native($fd_zval);
+        $file = \fd_type();
+        $file->add_object($req);
+        $file->add_pair($fd_zval, $fd, (int)$resource);
+
+        return $resource;
     }
 
     function uv_ffi(): \FFI

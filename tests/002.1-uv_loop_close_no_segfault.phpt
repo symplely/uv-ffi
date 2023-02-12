@@ -7,8 +7,8 @@ No Segmentation fault after uv_loop_close
 require 'vendor/autoload.php';
 
 $loop = uv_loop_new();
+echo 'ok';
 uv_loop_close($loop);
 
-echo 'ok';
 --EXPECTF--
 ok

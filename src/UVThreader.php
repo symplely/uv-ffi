@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use FFI\CData;
-use FFI\CType;
 
 if (!\class_exists('UVThreader')) {
     abstract class UVThreader extends \CStruct

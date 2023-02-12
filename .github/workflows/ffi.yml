@@ -34,7 +34,7 @@ jobs:
           tools: composer:v2
           extensions: ffi, opcache, fileinfo, mbstring, openssl, simplexml, dom, sockets, sodium, filter, readline
           coverage: ${{ matrix.php-coverage }}
-          ini-values: ffi.enable="true", opcache.enable_cli=1, opcache.jit=tracing, opcache.jit_buffer_size=256M
+          ini-values: ffi.enable="true", opcache.enable_cli=1, opcache.jit=tracing, opcache.jit_buffer_size=0
       - name: Install dependencies
         run: |
           composer install
