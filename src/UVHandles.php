@@ -2006,6 +2006,7 @@ if (!\class_exists('UVFsEvent')) {
 
         public function start(callable $callback, string $path, int $flags): int
         {
+            \zval_add_ref($this);
             $uv_fs_event_cb = function (CData $handle, ?string $filename, int $events, int $status) use ($callback) {
                 $callback($this, $filename, $events, $status);
             };
