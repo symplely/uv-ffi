@@ -21,16 +21,16 @@ if (!\class_exists('UVLoop')) {
         /** @var uv_Loop_t */
         protected ?CData $uv_loop_ptr = null;
 
-        protected bool $uv_run_called = false;
+        protected bool $run_called = false;
 
-        protected bool $uv_close_called = false;
+        protected bool $close_called = false;
 
         protected bool $is_default = false;
 
         public function __destruct()
         {
             if (\is_cdata($this->uv_loop_ptr)) {
-                if ($this->uv_run_called && !$this->uv_close_called) {
+                if ($this->run_called && !$this->close_called) {
                     /* in case we longjmp()'ed ... */
                     \uv_ffi()->uv_stop($this->uv_loop_ptr);
                     /* invalidate the stop ;-) */
@@ -46,7 +46,7 @@ if (!\class_exists('UVLoop')) {
                     \uv_ffi()->uv_loop_close($this->uv_loop_ptr);
                 }
 
-                if (!$this->is_default && (!$this->uv_run_called || !$this->uv_close_called)) {
+                if (!$this->is_default && (!$this->run_called || !$this->close_called)) {
                     \ffi_set_free(true);
                     \ffi_free_if($this->uv_loop_ptr, $this->uv_loop);
                     \ffi_set_free(false);
@@ -80,6 +80,22 @@ if (!\class_exists('UVLoop')) {
             return $this->uv_loop_ptr;
         }
 
+        public function close(): void
+        {
+            \uv_ffi()->uv_loop_close($this->uv_loop_ptr);
+            $this->close_called = true;
+            if (!$this->run_called)
+                \zval_del_ref($this);
+        }
+
+        public function run(int $mode = \UV::RUN_DEFAULT): void
+        {
+            \uv_ffi()->uv_run($this->uv_loop_ptr, $mode);
+            $this->run_called = true;
+            if ($mode === \UV::RUN_DEFAULT)
+                \zval_del_ref($this);
+        }
+
         public static function default(): self
         {
             $uv_default = \ext_uv::get_module()->get_default();
@@ -88,16 +104,6 @@ if (!\class_exists('UVLoop')) {
             }
 
             return $uv_default;
-        }
-
-        public function uv_ran(): void
-        {
-            $this->uv_run_called = true;
-        }
-
-        public function uv_closed(): void
-        {
-            $this->uv_close_called = true;
         }
 
         public static function init()
