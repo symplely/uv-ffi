@@ -1905,6 +1905,7 @@ if (!\class_exists('UVFs')) {
                     case \UV::FS_SENDFILE:
                         $in = \array_shift($arguments);
                         [$zval_alt, $in_fd] = \zval_to_fd_pair($in);
+                        Resource::remove_fd($fd);
                         $uv_fSystem->fd_alt(\create_uv_fs_resource($fd, $uv_fSystem));
                         $uv_fSystem->fd($zval_alt);
                         $offset = \array_shift($arguments);
