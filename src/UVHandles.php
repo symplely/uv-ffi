@@ -168,6 +168,10 @@ if (!\class_exists('UVRequest')) {
 
         public function free(): void
         {
+            $this->buffer = null;
+            $this->fd = null;
+            $this->fd_alt = null;
+
             if (\is_cdata($this->uv_type_ptr)) {
                 if (\is_typeof($this->uv_type_ptr, 'struct uv_fs_s*'))
                     \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
@@ -176,9 +180,6 @@ if (!\class_exists('UVRequest')) {
 
                 $this->uv_type_ptr = null;
                 $this->uv_type = null;
-                $this->buffer = null;
-                $this->fd = null;
-                $this->fd_alt = null;
             }
         }
 
@@ -1712,10 +1713,6 @@ if (!\class_exists('UVFs')) {
             if (\is_null($set))
                 return $this->buffer;
 
-            if ($set === 'free') {
-                $this->buffer = null;
-            }
-
             $this->buffer = $set instanceof UVBuffer ? $set : null;
         }
 
@@ -1798,14 +1795,12 @@ if (!\class_exists('UVFs')) {
                             $params[1] = $buffer->getString($result);
                         else
                             $params[1] = $result;
-                        $uv_fSystem->buffer('free');
                         break;
                     case \UV::FS_SENDFILE:
                         $params[1] = $result;
                         break;
                     case \UV::FS_WRITE:
                         $params[1] = $result;
-                        $uv_fSystem->buffer('free');
                         break;
                     case \UV::FS_UNKNOWN:
                     case \UV::FS_CUSTOM:
@@ -1815,10 +1810,12 @@ if (!\class_exists('UVFs')) {
                 }
 
                 $callback(...$params);
-                if (\is_resource($params[0]) || $fs_type === \UV::FS_CLOSE)
+                if (\is_resource($params[0]) || $fs_type === \UV::FS_CLOSE) {
                     \remove_fd_resource($fs_type === \UV::FS_CLOSE ? $uv_fSystem->fd_alt() : $params[0]);
-                else
-                    \zval_del_ref($uv_fSystem);
+                    $uv_fSystem->free();
+                }
+
+                \zval_del_ref($uv_fSystem);
             };
 
             if (\is_string($fdOrString)) {
@@ -2125,7 +2122,6 @@ if (!\class_exists('UVWriter')) {
                 }
                 :  function (CData $writer, int $status) use ($callback, $handle, $buffer) {
                     $callback($handle, $status);
-                    \FFI::free($writer);
                     \zval_del_ref($buffer);
                     \zval_del_ref($this);
                     \zval_del_ref($callback);
@@ -2154,7 +2150,6 @@ if (!\class_exists('UVWriter')) {
                 }
                 :  function (CData $writer, int $status) use ($callback, $handle, $buffer) {
                     $callback($handle, $status);
-                    \FFI::free($writer);
                     \zval_del_ref($buffer);
                     \zval_del_ref($this);
                     \zval_del_ref($callback);
@@ -2183,7 +2178,6 @@ if (!\class_exists('UVShutdown')) {
             $r = \uv_ffi()->uv_shutdown($this->uv_type_ptr, \uv_stream($handle), !\is_null($callback)
                 ? function (CData $shutdown, int $status) use ($callback, $handle) {
                     $callback($handle, $status);
-                    \FFI::free($shutdown);
                     \zval_del_ref($this);
                 } : null);
 
