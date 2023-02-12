@@ -585,8 +585,6 @@ if (!\class_exists('UVUdp')) {
                     $callback($this, ($nRead > 0) ? \FFI::string($data->base) : $nRead, $flag);
                     if ($nRead > 0)
                         \FFI::free($data->base);
-
-                    \zval_del_ref($callback);
                 }
             );
 
