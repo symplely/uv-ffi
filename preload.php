@@ -248,7 +248,6 @@ if (!\function_exists('uv_init')) {
         $fd_zval = \zval_resource($fd_res);
         $resource = \zval_native($fd_zval);
         $file = \fd_type();
-        $file->update($fd_ptr, true);
         $file->add_object($req);
         $file->add_pair($fd_zval, $fd, (int)$resource);
 
