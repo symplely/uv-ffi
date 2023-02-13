@@ -180,6 +180,7 @@ if (!\class_exists('UVRequest')) {
 
                 $this->uv_type_ptr = null;
                 $this->uv_type = null;
+                \zval_skip_dtor($this);
             }
         }
 
@@ -1811,9 +1812,9 @@ if (!\class_exists('UVFs')) {
                 if (\is_resource($params[0]) || $fs_type === \UV::FS_CLOSE) {
                     \remove_fd_resource($fs_type === \UV::FS_CLOSE ? $uv_fSystem->fd_alt() : $params[0]);
                     $uv_fSystem->free();
+                } else {
+                    \zval_del_ref($uv_fSystem);
                 }
-
-                \zval_del_ref($uv_fSystem);
             };
 
             if (\is_string($fdOrString)) {
