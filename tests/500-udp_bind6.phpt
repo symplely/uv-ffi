@@ -1,7 +1,7 @@
 --TEST--
 Check for udp bind
 --SKIPIF--
-<?php if (!extension_loaded("ffi")) print "skip"; ?>
+<?php if (!extension_loaded("ffi") || (getenv('GITHUB_ACTIONS') !== false && \PHP_OS === 'Linux' && (float) \phpversion() < 8.0)) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';
