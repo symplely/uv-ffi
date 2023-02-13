@@ -7,7 +7,8 @@
 This **libuv ffi** implementation is based on PHP extension [ext-uv](https://github.com/amphp/ext-uv). All **ext-uv 0.3.0** _tests and functions_ been implemented, except **uv_queue_work**.
 
 - Functionality works as expected under `Windows` _PHP 7.4, 8.0, 8.1, 8.2_.
-- `Linux` and `macOS` is failing, most functions and tests completes, but `5` to `10` segfaults afterwards, issues around current **destruct/shutdown** routine implementations and usage of **FFI::free** on libuv C structures.
+- `Linux` all functions and tests completes, but failing by way of `2`, _segmentation fault (core dumped)_ after completing, issues around current **destruct/shutdown** routine implementations and usage of **FFI::free** on _libuv_ C structures.
+- `macOS` most functions and tests completes, but failing by way of `4`, implementation issues around **uv_spawn**, **uv_ip4_addr** and **uv_signal**.
 
 **All functionality is interdependent on [zend-ffi](https://github.com/symplely/zend-ffi).**
 
@@ -28,23 +29,33 @@ This package/repo is self-contained for Windows, meaning it has **GitHub Actions
 
 The `create-project` will setup a different loading/installation area. This feature is still a work in progress.
 
-`FFI` is enabled by default in `php.ini` since `PHP 7.4`, as to `OpCache`, they should not be changed unless already manually disabled.
-Only the `preload` section might need setting up if better performance is desired.
+Minimum `php.ini` setting:
 
 ```ini
+extension=ffi
+extension=openssl
+extension=sockets
+
+zend_extension=opcache
+
+[opcache]
+; Determines if Zend OPCache is enabled
+opcache.enable=1
+
+; Determines if Zend OPCache is enabled for the CLI version of PHP
+opcache.enable_cli=1
+
 [ffi]
 ; FFI API restriction. Possible values:
 ; "preload" - enabled in CLI scripts and preloaded files (default)
 ; "false"   - always disabled
 ; "true"    - always enabled
-ffi.enable="preload"
+ffi.enable="true"
 
-; List of headers files to preload, wildcard patterns allowed.
-ffi.preload=path/to/.cdef/ffi_preloader.php ; For simple integration with other FFI extensions when used as project
-; Or
-ffi.preload=path/to/vendor/symplely/uv-ffi/preload.php
+; List of headers files to preload, wildcard patterns allowed. `ffi.preload` has no effect on Windows.
+ffi.preload=path/to/vendor/symplely/uv-ffi/headers/uv_{%OS platform%}_vendor.h
 
-zend_extension=opcache
+opcache.preload==path/to/vendor/symplely/uv-ffi/preload.php
 ```
 
 ## How to use
