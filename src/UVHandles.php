@@ -158,6 +158,42 @@ if (!\class_exists('UVRequest')) {
         protected $fd_alt = null;
         protected ?\UVBuffer $buffer = null;
 
+        /**
+         * @param Zval|null $set
+         * @return Zval|null|void
+         */
+        public function fd(?Zval $set = null)
+        {
+            if (\is_null($set))
+                return $this->fd;
+
+            $this->fd = $set instanceof Zval ? $set : null;
+        }
+
+        /**
+         * @param Zval|resource|null $set
+         * @return Zval|resource|null|void
+         */
+        public function fd_alt($set = null)
+        {
+            if (\is_null($set))
+                return $this->fd_alt;
+
+            $this->fd_alt = $set instanceof Zval || \is_resource($set) ? $set : null;
+        }
+
+        /**
+         * @param UVBuffer|null $set
+         * @return UVBuffer|null|void
+         */
+        public function buffer(?UVBuffer $set = null)
+        {
+            if (\is_null($set))
+                return $this->buffer;
+
+            $this->buffer = $set instanceof UVBuffer ? $set : null;
+        }
+
         public function __invoke(bool $by_req = false): ?\FFI\CData
         {
             if ($by_req)
@@ -1683,38 +1719,6 @@ if (!\class_exists('UVFs')) {
      */
     final class UVFs extends \UVRequest
     {
-        /**
-         * @param Zval $set
-         * @return Zval|resource|null|void
-         */
-        public function fd($set = null)
-        {
-            if (\is_null($set))
-                return $this->fd;
-
-            $this->fd = $set instanceof Zval ? $set : null;
-        }
-
-        public function fd_alt($set = null)
-        {
-            if (\is_null($set))
-                return $this->fd_alt;
-
-            $this->fd_alt = $set instanceof Zval || \is_resource($set) ? $set : null;
-        }
-
-        /**
-         * @param UVBuffer $read
-         * @return UVBuffer|null|void
-         */
-        public function buffer($set = null)
-        {
-            if (\is_null($set))
-                return $this->buffer;
-
-            $this->buffer = $set instanceof UVBuffer ? $set : null;
-        }
-
         public static function init(...$arguments)
         {
             $result = -4058;
