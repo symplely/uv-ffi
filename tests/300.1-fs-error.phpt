@@ -6,7 +6,7 @@ Check for fs error
 <?php
 require 'vendor/autoload.php';
 
-UVFs::init(0, 0);
+UVFs::init(uv_default_loop(), 0);
 
 --EXPECTF--
 Warning: uv_fs_custom failed: no such file or directory in %S

@@ -168,18 +168,20 @@ if (!\class_exists('UVRequest')) {
 
         public function free(): void
         {
-            $this->buffer = null;
-            $this->fd = null;
-            $this->fd_alt = null;
-
             if (\is_cdata($this->uv_type_ptr)) {
-                if (\is_typeof($this->uv_type_ptr, 'struct uv_fs_s*'))
+                if (\is_typeof($this->uv_type_ptr, 'struct uv_fs_s*') && $this->uv_type_ptr->fs_type > 0)
                     \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
+                elseif ($this->uv_type_ptr->fs_type === 0)
+                    \FFI::free($this->uv_type_ptr);
                 else
                     \ffi_free_if($this->uv_type_ptr);
 
+                $this->buffer = null;
+                $this->fd = null;
+                $this->fd_alt = null;
                 $this->uv_type_ptr = null;
                 $this->uv_type = null;
+
                 \zval_skip_dtor($this);
             }
         }
@@ -1809,12 +1811,8 @@ if (!\class_exists('UVFs')) {
                 }
 
                 $callback(...$params);
-                if (\is_resource($params[0]) || $fs_type === \UV::FS_CLOSE) {
+                if (\is_resource($params[0]) || $fs_type === \UV::FS_CLOSE)
                     \remove_fd_resource($fs_type === \UV::FS_CLOSE ? $uv_fSystem->fd_alt() : $params[0]);
-                    $uv_fSystem->free();
-                } else {
-                    \zval_del_ref($uv_fSystem);
-                }
             };
 
             if (\is_string($fdOrString)) {
@@ -1975,10 +1973,7 @@ if (!\class_exists('UVFs')) {
             }
 
             if ($result < 0) {
-                \zval_del_ref($uv_fSystem);
                 \ze_ffi()->zend_error(\E_WARNING, "uv_%s failed: %s",  \strtolower(\UV::name($fs_type)), \uv_strerror($result));
-            } elseif (\is_null($callback)) {
-                \zval_del_ref($uv_fSystem);
             }
 
             return  $result;
