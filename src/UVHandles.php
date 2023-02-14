@@ -169,11 +169,8 @@ if (!\class_exists('UVRequest')) {
         public function free(): void
         {
             if (\is_cdata($this->uv_type_ptr)) {
-                if (\is_typeof($this->uv_type_ptr, 'struct uv_fs_s*'))
-                    if ($this->uv_type_ptr->fs_type > 0)
-                        \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
-                    else
-                        \FFI::free($this->uv_type_ptr);
+                if (\is_typeof($this->uv_type_ptr, 'struct uv_fs_s*') && $this->uv_type_ptr->fs_type > 0)
+                    \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
                 else
                     \ffi_free_if($this->uv_type_ptr);
 
