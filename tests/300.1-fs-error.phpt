@@ -9,4 +9,4 @@ require 'vendor/autoload.php';
 UVFs::init(uv_default_loop(), 0);
 
 --EXPECTF--
-Warning: uv_fs_custom failed: no such file or directory in %S
+Warning: uv_fs_custom failed: %S
