@@ -507,7 +507,7 @@ if (!\class_exists('UVTcp')) {
             $addr_len = \c_int_type(
                 'int',
                 'uv',
-                \FFi::sizeof($addr()[0]) * ($isIP6 ? 3 : 1)
+                \FFi::sizeof($addr()[0]) * ($isIP6 ? 8 : 1)
             );
 
             switch ($type) {
@@ -672,7 +672,7 @@ if (!\class_exists('UVUdp')) {
             $addr_len = \c_int_type(
                 'int',
                 'uv',
-                \FFi::sizeof($addr()[0]) * ($isIP6 ? 3 : 1)
+                \FFi::sizeof($addr()[0]) * ($isIP6 ? 8 : 1)
             );
 
             switch ($type) {
@@ -2121,9 +2121,6 @@ if (!\class_exists('UVWriter')) {
                 }
                 :  function (CData $writer, int $status) use ($callback, $handle, $buffer) {
                     $callback($handle, $status);
-                    if (\IS_WINDOWS)
-                        \FFI::free($writer);
-
                     \zval_del_ref($buffer);
                     \zval_del_ref($this);
                     \zval_del_ref($callback);
@@ -2152,9 +2149,6 @@ if (!\class_exists('UVWriter')) {
                 }
                 :  function (CData $writer, int $status) use ($callback, $handle, $buffer) {
                     $callback($handle, $status);
-                    if (\IS_WINDOWS)
-                        \FFI::free($writer);
-
                     \zval_del_ref($buffer);
                     \zval_del_ref($this);
                     \zval_del_ref($callback);
