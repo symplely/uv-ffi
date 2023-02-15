@@ -391,8 +391,8 @@ typedef struct __dirstream DIR;
 
 struct iovec
 {
-  void *iov_base;
-  size_t iov_len;
+  void *iov_base; /* [XSI] Base address of I/O memory region */
+  size_t iov_len; /* [XSI] Size of region iov_base points to */
 };
 typedef __socklen_t socklen_t;
 enum __socket_type
@@ -407,17 +407,26 @@ enum __socket_type
   SOCK_CLOEXEC = 02000000,
   SOCK_NONBLOCK = 00004000
 };
-typedef unsigned short int sa_family_t;
+
+typedef __uint8_t sa_family_t;
+struct sockproto
+{
+  __uint16_t sp_family;   /* address family */
+  __uint16_t sp_protocol; /* protocol */
+};
 struct sockaddr
 {
-  sa_family_t sa_family;
-  char sa_data[14];
+  __uint8_t sa_len;      /* total length */
+  sa_family_t sa_family; /* [XSI] address family */
+  char sa_data[14];      /* [XSI] addr value (actually larger) */
 };
 struct sockaddr_storage
 {
-  sa_family_t ss_family;
-  char __ss_padding[(128 - (sizeof(unsigned short int)) - sizeof(unsigned long int))];
-  unsigned long int __ss_align;
+  __uint8_t ss_len;      /* address length */
+  sa_family_t ss_family; /* [XSI] address family */
+  char __ss_pad1[((sizeof(__int64_t)) - sizeof(__uint8_t) - sizeof(sa_family_t))];
+  __int64_t __ss_align; /* force structure storage alignment */
+  char __ss_pad2[(128 - sizeof(__uint8_t) - sizeof(sa_family_t) - ((sizeof(__int64_t)) - sizeof(__uint8_t) - sizeof(sa_family_t)) - (sizeof(__int64_t)))];
 };
 enum
 {
@@ -445,21 +454,39 @@ enum
 };
 struct msghdr
 {
-  void *msg_name;
-  socklen_t msg_namelen;
-  struct iovec *msg_iov;
-  size_t msg_iovlen;
-  void *msg_control;
-  size_t msg_controllen;
-  int msg_flags;
+  void *msg_name;           /* [XSI] optional address */
+  socklen_t msg_namelen;    /* [XSI] size of address */
+  struct iovec *msg_iov;    /* [XSI] scatter/gather array */
+  int msg_iovlen;           /* [XSI] # elements in msg_iov */
+  void *msg_control;        /* [XSI] ancillary data, see below */
+  socklen_t msg_controllen; /* [XSI] ancillary data buffer len */
+  int msg_flags;            /* [XSI] flags on received message */
 };
 
 struct cmsghdr
 {
-  size_t cmsg_len;
-  int cmsg_level;
-  int cmsg_type;
-  __extension__ unsigned char __cmsg_data[];
+  socklen_t cmsg_len;          /* [XSI] data byte count, including hdr */
+  int cmsg_level;              /* [XSI] originating protocol */
+  int cmsg_type;               /* [XSI] protocol-specific type */
+  unsigned char __cmsg_data[]; /* followed by	unsigned char  cmsg_data[]; */
+};
+
+struct cmsgcred
+{
+  pid_t cmcred_pid;        /* PID of sending process */
+  uid_t cmcred_uid;        /* real UID of sending process */
+  uid_t cmcred_euid;       /* effective UID of sending process */
+  gid_t cmcred_gid;        /* real GID of sending process */
+  short cmcred_ngroups;    /* number or groups */
+  gid_t cmcred_groups[16]; /* groups */
+};
+
+struct sf_hdtr
+{
+  struct iovec *headers;  /* pointer to an array of header struct iovec's */
+  int hdr_cnt;            /* number of header iovec's */
+  struct iovec *trailers; /* pointer to an array of trailer struct iovec's */
+  int trl_cnt;            /* number of trailer iovec's */
 };
 
 enum
@@ -617,25 +644,27 @@ struct in6_addr
 {
   union
   {
-    uint8_t __u6_addr8[16];
-    uint16_t __u6_addr16[8];
-    uint32_t __u6_addr32[4];
-  } __in6_u;
+    __uint8_t __u6_addr8[16];
+    __uint16_t __u6_addr16[8];
+    __uint32_t __u6_addr32[4];
+  } __in6_u; /* 128-bit IP6 address */
 };
 struct sockaddr_in
 {
+  __uint8_t sin_len;
   sa_family_t sin_family;
   in_port_t sin_port;
   struct in_addr sin_addr;
-  unsigned char sin_zero[sizeof(struct sockaddr) - (sizeof(unsigned short int)) - sizeof(in_port_t) - sizeof(struct in_addr)];
+  char sin_zero[8];
 };
 struct sockaddr_in6
 {
-  sa_family_t sin6_family;
-  in_port_t sin6_port;
-  uint32_t sin6_flowinfo;
-  struct in6_addr sin6_addr;
-  uint32_t sin6_scope_id;
+  __uint8_t sin6_len;        /* length of this struct(sa_family_t) */
+  sa_family_t sin6_family;   /* AF_INET6 (sa_family_t) */
+  in_port_t sin6_port;       /* Transport layer port # (in_port_t) */
+  __uint32_t sin6_flowinfo;  /* IP6 flow information */
+  struct in6_addr sin6_addr; /* IP6 address */
+  __uint32_t sin6_scope_id;  /* scope zone index */
 };
 struct ip_mreq
 {
@@ -653,6 +682,22 @@ struct ipv6_mreq
   struct in6_addr ipv6mr_multiaddr;
   unsigned int ipv6mr_interface;
 };
+
+struct in6_pktinfo
+{
+  struct in6_addr ipi6_addr; /* src/dst IPv6 address */
+  unsigned int ipi6_ifindex; /* send/recv interface index */
+};
+
+/*
+ * Control structure for IPV6_RECVPATHMTU socket option.
+ */
+struct ip6_mtuinfo
+{
+  struct sockaddr_in6 ip6m_addr; /* or sockaddr_storage? */
+  uint32_t ip6m_mtu;
+};
+
 struct group_req
 {
   uint32_t gr_interface;
