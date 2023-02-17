@@ -59,7 +59,9 @@ if (!\class_exists('UVLoop')) {
                 $this->uv_loop_ptr = null;
                 $this->uv_loop = null;
 
-                \ext_uv::get_module()->request_shutdown(0, 0);
+                $ext_uv = \ext_uv::get_module();
+                if ($ext_uv->is_shutdown())
+                    $ext_uv->request_shutdown(0, 0);
             }
         }
 

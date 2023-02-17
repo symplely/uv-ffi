@@ -45,6 +45,8 @@ opcache.enable=1
 ; Determines if Zend OPCache is enabled for the CLI version of PHP
 opcache.enable_cli=1
 
+opcache.jit_buffer_size=8M
+
 [ffi]
 ; FFI API restriction. Possible values:
 ; "preload" - enabled in CLI scripts and preloaded files (default)
