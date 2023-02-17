@@ -79,7 +79,7 @@ if (!\class_exists('ext_uv')) {
                 }
 
                 $this->uv_exited = true;
-                if (\UVLock::is_lock_active()) {
+                if ($this->module_destructor_linked) {
                     \ext_uv::clear_module();
                 }
             };
@@ -87,7 +87,7 @@ if (!\class_exists('ext_uv')) {
 
         public function module_shutdown(int $type, int $module_number): int
         {
-            if (!\UVLock::is_lock_active()) {
+            if (!$this->module_destructor_linked) {
                 $this->module_clear();
             }
 

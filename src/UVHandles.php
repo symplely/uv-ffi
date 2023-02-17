@@ -173,7 +173,7 @@ if (!\class_exists('UVRequest')) {
          * @param UVBuffer|null $set
          * @return UVBuffer|null|void
          */
-        public function buffer(?UVBuffer $set = null)
+        public function buffer($set = null)
         {
             if (\is_null($set))
                 return $this->buffer;
@@ -1791,12 +1791,15 @@ if (!\class_exists('UVFs')) {
                             $params[1] = $buffer->getString($result);
                         else
                             $params[1] = $result;
+
+                        $uv_fSystem->buffer('free');
                         break;
                     case \UV::FS_SENDFILE:
                         $params[1] = $result;
                         break;
                     case \UV::FS_WRITE:
                         $params[1] = $result;
+                        $uv_fSystem->buffer('free');
                         break;
                     case \UV::FS_UNKNOWN:
                     case \UV::FS_CUSTOM:
@@ -1806,8 +1809,10 @@ if (!\class_exists('UVFs')) {
                 }
 
                 $callback(...$params);
-                if ($fs_type !== \UV::FS_OPEN)
-                    \zval_del_ref($uv_fSystem);
+                if (\is_resource($params[0]) || $fs_type === \UV::FS_CLOSE) {
+                    \remove_fd_resource($fs_type === \UV::FS_CLOSE ? $uv_fSystem->fd_alt() : $params[0]);
+                    $uv_fSystem->fd_alt('free');
+                }
             };
 
             if (\is_string($fdOrString)) {
