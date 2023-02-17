@@ -53,9 +53,9 @@ opcache.enable_cli=1
 ffi.enable="true"
 
 ; List of headers files to preload, wildcard patterns allowed. `ffi.preload` has no effect on Windows.
-ffi.preload=path/to/vendor/symplely/uv-ffi/headers/uv_your-OS-platform_vendor.h
+;ffi.preload=path/to/vendor/symplely/uv-ffi/headers/uv_your-OS-platform_vendor.h
 
-opcache.preload==path/to/vendor/symplely/uv-ffi/preload.php
+;opcache.preload==path/to/vendor/symplely/uv-ffi/preload.php
 ```
 
 ## How to use

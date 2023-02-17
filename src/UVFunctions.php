@@ -405,7 +405,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_tty_init(\UVLoop $loop, $fd, int $readable)
     {
-        return \UVTty::init($loop, \get_fd_resource($fd), $readable);
+        return \UVTty::init($loop, \get_fd_resource($fd, 'uv_file'), $readable);
     }
 
     /**

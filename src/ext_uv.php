@@ -18,7 +18,7 @@ if (!\class_exists('ext_uv')) {
         protected bool $restart_sapi = false;
         protected bool $uv_exited = false;
 
-        protected bool $shutdown_on_request = false;
+        protected bool $shutdown_on_request = true;
 
         /** @var \UVLoop[]|null */
         protected $uv_default = null;
@@ -71,7 +71,6 @@ if (!\class_exists('ext_uv')) {
         {
             if (!$this->uv_exited) {
                 \Core::clear_stdio();
-                \Core::clear('uv');
 
                 if (\PHP_ZTS) {
                     \ze_ffi()->tsrm_mutex_free($this->default_mutex);
@@ -80,7 +79,8 @@ if (!\class_exists('ext_uv')) {
 
                 $this->uv_exited = true;
                 if (\UVLock::is_lock_active()) {
-                    \ext_uv::set_module(null);
+                    \Core::clear('uv');
+                    \ext_uv::clear_module();
                 }
             };
         }
@@ -99,7 +99,8 @@ if (!\class_exists('ext_uv')) {
             if (\is_ze_ffi()) {
                 $uv_loop = $this->get_default();
                 if ($uv_loop instanceof \UVLoop && \is_cdata($uv_loop())) {
-                    $uv_loop->__destruct();
+                    $this->set_default(null);
+                    \zval_del_ref($uv_loop);
                 } elseif (!$this->uv_exited) {
                     $module = $this->__invoke();
                     $this->module_shutdown($module->type, $module->module_number);
