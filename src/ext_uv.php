@@ -71,6 +71,7 @@ if (!\class_exists('ext_uv')) {
         {
             if (!$this->uv_exited) {
                 \Core::clear_stdio();
+                \Core::clear('uv');
 
                 if (\PHP_ZTS) {
                     \ze_ffi()->tsrm_mutex_free($this->default_mutex);
@@ -79,7 +80,6 @@ if (!\class_exists('ext_uv')) {
 
                 $this->uv_exited = true;
                 if (\UVLock::is_lock_active()) {
-                    \Core::clear('uv');
                     \ext_uv::clear_module();
                 }
             };

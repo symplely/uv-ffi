@@ -152,21 +152,8 @@ if (!\class_exists('UVRequest')) {
      */
     abstract class UVRequest extends \UVTypes
     {
-        protected ?Zval $fd = null;
         protected $fd_alt = null;
         protected ?\UVBuffer $buffer = null;
-
-        /**
-         * @param Zval|null $set
-         * @return Zval|null|void
-         */
-        public function fd(?Zval $set = null)
-        {
-            if (\is_null($set))
-                return $this->fd;
-
-            $this->fd = $set instanceof Zval ? $set : null;
-        }
 
         /**
          * @param Zval|resource|null $set
@@ -204,7 +191,6 @@ if (!\class_exists('UVRequest')) {
         {
             if (!\is_null($this->fd_alt)) {
                 $fd_alt = $this->fd_alt;
-                $this->fd = null;
                 $this->fd_alt = null;
                 \remove_fd_resource($fd_alt);
             }
@@ -325,10 +311,10 @@ if (!\class_exists('UVPipe')) {
             $io = $pipe;
             $isPipeEmulated = false;
             if (\is_resource($io)) {
-                $which = ($io === \STDOUT || $io === \STDERR) ? 1 : 0;
                 if (\get_resource_type($io) === 'uv_pipe') {
-                    $io = Resource::get_fd((int)$pipe);
+                    $io = \resource_get_fd((int)$pipe, false, true)[0];
                 } elseif (\IS_WINDOWS && $emulated) {
+                    $which = ($io === \STDOUT || $io === \STDERR) ? 1 : 0;
                     $pipe = static::pair(\UV::NONBLOCK_PIPE, \UV::NONBLOCK_PIPE, false);
                     $io = $pipe[$which];
                     $isPipeEmulated = true;
@@ -473,7 +459,7 @@ if (!\class_exists('UVTcp')) {
         {
             $fd = $sock;
             if (\is_resource($sock)) {
-                $fd = \get_fd_resource($sock, 'uv_os_sock_t');
+                $fd = \get_fd_resource($sock);
                 if ($fd < 0) {
                     \ze_ffi()->zend_error(\E_WARNING, "file descriptor must be unsigned value or a valid resource");
                     return false;;
@@ -590,7 +576,7 @@ if (!\class_exists('UVUdp')) {
         {
             $fd = $sock;
             if (\is_resource($sock)) {
-                $fd = \get_fd_resource($sock, 'uv_os_sock_t');
+                $fd = \get_fd_resource($sock);
                 if ($fd < 0) {
                     \ze_ffi()->zend_error(\E_WARNING, "file descriptor must be unsigned value or a valid resource");
                     return false;;
@@ -739,7 +725,7 @@ if (!\class_exists('UVPoll')) {
             $resource = \reset($arguments);
             \stream_set_blocking($resource, false);
             $poll->fd($resource);
-            $fd = \get_socket_fd($resource, 'uv_os_sock_t');
+            $fd = \get_socket_fd($resource);
             if (\IS_WINDOWS)
                 $status = \uv_ffi()->uv_poll_init_socket($loop(), $poll(), $fd);
             else
@@ -1910,8 +1896,7 @@ if (!\class_exists('UVFs')) {
                         break;
                     case \UV::FS_SENDFILE:
                         $in = \array_shift($arguments);
-                        [$zval_alt, $in_fd] = \zval_to_fd_pair($in, 'uv_file');
-                        $uv_fSystem->fd($zval_alt);
+                        $in_fd = \get_fd_resource($in, 'uv_file');
                         $offset = \array_shift($arguments);
                         $length = \array_shift($arguments);
                         $result = \uv_ffi()->uv_fs_sendfile(
