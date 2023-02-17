@@ -1810,8 +1810,7 @@ if (!\class_exists('UVFs')) {
 
                 $callback(...$params);
                 if (\is_resource($params[0]) || $fs_type === \UV::FS_CLOSE) {
-                    \remove_fd_resource($fs_type === \UV::FS_CLOSE ? $uv_fSystem->fd_alt() : $params[0]);
-                    $uv_fSystem->fd_alt('free');
+                    $uv_fSystem->free();
                 }
             };
 
