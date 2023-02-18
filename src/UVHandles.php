@@ -31,7 +31,7 @@ if (!\class_exists('UVLoop')) {
 
         public function __destruct()
         {
-            if (\is_cdata($this->uv_loop_ptr)) {
+            if (\is_cdata($this->uv_loop_ptr) && \is_uv_ffi()) {
                 if ($this->run_called && !$this->close_called) {
                     if (!$this->stop_called) {
                         /* in case we longjmp()'ed ... */
@@ -60,7 +60,7 @@ if (!\class_exists('UVLoop')) {
                 $this->uv_loop = null;
 
                 $ext_uv = \ext_uv::get_module();
-                if ($ext_uv->is_shutdown())
+                if (!\is_null($ext_uv) && $ext_uv->is_shutdown())
                     $ext_uv->request_shutdown(0, 0);
             }
         }
@@ -1749,9 +1749,7 @@ if (!\class_exists('UVFs')) {
                         if ($result < 0)
                             $params[0] = $result;
                         else
-                            $params[0] = \create_resource_object($result, $uv_fSystem, function (CData $rsrc) {
-                                \uv_ffi()->uv_fs_req_cleanup(\uv_cast('uv_fs_t*', $rsrc->ptr));
-                            });
+                            $params[0] = \get_fd_resource($result, 'uv_file');
                         break;
                     case \UV::FS_SCANDIR:
                         /* req->ptr may be NULL here, but uv_fs_scandir_next() knows to handle it */
@@ -1809,7 +1807,7 @@ if (!\class_exists('UVFs')) {
                 }
 
                 $callback(...$params);
-                if (\is_resource($params[0]) || $fs_type === \UV::FS_CLOSE) {
+                if ($fs_type !== \UV::FS_OPEN && (\is_resource($params[0]) || $fs_type === \UV::FS_CLOSE)) {
                     $uv_fSystem->free();
                 }
             };
@@ -1821,9 +1819,7 @@ if (!\class_exists('UVFs')) {
                         $mode = \array_shift($arguments);
                         $result = \uv_ffi()->uv_fs_open($loop(), $uv_fSystem(), $fdOrString, $flags, $mode, $uv_fs_cb);
                         if (\is_null($callback))
-                            return \create_resource_object($result, $uv_fSystem, function (CData $rsrc) {
-                                \uv_ffi()->uv_fs_req_cleanup(\uv_cast('uv_fs_t*', $rsrc->ptr));
-                            });
+                            return \get_fd_resource($result, 'uv_file');
                         break;
                     case \UV::FS_UNLINK:
                         $result = \uv_ffi()->uv_fs_unlink($loop(), $uv_fSystem(), $fdOrString, $uv_fs_cb);
