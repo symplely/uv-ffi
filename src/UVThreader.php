@@ -59,8 +59,8 @@ if (!\class_exists('UVThreader')) {
 
             $this->free();
             if (self::$locking_counter === 0) {
-                \ext_uv::get_module()->module_clear();
                 self::$default_loop = null;
+                \ext_uv::get_module()->module_clear();
             }
         }
 

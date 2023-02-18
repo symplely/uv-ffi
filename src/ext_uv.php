@@ -18,7 +18,7 @@ if (!\class_exists('ext_uv')) {
         protected bool $restart_sapi = false;
         protected bool $uv_exited = false;
 
-        protected bool $shutdown_on_request = true;
+        protected bool $shutdown_on_request = false;
 
         /** @var \UVLoop[]|null */
         protected $uv_default = null;
@@ -100,7 +100,6 @@ if (!\class_exists('ext_uv')) {
                 $uv_loop = $this->get_default();
                 if ($uv_loop instanceof \UVLoop && \is_cdata($uv_loop())) {
                     $this->set_default(null);
-                    \zval_del_ref($uv_loop);
                 } elseif (!$this->uv_exited) {
                     $module = $this->__invoke();
                     $this->module_shutdown($module->type, $module->module_number);
