@@ -10,8 +10,8 @@ if (!\class_exists('UVThreader')) {
         protected string $type;
         protected int $locked = 0x00;
         protected ?CData $struct_base;
-        protected static bool $is_locking = false;
         protected static int $locking_counter = 0;
+        protected static ?\UVLoop $default_loop = null;
 
         const IS_UV_RWLOCK      = 1;
         const IS_UV_RWLOCK_RD   = 2;
@@ -58,8 +58,10 @@ if (!\class_exists('UVThreader')) {
             }
 
             $this->free();
-            if (self::$locking_counter === 0)
+            if (self::$locking_counter === 0) {
+                self::$default_loop = null;
                 \ext_uv::get_module()->module_clear();
+            }
         }
 
         protected function __construct(
@@ -70,12 +72,10 @@ if (!\class_exists('UVThreader')) {
         ) {
             $this->tag = 'uv';
             $this->type = $type;
-
-            self::$is_locking = true;
             self::$locking_counter++;
-            \ext_uv::get_module()->destructor_set();
-            if (\is_null(\uv_g())) {
-                \uv_default_loop();
+            if (\is_null(self::$default_loop)) {
+                \ext_uv::get_module()->destructor_set();
+                self::$default_loop = \uv_default_loop();
             }
 
             if (!$isSelf || \is_string($typedef)) {
@@ -114,11 +114,6 @@ if (!\class_exists('UVThreader')) {
             $this->struct = null;
             $this->type = '';
             $this->tag = '';
-        }
-
-        public static function is_lock_active(): bool
-        {
-            return self::$is_locking;
         }
     }
 }

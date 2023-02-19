@@ -228,30 +228,6 @@ if (!\function_exists('uv_init')) {
         return ['address' => \ffi_string($ip), 'port' => $port, 'family' => $family];
     }
 
-    function create_uv_fs_resource(int $fd, \UVFs $req)
-    {
-        $fd_ptr = $req();
-        $fd_res = \zend_register_resource(
-            $fd_ptr,
-            \zend_register_list_destructors_ex(
-                function (CData $rsrc) {
-                    \uv_ffi()->uv_fs_req_cleanup(\uv_cast('uv_fs_t*', $rsrc->ptr));
-                },
-                null,
-                'stream',
-                \ZEND_MODULE_API_NO
-            )
-        );
-
-        $fd_zval = \zval_resource($fd_res);
-        $resource = \zval_native($fd_zval);
-        $file = \fd_type();
-        $file->add_object($req);
-        $file->add_pair($fd_zval, $fd, (int)$resource);
-
-        return $resource;
-    }
-
     function uv_ffi(): \FFI
     {
         return \Core::get('uv');

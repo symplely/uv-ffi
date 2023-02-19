@@ -23,7 +23,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_loop_init()
     {
-        return UVLoop::init();
+        return \UVLoop::init();
     }
 
     /**
@@ -202,7 +202,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_async_init(\UVLoop $loop, callable $callback)
     {
-        return UVAsync::init($loop, $callback);
+        return \UVAsync::init($loop, $callback);
     }
 
     /**
@@ -248,7 +248,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_pipe(int $read_flags = \UV::NONBLOCK_PIPE, int $write_flags = \UV::NONBLOCK_PIPE)
     {
-        return UVPipe::pair($read_flags, $write_flags);
+        return \UVPipe::pair($read_flags, $write_flags);
     }
 
     /**
@@ -265,7 +265,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_pipe_init(\UVLoop $loop, int $ipc): ?UVPipe
     {
-        return UVPipe::init($loop, $ipc);
+        return \UVPipe::init($loop, $ipc);
     }
 
     /**
@@ -405,7 +405,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_tty_init(\UVLoop $loop, $fd, int $readable)
     {
-        return \UVTty::init($loop, \get_fd_resource($fd), $readable);
+        return \UVTty::init($loop, \get_fd_resource($fd, 'uv_file'), $readable);
     }
 
     /**
@@ -678,7 +678,7 @@ if (!\function_exists('uv_loop_init')) {
      * @return int
      * @deprecated 1.0
      */
-    function uv_tcp_connect6(\UVTcp $handle, UVSockAddrIPv6 $ipv6_addr, callable $callback): int
+    function uv_tcp_connect6(\UVTcp $handle, \UVSockAddrIPv6 $ipv6_addr, callable $callback): int
     {
         return \uv_tcp_connect($handle, $ipv6_addr, $callback);
     }
@@ -692,7 +692,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_dlopen(string $filename)
     {
-        return UVLib::init($filename);
+        return \UVLib::init($filename);
     }
 
     /**
@@ -936,7 +936,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_fs_open(\UVLoop $loop, string $path, int $flag, int $mode = \UV::S_IRWXU, callable $callback = null)
     {
-        return UVFs::init($loop, \UV::FS_OPEN, $path, $flag, $mode, $callback);
+        return \UVFs::init($loop, \UV::FS_OPEN, $path, $flag, $mode, $callback);
     }
 
     /**
@@ -1023,7 +1023,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_fs_close(\UVLoop $loop, $fd, callable $callback = null)
     {
-        return UVFs::init($loop, \UV::FS_CLOSE, $fd, $callback);
+        return \UVFs::init($loop, \UV::FS_CLOSE, $fd, $callback);
     }
 
     /**
@@ -1047,7 +1047,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_fs_read(\UVLoop $loop, $fd, int $offset, int $length, callable $callback = null)
     {
-        return UVFs::init($loop, \UV::FS_READ, $fd, $offset, $length, $callback);
+        return \UVFs::init($loop, \UV::FS_READ, $fd, $offset, $length, $callback);
     }
 
     /**
@@ -1065,7 +1065,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_fs_write(\UVLoop $loop, $fd, string $buffer, int $offset = -1, callable $callback = null)
     {
-        return UVFs::init($loop, \UV::FS_WRITE, $fd, $buffer, $offset, $callback);
+        return \UVFs::init($loop, \UV::FS_WRITE, $fd, $buffer, $offset, $callback);
     }
 
     /**
@@ -1142,7 +1142,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_fs_fstat(\UVLoop $loop, $fd, callable $callback = null)
     {
-        return UVFs::init($loop, \UV::FS_FSTAT, $fd, $callback);
+        return \UVFs::init($loop, \UV::FS_FSTAT, $fd, $callback);
     }
 
     /**
@@ -1161,7 +1161,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_fs_sendfile(\UVLoop $loop, $out_fd, $in_fd, int $offset, int $length, callable $callback = null)
     {
-        return UVFs::init($loop, \UV::FS_SENDFILE, $out_fd, $in_fd, $offset, $length, $callback);
+        return \UVFs::init($loop, \UV::FS_SENDFILE, $out_fd, $in_fd, $offset, $length, $callback);
     }
 
     /**
@@ -2215,7 +2215,7 @@ if (!\function_exists('uv_loop_init')) {
      * @return int
      * @link http://docs.libuv.org/en/v1.x/udp.html?highlight=uv_udp_init#c.uv_udp_bind
      */
-    function uv_udp_bind(\UVUdp $handle, UVSockAddr $addr, int $flags = \UV::UDP_LINUX_RECVERR)
+    function uv_udp_bind(\UVUdp $handle, \UVSockAddr $addr, int $flags = \UV::UDP_LINUX_RECVERR)
     {
         return $handle->bind($addr, $flags);
     }
@@ -2233,7 +2233,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      */
-    function uv_udp_bind6(\UVUdp $handle, UVSockAddr $address, int $flags = 0)
+    function uv_udp_bind6(\UVUdp $handle, \UVSockAddr $address, int $flags = 0)
     {
         return \uv_udp_bind($handle, $address, $flags);
     }
@@ -2379,7 +2379,7 @@ if (!\function_exists('uv_loop_init')) {
      * @return int
      * @link http://docs.libuv.org/en/v1.x/udp.html?highlight=uv_udp_send#c.uv_udp_send
      */
-    function uv_udp_send(\UVUdp $handle, string $data, UVSockAddr $uv_addr, callable $callback)
+    function uv_udp_send(\UVUdp $handle, string $data, \UVSockAddr $uv_addr, callable $callback)
     {
         return $handle->send($data, $uv_addr, $callback);
     }
@@ -2405,7 +2405,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      */
-    function uv_udp_send6(\UVUdp $handle, string $data, UVSockAddrIPv6 $uv_addr6, callable $callback)
+    function uv_udp_send6(\UVUdp $handle, string $data, \UVSockAddrIPv6 $uv_addr6, callable $callback)
     {
         return \uv_udp_send($handle, $data, $uv_addr6, $callback);
     }
