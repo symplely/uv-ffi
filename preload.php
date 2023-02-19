@@ -224,7 +224,7 @@ if (!\function_exists('uv_init')) {
                 break;
         }
 
-        \zval_del_ref($addr);
+        //  \zval_del_ref($addr);
         return ['address' => \ffi_string($ip), 'port' => $port, 'family' => $family];
     }
 
