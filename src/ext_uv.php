@@ -70,6 +70,7 @@ if (!\class_exists('ext_uv')) {
         public function module_clear(): void
         {
             if (!$this->uv_exited) {
+                $this->uv_exited = true;
                 \Core::clear_stdio();
 
                 if (\PHP_ZTS) {
@@ -77,8 +78,9 @@ if (!\class_exists('ext_uv')) {
                     $this->default_mutex = null;
                 }
 
-                $this->uv_exited = true;
                 \ext_uv::clear_module();
+                if (\Core::get('uv') instanceof \FFI)
+                    \Core::clear('uv');
             };
         }
 

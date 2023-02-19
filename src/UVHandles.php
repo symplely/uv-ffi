@@ -1694,12 +1694,8 @@ if (!\class_exists('UVFs')) {
             $fd_alt = $this->fd_alt;
             $this->fd_alt = null;
 
-            if (\is_cdata($this->uv_type_ptr)) {
-                if ($this->uv_type_ptr->fs_type > 0)
-                    \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
-                else
-                    \FFI::free($this->uv_type_ptr);
-            }
+            if (\is_cdata($this->uv_type_ptr) && $this->uv_type_ptr->fs_type > 0)
+                \uv_ffi()->uv_fs_req_cleanup($this->uv_type_ptr);
 
             if ($remove)
                 \remove_fd_resource($fd_alt);
