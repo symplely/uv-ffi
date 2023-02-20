@@ -1906,7 +1906,7 @@ if (!\class_exists('UVFs')) {
                     case \UV::FS_CLOSE:
                         $result = \uv_ffi()->uv_fs_close($loop(), $uv_fSystem(), $fd, $uv_fs_cb);
                         if (\is_null($callback))
-                            Resource::remove_fd($fd);
+                            \remove_fd_resource($fd);
                         break;
                     case \UV::FS_FSYNC:
                         $result = \uv_ffi()->uv_fs_fsync($loop(), $uv_fSystem(), $fd, $uv_fs_cb);

@@ -1,8 +1,152 @@
 #define FFI_SCOPE "__uv__"
 #define FFI_LIB "./lib/macOS/libuv.1.0.0.dylib"
 
-typedef long int ptrdiff_t;
-typedef long unsigned int size_t;
+// macOS specific
+typedef signed char __int8_t;
+typedef unsigned char __uint8_t;
+typedef short __int16_t;
+typedef unsigned short __uint16_t;
+typedef int __int32_t;
+typedef unsigned int __uint32_t;
+typedef long long __int64_t;
+typedef unsigned long long __uint64_t;
+
+typedef long __darwin_intptr_t;
+typedef __int32_t __darwin_dev_t;       /* dev_t */
+typedef __uint32_t __darwin_gid_t;      /* [???] process and group IDs */
+typedef __uint32_t __darwin_id_t;       /* [XSI] pid_t, uid_t, or gid_t*/
+typedef __uint64_t __darwin_ino64_t;    /* [???] Used for 64 bit inodes */
+typedef __uint16_t __darwin_mode_t;     /* [???] Some file attributes */
+typedef __int64_t __darwin_off_t;       /* [???] Used for file sizes */
+typedef __int32_t __darwin_pid_t;       /* [???] process and group IDs */
+typedef __uint32_t __darwin_sigset_t;   /* [???] signal set */
+typedef __int32_t __darwin_suseconds_t; /* [???] microseconds */
+typedef __uint32_t __darwin_uid_t;      /* [???] user IDs */
+typedef __uint32_t __darwin_useconds_t; /* [???] microseconds */
+
+typedef unsigned int __darwin_natural_t;
+typedef int __darwin_ct_rune_t;              /* ct_rune_t */
+typedef __darwin_ct_rune_t __darwin_wchar_t; /* wchar_t */
+
+typedef __darwin_wchar_t __darwin_rune_t;   /* rune_t */
+typedef __darwin_ct_rune_t __darwin_wint_t; /* wint_t */
+typedef unsigned long __darwin_clock_t;     /* clock() */
+typedef __uint32_t __darwin_socklen_t;      /* socklen_t (duh) */
+typedef long __darwin_ssize_t;              /* byte count or error */
+typedef long __darwin_time_t;               /* time() */
+
+/*
+ * mbstate_t is an opaque object to keep conversion state, during multibyte
+ * stream conversions.  The content must not be referenced by user programs.
+ */
+typedef union
+{
+  char __mbstate8[128];
+  long long _mbstateL; /* for alignment */
+} __mbstate_t;
+
+typedef __mbstate_t __darwin_mbstate_t; /* mbstate_t */
+typedef int __darwin_ptrdiff_t;         /* ptr1 - ptr2 */
+
+typedef unsigned long __darwin_size_t; /* sizeof() */
+typedef void *__darwin_va_list;        /* va_list */
+
+typedef __darwin_ptrdiff_t ptrdiff_t;
+typedef __darwin_size_t size_t;
+typedef __darwin_wchar_t wchar_t;
+typedef __darwin_wint_t _wint_t;
+typedef __darwin_uid_t uid_t;
+typedef __darwin_gid_t gid_t;
+typedef __darwin_pid_t pid_t;
+typedef __darwin_intptr_t intptr_t;
+typedef __darwin_ino64_t ino_t;
+typedef __darwin_dev_t dev_t;
+
+struct __darwin_pthread_handler_rec
+{
+  void (*__routine)(void *); // Routine to call
+  void *__arg;               // Argument to pass
+  struct __darwin_pthread_handler_rec *__next;
+};
+
+struct _opaque_pthread_attr_t
+{
+  long __sig;
+  char __opaque[36];
+};
+
+struct _opaque_pthread_cond_t
+{
+  long __sig;
+  char __opaque[24];
+};
+
+struct _opaque_pthread_condattr_t
+{
+  long __sig;
+  char __opaque[4];
+};
+
+struct _opaque_pthread_mutex_t
+{
+  long __sig;
+  char __opaque[40];
+};
+
+struct _opaque_pthread_mutexattr_t
+{
+  long __sig;
+  char __opaque[8];
+};
+
+struct _opaque_pthread_once_t
+{
+  long __sig;
+  char __opaque[4];
+};
+
+struct _opaque_pthread_rwlock_t
+{
+  long __sig;
+  char __opaque[124];
+};
+
+struct _opaque_pthread_rwlockattr_t
+{
+  long __sig;
+  char __opaque[12];
+};
+
+struct _opaque_pthread_t
+{
+  long __sig;
+  struct __darwin_pthread_handler_rec *__cleanup_stack;
+  char __opaque[4088];
+};
+
+typedef struct _opaque_pthread_attr_t __darwin_pthread_attr_t;
+typedef struct _opaque_pthread_cond_t __darwin_pthread_cond_t;
+typedef struct _opaque_pthread_condattr_t __darwin_pthread_condattr_t;
+typedef unsigned long __darwin_pthread_key_t;
+typedef struct _opaque_pthread_mutex_t __darwin_pthread_mutex_t;
+typedef struct _opaque_pthread_mutexattr_t __darwin_pthread_mutexattr_t;
+typedef struct _opaque_pthread_once_t __darwin_pthread_once_t;
+typedef struct _opaque_pthread_rwlock_t __darwin_pthread_rwlock_t;
+typedef struct _opaque_pthread_rwlockattr_t __darwin_pthread_rwlockattr_t;
+typedef struct _opaque_pthread_t *__darwin_pthread_t;
+
+typedef __darwin_pthread_attr_t pthread_attr_t;
+typedef __darwin_pthread_cond_t pthread_cond_t;
+typedef __darwin_pthread_condattr_t pthread_condattr_t;
+typedef __darwin_pthread_key_t pthread_key_t;
+typedef __darwin_pthread_mutex_t pthread_mutex_t;
+typedef __darwin_pthread_mutexattr_t pthread_mutexattr_t;
+typedef __darwin_pthread_once_t pthread_once_t;
+typedef __darwin_pthread_rwlock_t pthread_rwlock_t;
+typedef __darwin_pthread_rwlockattr_t pthread_rwlockattr_t;
+typedef __darwin_pthread_t pthread_t;
+// macOS specific end
+
 typedef struct
 {
   long long __max_align_ll;
@@ -13,14 +157,6 @@ typedef unsigned char __u_char;
 typedef unsigned short int __u_short;
 typedef unsigned int __u_int;
 typedef unsigned long int __u_long;
-typedef signed char __int8_t;
-typedef unsigned char __uint8_t;
-typedef signed short int __int16_t;
-typedef unsigned short int __uint16_t;
-typedef signed int __int32_t;
-typedef unsigned int __uint32_t;
-typedef signed long int __int64_t;
-typedef unsigned long int __uint64_t;
 typedef __int8_t __int_least8_t;
 typedef __uint8_t __uint_least8_t;
 typedef __int16_t __int_least16_t;
@@ -74,15 +210,7 @@ typedef char *__caddr_t;
 typedef long int __intptr_t;
 typedef unsigned int __socklen_t;
 typedef int __sig_atomic_t;
-typedef struct
-{
-  int __count;
-  union
-  {
-    unsigned int __wch;
-    char __wchb[4];
-  } __value;
-} __mbstate_t;
+
 typedef struct _G_fpos_t
 {
   __off_t __pos;
@@ -162,7 +290,6 @@ typedef unsigned char uint_fast8_t;
 typedef unsigned long int uint_fast16_t;
 typedef unsigned long int uint_fast32_t;
 typedef unsigned long int uint_fast64_t;
-typedef long int intptr_t;
 typedef unsigned long int uintptr_t;
 typedef __intmax_t intmax_t;
 typedef __uintmax_t uintmax_t;
@@ -175,13 +302,8 @@ typedef __quad_t quad_t;
 typedef __u_quad_t u_quad_t;
 typedef __fsid_t fsid_t;
 typedef __loff_t loff_t;
-typedef __ino_t ino_t;
-typedef __dev_t dev_t;
-typedef __gid_t gid_t;
 typedef __mode_t mode_t;
 typedef __nlink_t nlink_t;
-typedef __uid_t uid_t;
-typedef __pid_t pid_t;
 typedef __id_t id_t;
 typedef __daddr_t daddr_t;
 typedef __caddr_t caddr_t;
@@ -286,46 +408,6 @@ struct __pthread_cond_s
   unsigned int __wrefs;
   unsigned int __g_signals[2];
 };
-typedef unsigned long int pthread_t;
-typedef union
-{
-  char __size[4];
-  int __align;
-} pthread_mutexattr_t;
-typedef union
-{
-  char __size[4];
-  int __align;
-} pthread_condattr_t;
-union pthread_attr_t
-{
-  char __size[56];
-  long int __align;
-};
-typedef union pthread_attr_t pthread_attr_t;
-typedef union
-{
-  struct __pthread_mutex_s __data;
-  char __size[40];
-  long int __align;
-} pthread_mutex_t;
-typedef union
-{
-  struct __pthread_cond_s __data;
-  char __size[48];
-  __extension__ long long int __align;
-} pthread_cond_t;
-typedef union
-{
-  struct __pthread_rwlock_arch_t __data;
-  char __size[56];
-  long int __align;
-} pthread_rwlock_t;
-typedef union
-{
-  char __size[8];
-  long int __align;
-} pthread_rwlockattr_t;
 typedef volatile int pthread_spinlock_t;
 typedef union
 {
@@ -1446,14 +1528,12 @@ typedef int uv_file;
 typedef int uv_os_sock_t;
 typedef int uv_os_fd_t;
 typedef pid_t uv_pid_t;
-typedef int pthread_once_t;
 typedef pthread_once_t uv_once_t;
 typedef pthread_t uv_thread_t;
 typedef pthread_mutex_t uv_mutex_t;
 typedef sem_t uv_sem_t;
 typedef pthread_rwlock_t uv_rwlock_t;
 typedef pthread_cond_t uv_cond_t;
-typedef unsigned int pthread_key_t;
 typedef pthread_key_t uv_key_t;
 
 typedef pthread_barrier_t uv_barrier_t;
