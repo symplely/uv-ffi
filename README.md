@@ -22,7 +22,7 @@ There will be two ways:
 and:
     composer create-project symplely/uv-ffi .cdef/libuv
 
-This package/repo is self-contained for Windows, meaning it has **GitHub Actions** building `libuv` _binary_ `.dll`, and committing back to repo. The other platform will you the distributions included `libuv` _binary_ version.
+This package/repo is self-contained for Windows and Apple macOS, meaning it has **GitHub Actions** building `libuv` _binary_ `.dll` & `.dylib`, and committing back to repo. The other platforms will use the distributions included `libuv` _binary_ version.
 
 The `create-project` will setup a different loading/installation area. This feature is still a work in progress.
 
@@ -42,8 +42,6 @@ opcache.enable=1
 ; Determines if Zend OPCache is enabled for the CLI version of PHP
 opcache.enable_cli=1
 
-opcache.jit_buffer_size=8M
-
 [ffi]
 ; FFI API restriction. Possible values:
 ; "preload" - enabled in CLI scripts and preloaded files (default)
@@ -52,9 +50,11 @@ opcache.jit_buffer_size=8M
 ffi.enable="true"
 
 ; List of headers files to preload, wildcard patterns allowed. `ffi.preload` has no effect on Windows.
-; replace `your-platform` with: windows, centos7, centos8+, macos, pi, ubuntu18.04, or ubuntu20.04
+; Replace `your-platform` with: windows, centos7, centos8+, macos, pi, ubuntu18.04, or ubuntu20.04
+; This feature is untested, since not enabled for Windows.
 ;ffi.preload=path/to/vendor/symplely/uv-ffi/headers/uv_your-platform_generated.h
 
+;This feature is untested, since not enabled for Windows.
 ;opcache.preload==path/to/vendor/symplely/uv-ffi/preload.php
 ```
 
@@ -229,7 +229,7 @@ All `functions/methods/classes` have there original **Libuv** _documentation_, _
 
 For deeper usage understanding, see [An Introduction to libuv](https://codeahoy.com/learn/libuv/toc/).
 
-The following functions are present in _Windows_, but not in _Linux_.
+The following functions are present in _Windows_, but not in _Linux_ **ubuntu 20.04** up, might need rechecking thought.
 
 ```cpp
  void uv_library_shutdown(void);
