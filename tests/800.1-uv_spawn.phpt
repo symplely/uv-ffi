@@ -15,7 +15,7 @@ $stdio = array();
 $stdio[] = uv_stdio_new($in, UV::CREATE_PIPE | UV::READABLE_PIPE);
 $stdio[] = uv_stdio_new($out, UV::CREATE_PIPE | UV::WRITABLE_PIPE);
 
-$process = uv_spawn(
+uv_spawn(
     uv_default_loop(),
     PHP_BINARY,
     array('-r', "var_dump(getenv('KEY'));"),
@@ -29,16 +29,12 @@ $process = uv_spawn(
     }
 );
 
-$check_read = uv_read_start($out, function ($out, $nRead, $buffer) {
+uv_read_start($out, function ($out, $nRead, $buffer) {
     echo $buffer;
 
     uv_close($out, function () {
     });
 });
-
-if (IS_MACOS) {
-    var_dump(uv_strerror($process), $check_read);
-}
 
 uv_run();
 --EXPECTF--
