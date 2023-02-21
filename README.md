@@ -6,11 +6,8 @@
 
 This **libuv ffi** implementation is based on PHP extension [ext-uv](https://github.com/amphp/ext-uv). All **ext-uv 0.3.0** _tests and functions_ been implemented, except **uv_queue_work**.
 
-- Functionality works as expected under `Windows` _PHP 7.4, 8.0, 8.1, 8.2_.
-- `Linux` all functions and tests completes, but failing by way of `2`, _segmentation fault (core dumped)_ after completing, issues around current **destruct/shutdown** routine implementations and usage of **FFI::free** on _libuv_ C structures.
-- `macOS` most functions and tests completes, but failing by way of `4`, implementation issues around **uv_spawn**, **uv_ip4_addr** and **uv_signal**.
-
-**All functionality is interdependent on [zend-ffi](https://github.com/symplely/zend-ffi).**
+- Functionality works as expected under _`Windows`_, _`Linux`_, and _`Apple macOS`_, **PHP 7.4 to 8.2**.
+- All functionality is interdependent on [zend-ffi](https://github.com/symplely/zend-ffi).
 
 The actual threading feature of `uv_queue_work` in **ext-uv 0.3.0** is on pause. Getting native PThreads working with FFI, needs a lot more investigation and more likely C development of PHP source code. Seems someone else has started something similar <https://github.com/mrsuh/php-pthreads>.
 
@@ -55,7 +52,8 @@ opcache.jit_buffer_size=8M
 ffi.enable="true"
 
 ; List of headers files to preload, wildcard patterns allowed. `ffi.preload` has no effect on Windows.
-;ffi.preload=path/to/vendor/symplely/uv-ffi/headers/uv_your-OS-platform_vendor.h
+; replace `your-platform` with: windows, centos7, centos8+, macos, pi, ubuntu18.04, or ubuntu20.04
+;ffi.preload=path/to/vendor/symplely/uv-ffi/headers/uv_your-platform_generated.h
 
 ;opcache.preload==path/to/vendor/symplely/uv-ffi/preload.php
 ```

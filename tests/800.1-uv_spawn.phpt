@@ -17,7 +17,7 @@ $stdio[] = uv_stdio_new($out, UV::CREATE_PIPE | UV::WRITABLE_PIPE);
 
 uv_spawn(
     uv_default_loop(),
-    "php",
+    PHP_BINARY,
     array('-r', "var_dump(getenv('KEY'));"),
     $stdio,
     __DIR__,

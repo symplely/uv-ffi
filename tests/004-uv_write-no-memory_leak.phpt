@@ -1,7 +1,7 @@
 --TEST--
 Check for uv_write has no memory leak
 --SKIPIF--
-<?php if (!extension_loaded("ffi") || (getenv('GITHUB_ACTIONS') !== false && '\\' !== \DIRECTORY_SEPARATOR && (float) \phpversion() < 8.2)) print "skip"; ?>
+<?php if (!extension_loaded("ffi") || (getenv('GITHUB_ACTIONS') !== false && \PHP_OS === 'Linux' && (float) \phpversion() < 8.0)) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';

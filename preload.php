@@ -332,7 +332,7 @@ if (!\function_exists('uv_init')) {
 
         $vendor_dir = 'vendor' . \DS . 'symplely' . \DS . 'uv-ffi';
         if (\file_exists($vendor_dir) && (\IS_WINDOWS || \IS_MACOS)) {
-            $vendor_code = \str_replace('.h', '_vendor.h', $code);
+            $vendor_code = \str_replace('.h', '_generated.h', $code);
             if (!\file_exists($vendor_code)) {
                 $file = \str_replace(
                     'FFI_LIB ".',
