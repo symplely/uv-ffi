@@ -18,7 +18,7 @@ uv_signal_start($signal1, function ($signal1) {
 
 $signal2 = uv_signal_init();
 
-uv_signal_start($signal2, function ($signal2) {
+$check_signal = uv_signal_start($signal2, function ($signal2) {
     echo PHP_EOL . 'The SIGHUP signal received, the OS will close this session window!' . PHP_EOL;
     uv_signal_stop($signal2);
 }, 1);
@@ -49,6 +49,10 @@ $process = uv_spawn(
     },
     $flags
 );
+
+if (IS_MACOS) {
+    var_dump(uv_strerror($process), $check_signal, $stdio);
+}
 
 uv_read_start($out, function ($out, $nread, $buffer) use ($process) {
     echo $buffer;
