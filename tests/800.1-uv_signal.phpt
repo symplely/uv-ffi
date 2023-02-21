@@ -32,7 +32,7 @@ $stdio[] = uv_stdio_new($out, UV::CREATE_PIPE | UV::WRITABLE_PIPE);
 $flags = 0;
 $process = uv_spawn(
     uv_default_loop(),
-    "php",
+    PHP_BINARY,
     array('-r', 'echo "World!" . PHP_EOL; sleep(100);'),
     $stdio,
     __DIR__,
