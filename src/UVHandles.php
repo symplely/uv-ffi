@@ -182,7 +182,7 @@ if (!\class_exists('UVStream')) {
          * @param callable|uv_read_cb $callback
          * @return integer
          */
-        public static function read(object $handle, callable $callback): int
+        public static function read(object $handle, callable $callback)
         {
             if (!\uv_fileno($handle) instanceof Resource) {
                 return \ze_ffi()->zend_error(\E_WARNING, "passed UV handle is not initialized yet");
