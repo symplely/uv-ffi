@@ -10,11 +10,9 @@ $loop = uv_loop_init();
 
 $tty = uv_tty_init($loop, STDOUT, 0);
 
-uv_tty_get_winsize($tty, $width, $height);
 var_dump($width >= 0, $height >= 0);
 
-uv_write($tty, "A\n", function ($handle) {
-    uv_close($handle);
+uv_write($tty, "A\n", function () {
 });
 
 var_dump(uv_loop_alive($loop));
