@@ -108,6 +108,17 @@ if (!\class_exists('UVLoop')) {
                 \zval_del_ref($this);
         }
 
+        public function delete(): void
+        {
+            \uv_destruct_set();
+            $this->stop_called = true;
+            $this->close_called = true;
+            $this->is_default = true;
+            \ext_uv::get_module()->set_default(null);
+            \zval_del_ref($this);
+            \uv_ffi()->uv_loop_delete($this->uv_loop_ptr);
+        }
+
         public static function default(): self
         {
             $uv_default = \ext_uv::get_module()->get_default();
@@ -182,7 +193,7 @@ if (!\class_exists('UVStream')) {
          * @param callable|uv_read_cb $callback
          * @return integer
          */
-        public static function read(object $handle, callable $callback): int
+        public static function read(object $handle, callable $callback)
         {
             if (!\uv_fileno($handle) instanceof Resource) {
                 return \ze_ffi()->zend_error(\E_WARNING, "passed UV handle is not initialized yet");
@@ -317,14 +328,12 @@ if (!\class_exists('UVPipe')) {
                 $f0 = $fd[0];
                 $zval_1 = \zval_resource(\zend_register_resource(
                     $f1,
-                    \zend_register_list_destructors_ex(function (CData $rsrc) {
-                    }, null, "uv_pipe", \ZEND_MODULE_API_NO)
+                    \zend_register_list_destructors_ex(null, null, "uv_pipe", \ZEND_MODULE_API_NO)
                 ));
 
                 $zval_2 = \zval_resource(\zend_register_resource(
                     $f0,
-                    \zend_register_list_destructors_ex(function (CData $rsrc) {
-                    }, null, "uv_pipe", \ZEND_MODULE_API_NO)
+                    \zend_register_list_destructors_ex(null, null, "uv_pipe", \ZEND_MODULE_API_NO)
                 ));
 
                 $ht = \zend_new_pair($zval_1(), $zval_2());
@@ -379,9 +388,6 @@ if (!\class_exists('UVTty')) {
 
             $w->change_value($_width_ptr[0]);
             $h->change_value($_height_ptr[0]);
-
-            \FFI::free($_width_ptr);
-            \FFI::free($_height_ptr);
 
             return $error;
         }

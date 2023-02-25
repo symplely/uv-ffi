@@ -28,7 +28,7 @@
     "require": {
         "php": ">7.4",
         "ext-ffi": "*",
-        "symplely/zend-ffi": "~0.12.2"
+        "symplely/zend-ffi": "~0.12.3"
     },
     "autoload": {
         "files": [

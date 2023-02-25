@@ -10,12 +10,12 @@ $loop = uv_default_loop();
 $timer = uv_timer_init();
 
 $i = 0;
-uv_timer_start($timer, 10, 10, function($timer) use (&$i, $loop) {
+uv_timer_start($timer, 10, 10, function($timer) use (&$i) {
     echo "count: {$i}" . PHP_EOL;
     $i++;
 
     if ($i > 3) {
-        uv_stop($loop);
+        uv_stop();
     }
 });
 
