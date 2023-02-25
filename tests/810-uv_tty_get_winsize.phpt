@@ -1,7 +1,7 @@
 --TEST--
 Check for uv_tty_get_winsize and uv_loop_alive
 --SKIPIF--
-<?php if (!extension_loaded("ffi")) print "skip"; ?>
+<?php if (!extension_loaded("ffi") || (getenv('GITHUB_ACTIONS') !== false && '\\' === \DIRECTORY_SEPARATOR)) print "skip"; ?>
 --FILE--
 <?php
 require 'vendor/autoload.php';
