@@ -7,7 +7,7 @@ Check for uv_now
 require 'vendor/autoload.php';
 
 $time = uv_now();
-usleep(100);
+usleep(1000);
 uv_update_time();
 $timeNow = uv_now();
 var_dump($timeNow > $time);
