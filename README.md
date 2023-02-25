@@ -229,7 +229,7 @@ All `functions/methods/classes` have there original **Libuv** _documentation_, _
 
 For deeper usage understanding, see [An Introduction to libuv](https://codeahoy.com/learn/libuv/toc/).
 
-The following functions are present in _Windows_, but not in _Linux_ **ubuntu 20.04** up, might need rechecking thought.
+The following functions are present in _Windows_, but not in _Linux_ **ubuntu 20.04** up, might need rechecking though.
 
 ```cpp
  void uv_library_shutdown(void);

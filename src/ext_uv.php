@@ -79,8 +79,12 @@ if (!\class_exists('ext_uv')) {
                 }
 
                 \ext_uv::clear_module();
-                if (\Core::get('uv') instanceof \FFI)
+                if (\Core::get('uv') instanceof \FFI) {
+                    if (\IS_WINDOWS)
+                        \uv_library_shutdown();
+
                     \Core::clear('uv');
+                }
             };
         }
 

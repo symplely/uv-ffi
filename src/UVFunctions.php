@@ -98,7 +98,7 @@ if (!\function_exists('uv_loop_init')) {
      */
     function uv_loop_delete(\UVLoop $loop): void
     {
-        \uv_ffi()->uv_loop_delete($loop());
+        $loop->delete();
     }
 
     /**
