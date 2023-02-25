@@ -380,9 +380,6 @@ if (!\class_exists('UVTty')) {
             $w->change_value($_width_ptr[0]);
             $h->change_value($_height_ptr[0]);
 
-            \FFI::free($_width_ptr);
-            \FFI::free($_height_ptr);
-
             return $error;
         }
     }
