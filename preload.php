@@ -279,6 +279,9 @@ if (!\function_exists('uv_init')) {
         }
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     function uv_ffi_loader()
     {
         $directory = __DIR__ . \DS;

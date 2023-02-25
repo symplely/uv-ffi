@@ -24,6 +24,9 @@ if (!\class_exists('UVThreader')) {
             'semaphore' => self::IS_UV_SEMAPHORE,
         ];
 
+        /**
+         * @codeCoverageIgnore
+         */
         public function __destruct()
         {
             if ($this->type === 'rwlock') {
@@ -106,6 +109,9 @@ if (!\class_exists('UVThreader')) {
             return $this->struct_ptr;
         }
 
+        /**
+         * @codeCoverageIgnore
+         */
         public function free(): void
         {
             \ffi_free_if($this->struct_ptr, $this->struct_base);
