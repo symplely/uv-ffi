@@ -235,6 +235,9 @@ if (!\class_exists('UVPipe')) {
      */
     final class UVPipe extends \UVStream
     {
+        /**
+         * @codeCoverageIgnore
+         */
         protected function emulated($io): void
         {
             $pipe = new static('struct _php_uv_s', 'pipe');
@@ -281,10 +284,12 @@ if (!\class_exists('UVPipe')) {
                 if (\get_resource_type($io) === 'uv_pipe') {
                     $io = \resource_get_fd((int)$pipe, false, true)[0];
                 } elseif (\IS_WINDOWS && $emulated) {
+                    // @codeCoverageIgnoreStart
                     $which = ($io === \STDOUT || $io === \STDERR) ? 1 : 0;
                     $pipe = static::pair(\UV::NONBLOCK_PIPE, \UV::NONBLOCK_PIPE, false);
                     $io = $pipe[$which];
                     $isPipeEmulated = true;
+                    // @codeCoverageIgnoreEnd
                 } else {
                     $io = \get_fd_resource($pipe, 'uv_file');
                 }
@@ -2331,6 +2336,7 @@ if (!\class_exists('UVLib')) {
      * Provides cross platform way of loading shared libraries and retrieving a `symbol` from them.
      *
      * @return symbol _definition_ **pointer** by invoking `$UVLib()`
+     * @codeCoverageIgnore
      */
     final class UVLib extends \UVTypes
     {
