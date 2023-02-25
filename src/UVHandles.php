@@ -108,6 +108,9 @@ if (!\class_exists('UVLoop')) {
                 \zval_del_ref($this);
         }
 
+        /**
+         * @codeCoverageIgnore
+         */
         public function delete(): void
         {
             \uv_destruct_set();
@@ -313,6 +316,7 @@ if (!\class_exists('UVPipe')) {
          * @param int $write_flags
          * @param boolean $getResource
          * @return array<resource,resource>|int
+         * @codeCoverageIgnore
          */
         public static function pair(
             int $read_flags = \UV::NONBLOCK_PIPE,
