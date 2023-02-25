@@ -15,6 +15,7 @@ uv_read_start($handler, function () {
 
 --EXPECTF--
 bool(true)
+
 Notice: socket is not connected in %S
 
 Notice: read failed in %S
