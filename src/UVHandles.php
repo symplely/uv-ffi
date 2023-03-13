@@ -108,6 +108,9 @@ if (!\class_exists('UVLoop')) {
                 \zval_del_ref($this);
         }
 
+        /**
+         * @codeCoverageIgnore
+         */
         public function delete(): void
         {
             \uv_destruct_set();
@@ -232,6 +235,9 @@ if (!\class_exists('UVPipe')) {
      */
     final class UVPipe extends \UVStream
     {
+        /**
+         * @codeCoverageIgnore
+         */
         protected function emulated($io): void
         {
             $pipe = new static('struct _php_uv_s', 'pipe');
@@ -278,10 +284,12 @@ if (!\class_exists('UVPipe')) {
                 if (\get_resource_type($io) === 'uv_pipe') {
                     $io = \resource_get_fd((int)$pipe, false, true)[0];
                 } elseif (\IS_WINDOWS && $emulated) {
+                    // @codeCoverageIgnoreStart
                     $which = ($io === \STDOUT || $io === \STDERR) ? 1 : 0;
                     $pipe = static::pair(\UV::NONBLOCK_PIPE, \UV::NONBLOCK_PIPE, false);
                     $io = $pipe[$which];
                     $isPipeEmulated = true;
+                    // @codeCoverageIgnoreEnd
                 } else {
                     $io = \get_fd_resource($pipe, 'uv_file');
                 }
@@ -313,6 +321,7 @@ if (!\class_exists('UVPipe')) {
          * @param int $write_flags
          * @param boolean $getResource
          * @return array<resource,resource>|int
+         * @codeCoverageIgnore
          */
         public static function pair(
             int $read_flags = \UV::NONBLOCK_PIPE,
@@ -1041,8 +1050,6 @@ if (!\class_exists('UVProcess')) {
             int $flags = \UV::PROCESS_WINDOWS_HIDE,
             array $uid_gid = []
         ) {
-            $h = \zval_stack(2);
-
             $process_options = \c_struct_type('uv_process_options_s', 'uv');
             $process_options->memset(0, $process_options->sizeof());
 
@@ -1071,19 +1078,8 @@ if (!\class_exists('UVProcess')) {
             }
             $this->streams = $streams;
 
-            /* process args */
-            $n = 0;
-            $hash_len = $h->macro(\ZE::ARRVAL_P)->nNumOfElements;
-            $commands = \ffi_char($command);
-            $command_args = \FFI::new('char*[' . ($hash_len + 2) . ']', false);
-            $command_args[$n] = $commands;
-
-            $n++;
-            foreach ($args as $value) {
-                $command_args[$n] = \ffi_char($value);
-                $n++;
-            }
-            $command_args[$n] = NULL;
+            \array_unshift($args, $command);
+            $command_args = \ffi_char_variadic(...$args);
 
             /* process env */
             $i = 0;
@@ -1100,7 +1096,7 @@ if (!\class_exists('UVProcess')) {
             $gid = \IS_LINUX && \array_key_exists('gid', $uid_gid) ? $uid_gid['gid'] : null;
 
             $options = $process_options();
-            $options->file    = $commands;
+            $options->file    = $command_args[0];
             $options->stdio   = \uv_cast('uv_stdio_container_t*', $container);
             $options->exit_cb =  function (CData $process, int $exit_status, int $term_signal) use ($callback, $process_options) {
                 if (!\is_null($callback)) {
@@ -1116,7 +1112,7 @@ if (!\class_exists('UVProcess')) {
 
             $options->stdio_count = $stdio_count;
             $options->env   = \FFI::cast('char**', $zenv);
-            $options->args  = \FFI::cast('char**', $command_args);
+            $options->args  = $command_args;
 
             if (\is_null($cwd)) {
                 $cwd = \uv_cwd();
@@ -2327,6 +2323,7 @@ if (!\class_exists('UVLib')) {
      * Provides cross platform way of loading shared libraries and retrieving a `symbol` from them.
      *
      * @return symbol _definition_ **pointer** by invoking `$UVLib()`
+     * @codeCoverageIgnore
      */
     final class UVLib extends \UVTypes
     {

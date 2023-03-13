@@ -95,6 +95,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      * @deprecated 1.0
+     * @codeCoverageIgnore
      */
     function uv_loop_delete(\UVLoop $loop): void
     {
@@ -110,6 +111,7 @@ if (!\function_exists('uv_loop_init')) {
      *
      * @return void
      * @link http://docs.libuv.org/en/v1.x/misc.html?highlight=file%20to%20fd#c.uv_library_shutdown
+     * @codeCoverageIgnore
      */
     function uv_library_shutdown(): void
     {
@@ -245,6 +247,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param integer $write_flags
      * @return array<resource,resource>|int
      * @link http://docs.libuv.org/en/v1.x/pipe.html?highlight=uv_pipe_bind#c.uv_pipe
+     * @codeCoverageIgnore
      */
     function uv_pipe(int $read_flags = \UV::NONBLOCK_PIPE, int $write_flags = \UV::NONBLOCK_PIPE)
     {
@@ -689,6 +692,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param string $filename
      * @return UVLib|int
      * @link http://docs.libuv.org/en/v1.x/dll.html?highlight=uv_lib_t#c.uv_dlopen
+     * @codeCoverageIgnore
      */
     function uv_dlopen(string $filename)
     {
@@ -701,6 +705,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param UVLib $lib
      * @return void
      * @link http://docs.libuv.org/en/v1.x/dll.html?highlight=uv_lib_t#c.uv_dlclose
+     * @codeCoverageIgnore
      */
     function uv_dlclose(\UVLib $lib)
     {
@@ -716,6 +721,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param string $symbol
      * @return object|int definition
      * @link http://docs.libuv.org/en/v1.x/dll.html?highlight=uv_lib_t#c.uv_dlsym
+     * @codeCoverageIgnore
      */
     function uv_dlsym(\UVLib $lib, string $symbol)
     {
@@ -728,6 +734,7 @@ if (!\function_exists('uv_loop_init')) {
      * @param \UVLib $lib
      * @return string
      * @link http://docs.libuv.org/en/v1.x/dll.html?highlight=uv_lib_t#c.uv_dlerror
+     * @codeCoverageIgnore
      */
     function uv_dlerror(\UVLib $lib)
     {

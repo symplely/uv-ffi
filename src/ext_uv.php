@@ -90,7 +90,7 @@ if (!\class_exists('ext_uv')) {
 
         public function module_shutdown(int $type, int $module_number): int
         {
-            if (!$this->module_destructor_linked) {
+            if (!$this->destructor_linked) {
                 $this->module_clear();
             }
 
