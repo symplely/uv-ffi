@@ -1078,19 +1078,13 @@ if (!\class_exists('UVProcess')) {
             }
             $this->streams = $streams;
 
+            /* process args */
             \array_unshift($args, $command);
             $command_args = \ffi_char_variadic(...$args);
 
             /* process env */
-            $i = 0;
-            $zenv = \FFI::new('char*[' . (\count($env) + 1) . ']', false);
-            foreach ($env as $key => $value) {
-                $tmp_env_entry = \sprintf('%s=%s', $key, $value);
-                $zenv[$i] = \ffi_char($tmp_env_entry);
-                $i++;
-            }
-            $zenv[$i] = NULL;
-            $zenv_size = $i;
+            $zenv = \ffi_char_assoc($env);
+            $zenv_size = \count($env);
 
             $uid = \IS_LINUX && \array_key_exists('uid', $uid_gid) ? $uid_gid['uid'] : null;
             $gid = \IS_LINUX && \array_key_exists('gid', $uid_gid) ? $uid_gid['gid'] : null;
@@ -1098,7 +1092,7 @@ if (!\class_exists('UVProcess')) {
             $options = $process_options();
             $options->file    = $command_args[0];
             $options->stdio   = \uv_cast('uv_stdio_container_t*', $container);
-            $options->exit_cb =  function (CData $process, int $exit_status, int $term_signal) use ($callback, $process_options) {
+            $options->exit_cb = function (CData $process, int $exit_status, int $term_signal) use ($callback, $process_options) {
                 if (!\is_null($callback)) {
                     $callback($this, $exit_status, $term_signal);
                     \zval_del_ref($callback);
@@ -1111,7 +1105,7 @@ if (!\class_exists('UVProcess')) {
             };
 
             $options->stdio_count = $stdio_count;
-            $options->env   = \FFI::cast('char**', $zenv);
+            $options->env   = $zenv;
             $options->args  = $command_args;
 
             if (\is_null($cwd)) {
@@ -2252,7 +2246,7 @@ if (!\class_exists('UVMisc')) {
         public static function cpu_info()
         {
             $cpus_type = \c_typedef('uv_cpu_info_t', 'uv');
-            $count = \c_int_type('int');
+            $count = \c_int_type('int', 'uv');
 
             $error = \uv_ffi()->uv_cpu_info($cpus_type->cast('uv_cpu_info_t**'), $count());
             if (0 == $error) {
@@ -2260,28 +2254,6 @@ if (!\class_exists('UVMisc')) {
                 $free = 0;
                 $cpus = $cpus_type->cast_ptr();
                 $return_value = [];
-                /*
-                $ht = \ze_ffi()->_zend_new_array(0);
-                $return_zvalue = \zval_array($ht);
-                for ($i = 0; $i < $count; $i++) {
-                    $tmp = \zval_array(\ze_ffi()->_zend_new_array(0));
-                    $times = \zval_array(\ze_ffi()->_zend_new_array(0));
-
-                    \ze_ffi()->add_assoc_string_ex($tmp(), 'model', \strlen("model"), \FFI::string($cpus[$i]->model));
-                    \ze_ffi()->add_assoc_long_ex($tmp(), 'speed', \strlen("speed"), $cpus[$i]->speed);
-
-                    \ze_ffi()->add_assoc_long_ex($times(), 'sys', \strlen("sys"), \uv_cast('size_t', $cpus[$i]->cpu_times->sys)->cdata);
-                    \ze_ffi()->add_assoc_long_ex($times(), 'user', \strlen("user"), \uv_cast('size_t', $cpus[$i]->cpu_times->user)->cdata);
-                    \ze_ffi()->add_assoc_long_ex($times(), 'idle', \strlen("idle"), \uv_cast('size_t', $cpus[$i]->cpu_times->idle)->cdata);
-                    \ze_ffi()->add_assoc_long_ex($times(), 'irq', \strlen("irq"), \uv_cast('size_t', $cpus[$i]->cpu_times->irq)->cdata);
-                    \ze_ffi()->add_assoc_long_ex($times(), 'nice', \strlen("nice"), \uv_cast('size_t', $cpus[$i]->cpu_times->nice)->cdata);
-                    \ze_ffi()->add_assoc_zval_ex($tmp(), 'times', \strlen("times"), $times());
-
-                    \ze_ffi()->zend_hash_next_index_insert($ht, $tmp());
-                }
-
-                $return_value = \zval_native($return_zvalue);
-                */
                 for ($i = 0; $i < $count; $i++) {
                     $model = null;
                     try {
