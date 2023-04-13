@@ -328,7 +328,7 @@ if (!\function_exists('uv_init')) {
             $version = \trim((string) $os['VERSION_ID']);
             if ($id === 'debian') {
                 $code = $directory . 'headers/uv_ubuntu' . ((float)$version < 20.04 ? '18.04' : '20.04') . '.h';
-            } elseif ($id === 'redhat') {
+            } elseif ($id === 'redhat' || $id === 'fedora') {
                 $code = $directory . 'headers/uv_centos' . ((float)$version < 8 ? '7' : '8+') . '.h';
             }
         }
