@@ -1475,36 +1475,37 @@ if (!\class_exists('UVWork')) {
                 $work_cb = \array_shift($arguments);
                 $after_cb = \array_shift($arguments);
                 $work = new static('struct uv_work_s');
-                \zval_add_ref($work);
                 $r = \uv_ffi()->uv_queue_work(
                     $loop(),
                     $work(),
                     function (CData $req) use ($work_cb) {
-                        //   $tsrm_ls = \ze_ffi()->ts_resource_ex(0, null);
-                        //$tsrm_ls = \ze_ffi()->tsrm_new_interpreter_context();
-                        //$old = \ze_ffi()->tsrm_set_interpreter_context($tsrm_ls);
+                        require_once 'vendor/symplely/zend-ffi/preload.php';
+                        if (\IS_PHP8) {
+                            \ze_ffi()->ts_resource_ex(0, null);
+                            \tsrmls_cache_update();
+                        } else {
+                            $tsrm_ls = \ze_ffi()->tsrm_new_interpreter_context();
+                            $old = \ze_ffi()->tsrm_set_interpreter_context($tsrm_ls);
+                        }
 
-                        //     \zend_pg('expose_php', 0);
-                        //  \zend_pg('auto_globals_jit', 0);
+                        \zend_pg('expose_php', 0);
+                        \zend_pg('auto_globals_jit', 1);
 
-                        // \ze_ffi()->php_request_startup();
-                        //   \zend_eg('current_execute_data', null);
-                        // \zend_eg('current_module', $phpext_uv_ptr);
+                        \ze_ffi()->php_request_startup();
 
-                        // require_once 'vendor/symplely/zend-ffi/preload.php';
-                        //   $work_cb();
+                        \zend_eg('current_execute_data', null);
+                        $work_cb();
 
-                        //\ze_ffi()->php_request_shutdown(NULL);
-                        //  \ze_ffi()->ts_free_thread();
-                        // \ze_ffi()->tsrm_set_interpreter_context($old);
-                        // \ze_ffi()->tsrm_free_interpreter_context($tsrm_ls);
+                        if (\IS_PHP8) {
+                            \ze_ffi()->ts_free_thread();
+                        } else {
+                            \ze_ffi()->tsrm_set_interpreter_context($old);
+                            \ze_ffi()->tsrm_free_interpreter_context($tsrm_ls);
+                        }
                     },
                     function (CData $req, int $status) use ($after_cb, $work) {
-                        //   $after_cb($status);
-                        //   unset($status);
-                        //   \FFI::free($req);
-                        // \zval_del_ref($after_cb);
-                        //   \zval_del_ref($work);
+                        $after_cb($status);
+                        \zval_del_ref($work);
                     }
                 );
 
