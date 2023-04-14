@@ -11,6 +11,8 @@ This **libuv ffi** implementation is based on PHP extension [ext-uv](https://git
 
 The actual threading feature of `uv_queue_work` in **ext-uv 0.3.0** is on pause. Getting native PThreads working with FFI, needs a lot more investigation and more likely C development of PHP source code. Seems someone else has started something similar <https://github.com/mrsuh/php-pthreads>.
 
+**Update:** Since progress by maintainers of [amphp/ext-uv](https://github.com/amphp/ext-uv) has stopped. See [symplely/ext-uv](https://github.com/symplely/ext-uv) for updates, a new release version **0.4.2** with _true_ threading feature of `uv_queue_work()` implemented, other bugs, and build issues fixed. Pre-built binaries available for most platforms at <https://github.com/symplely/ext-uv/releases>, the whole `pecl` build system not needed, and PHP versions _7.4 to 8.2_ supported.
+
 **PR** are welcome, see [Documentation] and [Contributing].
 
 Future versions of `uv-ffi` beyond **ext-uv 0.3.0** will include all current `libuv` features.
